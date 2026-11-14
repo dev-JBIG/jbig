@@ -2,6 +2,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 import "./MemberQuickLinks.css";
 
+// 다음 학기 Arena 운영을 재개할 때 true로 변경합니다.
+const SHOW_ARENA_LINK = false;
+
 interface MemberQuickLinksProps {
     isLogin: boolean;
     onOpen?: () => void;
@@ -12,9 +15,11 @@ const MemberQuickLinks: React.FC<MemberQuickLinksProps> = ({ isLogin, onOpen }) 
 
     return (
         <div className="member-quick-links">
-            <Link className="member-quick-link" to="/arena" onClick={onOpen}>
-                <span>JBIG Big Data Arena</span>
-            </Link>
+            {SHOW_ARENA_LINK && (
+                <Link className="member-quick-link" to="/arena" onClick={onOpen}>
+                    <span>JBIG Big Data Arena</span>
+                </Link>
+            )}
             <a
                 className="member-quick-link member-quick-link-news"
                 href="https://docs.google.com/forms/d/e/1FAIpQLSeayAi-rqN96kMX2sZb9pI_5pKvbC4XTijO5fM5RW6NeXCGew/viewform"
