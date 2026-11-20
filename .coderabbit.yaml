@@ -1,0 +1,83 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+language: ko-KR
+early_access: false
+
+reviews:
+  profile: chill
+  high_level_summary: true
+  high_level_summary_in_walkthrough: false
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  review_status: true
+  poem: false
+  abort_on_close: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+
+  path_filters:
+    - "!package-lock.json"
+    - "!build/**"
+    - "!**/*.css.backup"
+    - "!public/*.png"
+    - "!public/*.ico"
+
+  path_instructions:
+    - path: "src/API/**"
+      instructions: |
+        - `src/API/auth.ts`의 Web Locks(`navigator.locks`) 기반 단일 토큰 갱신, `jbig-session` 원자적 저장, `SessionChangedError` 처리가 손상되지 않았는지 확인하세요.
+        - `src/API/client.ts`에서 `BASE_URL/api/` 경로에 한정해 Bearer 토큰을 주입하고 401 재시도를 1회로 제한하는 보안 가드가 유지되는지 점검하세요(외부 URL이나 presigned URL로 Authorization 헤더가 유출되면 안 됩니다).
+        - Django REST API 엔드포인트의 trailing slash(`/`) 누락 여부와 Axios 에러 처리(`isAxiosError`)를 확인하세요.
+        - `src/API/arena.ts`의 `Idempotency-Key` 헤더와 `AbortSignal` 전달이 유지되는지 확인하세요.
+    - path: "src/Components/Posts/**"
+      instructions: |
+        - 마크다운 렌더링에서 `rehype-sanitize` 및 `safeMarkdown` 정책이 우회되지 않고 XSS 방어가 유지되는지 확인하세요.
+        - 비로그인 댓글의 Cloudflare Turnstile 검증 및 권한 게이트 첨부파일 다운로드(`downloadGatedAttachment`) 흐름이 깨지지 않았는지 점검하세요.
+        - 게시글 상세/작성/수정(`PostDetail`, `PostWrite`)에서 `recruitment_info`, `tag`, 수정 모드 상태 복원, 첨부파일 스토리지 키 추출(`extractKeyFromUrl`) 로직의 경계 조건을 확인하세요.
+    - path: "src/Components/Profile/**"
+      instructions: |
+        - 사용자 HTML 프로필 렌더링 `<iframe>`에 `sandbox=""` 격리 속성과 새니타이징이 유지되는지 최우선으로 확인하세요.
+        - 비동기 데이터 페칭에서 cleanup/취소 처리 누락으로 영구 로딩이나 언마운트 후 상태 갱신이 발생하지 않는지 점검하세요.
+    - path: "src/Components/Competitions/**"
+      instructions: |
+        - Arena 제출의 `Idempotency-Key` 유지 및 재시도 처리, 업로드 진행률 표시, 모바일 화면의 긴 닉네임 줄바꿈/반응형 레이아웃을 확인하세요.
+    - path: "src/Components/**"
+      instructions: |
+        - React Hooks 규칙(의존성 배열, effect cleanup)과 모달/다이얼로그 콜백 중복 호출 방지(`AlertModal`/`AlertContext` 등)를 점검하세요.
+        - `@primer/react` 및 `@primer/primitives` 디자인 토큰/CSS 변수 일관성을 유지하고 전역 CSS 충돌이 없는지 확인하세요.
+        - 접근성(키보드 조작, 시맨틱 HTML, `aria-*` 속성)과 모바일/데스크톱 반응형 깨짐 여부를 확인하세요.
+    - path: ".github/workflows/**"
+      instructions: |
+        - 프로덕션 배포(`deploy`) job이 반드시 `push` 이벤트의 `refs/heads/main`에서만 실행되도록 가드가 유지되는지 확인하세요.
+        - GitHub Actions 보안(권한 최소화, 시크릿 노출 방지, 안전한 액션 버전 사용)을 점검하세요.
+
+  tools:
+    eslint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    semgrep:
+      enabled: true
+    opengrep:
+      enabled: true
+    ast-grep:
+      enabled: true
+      essential_rules: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    yamllint:
+      enabled: true
+    github-checks:
+      enabled: true
+
+chat:
+  auto_reply: true
