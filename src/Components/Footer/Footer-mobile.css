@@ -1,17 +1,11 @@
-/* 모바일 전용 Footer 디자인 */
-
 @media (max-width: 767px) {
     .footer {
-        padding: var(--space-xl) var(--space-md);
-        margin-top: var(--space-2xl);
-        background-color: var(--color-bg-tertiary);
-        font-size: var(--font-size-xs);
-        color: var(--color-text-tertiary);
-        text-align: center;
-        line-height: var(--line-height-relaxed);
+        padding: 16px 12px 24px;
+        font-size: 12px;
+        color: var(--fgColor-muted, #59636e);
     }
 
     .footer-divider {
-        margin-bottom: var(--space-lg);
+        margin-bottom: 12px;
     }
 }

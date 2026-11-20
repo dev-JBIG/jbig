@@ -1,106 +1,110 @@
-/* 적응형 Signup - 미니멀리즘 */
+/* GitHub Primer styled Signup */
 
 .signup-wrapper {
-    width: 100vw;
+    width: 100%;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-md);
-    background-color: var(--color-bg-secondary);
+    padding: 24px 16px;
+    background-color: var(--bgColor-inset, var(--color-bg-secondary));
 }
 
 .signup-container {
     width: 100%;
-    max-width: 500px;
-    padding: var(--space-2xl) var(--space-lg) var(--space-xl);
-    background-color: var(--color-bg-primary);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-lg);
+    max-width: 440px;
+    padding: 28px 24px;
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
 }
 
 @media (min-width: 768px) {
     .signup-container {
-        padding: var(--space-3xl) var(--space-2xl) var(--space-2xl);
+        padding: 32px;
     }
 }
 
 .signup-title {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
+    font-size: 20px;
+    font-weight: 600;
     text-align: center;
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-xl);
-}
-
-@media (min-width: 768px) {
-    .signup-title {
-        font-size: var(--font-size-3xl);
-    }
+    color: var(--fgColor-default, var(--color-text-primary));
+    margin-bottom: 20px;
 }
 
 .signup-form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
+    gap: 12px;
 }
 
 .signup-label {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-xs);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, var(--color-text-primary));
+    margin-bottom: 4px;
 }
 
 .signup-input {
     width: 100%;
-    padding: var(--space-md);
-    border: 1px solid var(--color-border-medium);
+    padding: 8px 12px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
-    background-color: var(--color-bg-secondary);
-    transition: all var(--transition-fast);
+    font-size: 14px;
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .signup-input:focus {
-    border-color: var(--color-primary);
-    background-color: var(--color-bg-primary);
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
 }
 
 .signup-button {
     width: 100%;
-    padding: var(--space-lg);
-    margin-top: var(--space-md);
-    background-color: var(--color-primary);
-    color: var(--color-text-inverse);
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    border: none;
+    padding: 10px 16px;
+    margin-top: 8px;
+    background-color: var(--bgColor-accent-emphasis, var(--color-primary));
+    color: var(--fgColor-onEmphasis, #ffffff);
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px solid rgba(31, 35, 40, 0.15);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background-color var(--transition-fast);
+    transition: filter var(--transition-fast);
 }
 
-.signup-button:hover {
-    background-color: var(--color-primary-hover);
+.signup-button:hover:not(:disabled) {
+    filter: brightness(0.95);
+}
+
+.signup-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .signup-links {
     width: 100%;
     display: flex;
     justify-content: center;
-    gap: var(--space-md);
-    margin-top: var(--space-lg);
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
 .signup-link {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
+    font-size: 13px;
+    color: var(--fgColor-accent, var(--color-primary));
     cursor: pointer;
-    transition: color var(--transition-fast);
+    text-decoration: none;
+    font-weight: 500;
 }
 
 .signup-link:hover {
-    color: var(--color-primary);
     text-decoration: underline;
 }

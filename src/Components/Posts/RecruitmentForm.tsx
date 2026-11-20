@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MDEditor from '@uiw/react-md-editor';
+import { Button } from '@primer/react';
 import { safeSanitizePlugin } from '../Utils/safeMarkdown';
+import { useColorMode } from '../Utils/ThemeContext';
 import { RecruitmentFormData } from '../Utils/interfaces';
 import './PostWrite.css';
 
@@ -17,6 +19,7 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
     setRecruitmentData,
     initialRecruitmentData
 }) => {
+    const { resolvedColorMode } = useColorMode();
     const [recruitmentType, setRecruitmentType] = useState(initialRecruitmentData?.recruitment_type ?? 2);
     const [maxMembers, setMaxMembers] = useState(initialRecruitmentData?.max_members ?? 0);
     const [deadline, setDeadline] = useState(initialRecruitmentData?.deadline ?? '');
@@ -92,7 +95,7 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
 
             <div className="postwrite-row">
                 <label htmlFor="maxMembers">모집 인원</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                <div className="postwrite-inline-group">
                     <input
                         id="maxMembers"
                         className="postwrite-title-input"
@@ -100,9 +103,9 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                         min="0"
                         value={maxMembers}
                         onChange={e => setMaxMembers(Math.max(0, Number(e.target.value)))}
-                        style={{ flex: 1, maxWidth: '120px' }}
+                        style={{ maxWidth: '120px' }}
                     />
-                    <span style={{ fontSize: '14px', color: '#666' }}>
+                    <span className="postwrite-inline-hint">
                         {maxMembers === 0 ? '(인원 제한 없음)' : `${maxMembers}명`}
                     </span>
                 </div>
@@ -110,7 +113,7 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
 
             <div className="postwrite-row">
                 <label htmlFor="deadline">모집 마감일</label>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                <div className="postwrite-inline-group">
                     <input
                         id="deadline"
                         className="postwrite-title-input"
@@ -120,7 +123,7 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                         disabled={isDeadlineTbd}
                         style={{ flex: 1 }}
                     />
-                    <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    <label className="postwrite-checkbox-inline">
                         <input
                             type="checkbox"
                             checked={isDeadlineTbd}
@@ -128,7 +131,6 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                                 setIsDeadlineTbd(e.target.checked);
                                 if (e.target.checked) setDeadline('');
                             }}
-                            style={{ marginRight: '5px' }}
                         />
                         상시모집
                     </label>
@@ -138,7 +140,7 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
             <div className="postwrite-row">
                 <label>필요 기술/역할</label>
                 <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                    <div className="postwrite-inline-group" style={{ marginBottom: '8px' }}>
                         <input
                             className="postwrite-title-input"
                             type="text"
@@ -148,20 +150,21 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                             onKeyDown={handleSkillKeyDown}
                             style={{ flex: 1 }}
                         />
-                        <button type="button" className="write-button" onClick={handleAddSkill}
-                            style={{ padding: '6px 12px', fontSize: '13px', whiteSpace: 'nowrap' }}>
+                        <Button type="button" variant="default" size="small" onClick={handleAddSkill}>
                             추가
-                        </button>
+                        </Button>
                     </div>
                     {requiredSkills.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        <div className="postwrite-skill-chips">
                             {requiredSkills.map(skill => (
-                                <span key={skill} className="category-badge" style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                    padding: '4px 10px', fontSize: '13px', cursor: 'pointer'
-                                }} onClick={() => handleRemoveSkill(skill)}>
+                                <button
+                                    key={skill}
+                                    type="button"
+                                    className="postwrite-skill-chip"
+                                    onClick={() => handleRemoveSkill(skill)}
+                                >
                                     {skill} &times;
-                                </span>
+                                </button>
                             ))}
                         </div>
                     )}
@@ -181,27 +184,26 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
             </div>
 
             <div className="postwrite-row">
-                <label style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label className="postwrite-checkbox-label">
                     <input
                         type="checkbox"
                         checked={showApplicants}
                         onChange={e => setShowApplicants(e.target.checked)}
-                        style={{ width: 'auto', marginRight: '4px' }}
                     />
-                    지원자 공개
-                    <span style={{ fontSize: '0.85em', color: '#666', fontWeight: 'normal' }}>
+                    <span>지원자 공개</span>
+                    <span className="postwrite-checkbox-hint">
                         (체크하면 지원자끼리 서로의 이름과 기수를 볼 수 있습니다)
                     </span>
                 </label>
             </div>
 
             <div className="postwrite-row">
-                <label style={{ fontWeight: 'bold' }}>상세 내용 (본문)</label>
+                <label className="postwrite-label-bold">상세 내용 (본문)</label>
                 <div className="content-body">
                     <MDEditor
                         value={plan}
                         onChange={val => setPlan(val || '')}
-                        data-color-mode="light"
+                        data-color-mode={resolvedColorMode}
                         height={300}
                         preview="edit"
                         previewOptions={{ rehypePlugins: [safeSanitizePlugin] }}

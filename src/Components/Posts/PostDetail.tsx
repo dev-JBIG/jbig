@@ -12,10 +12,12 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
+import { Label } from '@primer/react';
 import {useUser} from "../Utils/UserContext";
 import { Heart } from "lucide-react";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
+import { useColorMode } from "../Utils/ThemeContext";
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
 import RecruitmentDetailSection from './RecruitmentDetail';
 
@@ -126,6 +128,7 @@ const PostDetail: React.FC = () => {
     const { accessToken, authReady } = useUser();
     const { staffAuth } = useStaffAuth();
     const { showAlert, showConfirm } = useAlert();
+    const { resolvedColorMode } = useColorMode();
 
     // 권한 게이트된 첨부(회원전용/스태프 게시판)는 공개 URL이 아니라 인증이 필요한
     // 백엔드 엔드포인트로만 받을 수 있어, Authorization 헤더를 실은 요청으로 다운로드한다.
@@ -219,7 +222,7 @@ const PostDetail: React.FC = () => {
     }, []);
 
     const redirectedRef = useRef(false);
-    const safeAuthRedirect = () => {
+    const safeAuthRedirect = useCallback(() => {
         if (redirectedRef.current) return;
         redirectedRef.current = true;
 
@@ -228,7 +231,7 @@ const PostDetail: React.FC = () => {
             type: 'warning',
             onClose: () => navigate(-1)
         });
-    };
+    }, [navigate, showAlert]);
 
     useEffect(() => {
         if (!authReady || !postId) return;
@@ -293,6 +296,9 @@ const PostDetail: React.FC = () => {
                     isLiked: src.is_liked ?? false,
                     is_owner: !!src.is_owner,
                     post_type: src.post_type,
+                    is_anonymous: src.is_anonymous,
+                    tag: src.tag,
+                    recruitment: src.recruitment ?? null,
                     attachments: (src.attachment_paths || []).map((item: any, index: number) => {
                         // 객체 형태인지 문자열 형태인지 확인
                         if (typeof item === 'string') {
@@ -374,7 +380,7 @@ const PostDetail: React.FC = () => {
 
         loadPost();
         return () => { cancelled = true; };
-    }, [authReady, accessToken, postId]);
+    }, [authReady, accessToken, postId, boardId, navigate, safeAuthRedirect, showAlert, staffAuth]);
 
    
 
@@ -685,7 +691,7 @@ const PostDetail: React.FC = () => {
     const handleReplyWriteClick = async (id: number) => {
         // 이미 다른 답글창이 열려 있고, 입력값이 있다면 confirm
         if (replyTargetId !== null && replyTargetId !== id && replyInput.trim().length > 0) {
-            const confirmed = await showConfirm({
+            await showConfirm({
                 message: "작성 중인 답글을 취소 하시겠습니까?",
                 title: "답글 작성 취소",
                 type: 'warning',
@@ -861,41 +867,57 @@ const PostDetail: React.FC = () => {
     return (
         <div className="postdetail-container has-floating-like">
             <div className="postdetail-header">
-                <div
-                    className="postdetail-category postdetail-category-link"
-                    onClick={() => navigate(`/board/${post.board_id}`)}
-                >
-                    {post.board}
-                </div>
-                {post.is_owner && (
-                    <div className="postdetail-actions">
-                        <span
-                            className="postdetail-edit-link"
-                            role="button"
-                            aria-label="게시글 수정"
-                            onClick={handleEditPost}
+                <div className="postdetail-header-top">
+                    <div className="postdetail-breadcrumbs">
+                        <button
+                            type="button"
+                            className="postdetail-category postdetail-category-link"
+                            onClick={() => navigate(`/board/${post.board_id}`)}
                         >
-                          수정
-                        </span>
-                        <span
-                            className="postdetail-delete-link"
-                            role="button"
-                            aria-label="게시글 삭제"
-                            onClick={handleDeletePost}
-                        >
-                          삭제
-                        </span>
+                            {post.board}
+                        </button>
+                        {post.tag && (
+                            <Label variant="accent" size="small" className="postdetail-tag-label">
+                                {post.tag}
+                            </Label>
+                        )}
                     </div>
-                )}
+                    {post.is_owner && (
+                        <div className="postdetail-actions">
+                            <span
+                                className="postdetail-edit-link"
+                                role="button"
+                                tabIndex={0}
+                                aria-label="게시글 수정"
+                                onClick={handleEditPost}
+                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleEditPost(); }}
+                            >
+                              수정
+                            </span>
+                            <span
+                                className="postdetail-delete-link"
+                                role="button"
+                                tabIndex={0}
+                                aria-label="게시글 삭제"
+                                onClick={handleDeletePost}
+                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleDeletePost(); }}
+                            >
+                              삭제
+                            </span>
+                        </div>
+                    )}
+                </div>
                 <h2 className="postdetail-title">
                     {post.title}
                     {post.post_type === 3 && (
-                        <span
+                        <Label
+                            variant="attention"
+                            size="small"
                             className="postdetail-private-badge"
                             title="해당 게시물은 작성자와 관리자만 열람할 수 있습니다"
                         >
                             (비공개)
-                        </span>
+                        </Label>
                     )}
                 </h2>
             </div>
@@ -949,8 +971,10 @@ const PostDetail: React.FC = () => {
                             ]}
 
                             components={{
-                                a: ({node, ...props})=>(
-                                    <a {...props} target="_blank" rel="noopener noreferrer" />
+                                a: ({node, children, ...props}) => (
+                                    <a {...props} target="_blank" rel="noopener noreferrer">
+                                        {children}
+                                    </a>
                                 )
                             }}
                         >
@@ -1327,7 +1351,7 @@ const PostDetail: React.FC = () => {
                                             onSuccess={(token: string) => setTurnstileToken(token)}
                                             onExpire={() => setTurnstileToken(null)}
                                             onError={() => setTurnstileToken(null)}
-                                            options={{ theme: 'light', size: 'compact' }}
+                                            options={{ theme: resolvedColorMode, size: 'compact' }}
                                         />
                                     )}
                                 </div>

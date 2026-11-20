@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
 import AlertModal from './AlertModal';
 
 interface AlertOptions {
@@ -58,13 +58,17 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         cancelText: '취소'
     });
 
+    // 동일 확인 다이얼로그에서 confirm과 cancel 콜백이 중복 실행되지 않도록 1회성 가드 유지
+    const confirmSettledRef = useRef(true);
+
     const showAlert = useCallback((options: AlertOptions | string) => {
         if (typeof options === 'string') {
             setAlertState({
                 show: true,
                 message: options,
                 title: '알림',
-                type: 'info'
+                type: 'info',
+                onCloseCallback: undefined,
             });
         } else {
             setAlertState({
@@ -78,6 +82,7 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, []);
 
     const showConfirm = useCallback((options: ConfirmOptions): Promise<boolean> => {
+        confirmSettledRef.current = false;
         return new Promise((resolve) => {
             setConfirmState({
                 show: true,
@@ -94,30 +99,41 @@ export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }, []);
 
     const handleAlertClose = useCallback(() => {
-        if (alertState.onCloseCallback) {
-            alertState.onCloseCallback();
-        }
-        setAlertState(prev => ({ ...prev, show: false }));
+        const callback = alertState.onCloseCallback;
+        setAlertState(prev => ({ ...prev, show: false, onCloseCallback: undefined }));
+        callback?.();
     }, [alertState.onCloseCallback]);
 
     const handleConfirmConfirm = useCallback(() => {
-        if (confirmState.onConfirmCallback) {
-            confirmState.onConfirmCallback();
-        }
-        if (confirmState.resolve) {
-            confirmState.resolve(true);
-        }
-        setConfirmState(prev => ({ ...prev, show: false }));
+        if (confirmSettledRef.current) return;
+        confirmSettledRef.current = true;
+        const onConfirmCallback = confirmState.onConfirmCallback;
+        const resolve = confirmState.resolve;
+        setConfirmState(prev => ({
+            ...prev,
+            show: false,
+            onConfirmCallback: undefined,
+            onCancelCallback: undefined,
+            resolve: undefined,
+        }));
+        onConfirmCallback?.();
+        resolve?.(true);
     }, [confirmState.onConfirmCallback, confirmState.resolve]);
 
     const handleConfirmCancel = useCallback(() => {
-        if (confirmState.onCancelCallback) {
-            confirmState.onCancelCallback();
-        }
-        if (confirmState.resolve) {
-            confirmState.resolve(false);
-        }
-        setConfirmState(prev => ({ ...prev, show: false }));
+        if (confirmSettledRef.current) return;
+        confirmSettledRef.current = true;
+        const onCancelCallback = confirmState.onCancelCallback;
+        const resolve = confirmState.resolve;
+        setConfirmState(prev => ({
+            ...prev,
+            show: false,
+            onConfirmCallback: undefined,
+            onCancelCallback: undefined,
+            resolve: undefined,
+        }));
+        onCancelCallback?.();
+        resolve?.(false);
     }, [confirmState.onCancelCallback, confirmState.resolve]);
 
     return (
@@ -152,4 +168,3 @@ export const useAlert = (): AlertContextType => {
     }
     return context;
 };
-

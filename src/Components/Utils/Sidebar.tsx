@@ -1,7 +1,9 @@
 import React from "react";
-import "../Home/Home.css"
+import { useLocation } from "react-router-dom";
+import { Button, CounterLabel, Label } from "@primer/react";
+import "../Home/Home.css";
 import { SidebarProps, Board } from "./interfaces";
-import {FileText, SquareCheckBig, Lock } from "lucide-react";
+import { FileText, SquareCheckBig, Lock } from "lucide-react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
@@ -26,14 +28,18 @@ const isNewPost = (dateString?: string | null): boolean => {
 
 // 좌측에 나오는 게시판 목록 등 관리 페이지
 const Sidebar: React.FC<SidebarProps> = ({
-                                             boards,
-                                             isLogin,
-                                             quizURL,
-                                             totalCount,
-                                             navigate
-                                         }) => {
+    boards,
+    isLogin,
+    quizURL,
+    totalCount,
+    navigate
+}) => {
     const { accessToken, user } = useUser();
     const { showAlert } = useAlert();
+    const location = useLocation();
+
+    const activeBoardMatch = location.pathname.match(/^\/board\/(\d+)/);
+    const activeBoardId = activeBoardMatch ? Number(activeBoardMatch[1]) : null;
 
     // read_permission 미지정은 'all'(전체공개)로 취급해 하위호환 유지
     // 'author'(본인+스태프) 게시판은 진입 자체는 회원 전체에게 열린다(제출·본인 글 확인용).
@@ -58,92 +64,104 @@ const Sidebar: React.FC<SidebarProps> = ({
     };
 
     return (
-        <aside className="sidebar">
-            <div className="sidebar-top-divider" />
+        <aside className="sidebar" aria-label="게시판 메뉴">
             <div className="sidebar-scrollable">
                 {!isLogin && (
-                    <button className="sidebar-button" onClick={() => navigate("/signup")}>회원가입</button>
+                    <div className="sidebar-signup-wrap">
+                        <Button
+                            variant="primary"
+                            block
+                            className="sidebar-signup-btn"
+                            onClick={() => navigate("/signup")}
+                        >
+                            회원가입
+                        </Button>
+                    </div>
                 )}
                 <MemberQuickLinks isLogin={isLogin} />
                 <ul className="menu">
-                <li className="menu-item-viewall" onClick={() => navigate("/board/0")}>
-                    <div className="board-item-content">
-                        <FileText size={18} className="board-icon"/>
-                        전체 글 보기
-                    </div>
-                    <span className="viewall-count">{totalCount.toLocaleString()}</span>
-                </li>
-                {quizURL && quizURL.trim() !== "" && (
                     <li
-                        className="menu-item-viewall"
-                        onClick={() => window.open(quizURL, "_blank", "noopener,noreferrer")}
+                        className={`menu-item-viewall${activeBoardId === 0 ? " is-active" : ""}`}
+                        onClick={() => navigate("/board/0")}
                     >
                         <div className="board-item-content">
-                            <SquareCheckBig size={18} className="board-icon" />
-                            이번 주 퀴즈
+                            <FileText size={16} className="board-icon" aria-hidden="true" />
+                            <span>전체 글 보기</span>
                         </div>
+                        <CounterLabel>{totalCount.toLocaleString()}</CounterLabel>
                     </li>
-                )}
-            </ul>
-            <div className="sidebar-top-divider"/>
+                    {quizURL && quizURL.trim() !== "" && (
+                        <li
+                            className="menu-item-viewall"
+                            onClick={() => window.open(quizURL, "_blank", "noopener,noreferrer")}
+                        >
+                            <div className="board-item-content">
+                                <SquareCheckBig size={16} className="board-icon" aria-hidden="true" />
+                                <span>이번 주 퀴즈</span>
+                            </div>
+                        </li>
+                    )}
+                </ul>
+                <div className="sidebar-top-divider" />
 
-            {boards.map((section, idx) => (
-                <React.Fragment key={section.category}>
-                    <ul className="menu">
-                        {section.boards.map((board) => {
-                            const IconComponent = getBoardIcon(board.name);
-                            const hasNewPost = isNewPost(board.latest_post_created_at);
-                            const locked = isBoardLocked(board);
-                            return (
-                                <li
-                                    key={board.id}
-                                    onClick={() => handleBoardClick(board)}
-                                >
-                                    <div className="board-item-content">
-                                        <IconComponent className="board-icon" size={18} />
-                                        {board.name}
-                                        {locked && (
-                                            <Lock
-                                                size={14}
-                                                color="#999"
-                                                style={{ marginLeft: 4, verticalAlign: "middle", flexShrink: 0 }}
-                                            />
+                {boards.map((section, idx) => (
+                    <React.Fragment key={section.category}>
+                        {section.category && (
+                            <div className="sidebar-section-heading">{section.category}</div>
+                        )}
+                        <ul className="menu">
+                            {section.boards.map((board) => {
+                                const IconComponent = getBoardIcon(board.name);
+                                const hasNewPost = isNewPost(board.latest_post_created_at);
+                                const locked = isBoardLocked(board);
+                                const isActive = activeBoardId === board.id;
+                                return (
+                                    <li
+                                        key={board.id}
+                                        className={isActive ? "is-active" : undefined}
+                                        onClick={() => handleBoardClick(board)}
+                                    >
+                                        <div className="board-item-content">
+                                            <IconComponent className="board-icon" size={16} aria-hidden="true" />
+                                            <span>{board.name}</span>
+                                            {locked && (
+                                                <Lock size={13} className="board-lock-icon" aria-hidden="true" />
+                                            )}
+                                        </div>
+                                        {hasNewPost && (
+                                            <Label variant="danger" size="small" className="sidebar-new-badge">N</Label>
                                         )}
-                                    </div>
-                                    {hasNewPost && <span className="sidebar-new-badge">N</span>}
-                                </li>
-                            );
-                        })}
-                    </ul>
-                    {/* 카테고리별 구분선, 마지막엔 생략 */}
-                    {idx !== boards.length - 1 && <div className="sidebar-middle-divider" />}
-                </React.Fragment>
-            ))}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        {idx !== boards.length - 1 && <div className="sidebar-middle-divider" />}
+                    </React.Fragment>
+                ))}
 
+                <div className="sidebar-top-divider" />
 
-            <div className="sidebar-top-divider"/>
+                <div className="sidebar-external-links">
+                    <a
+                        href="https://discord.gg/knpBCvvfGa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="sidebar-external-link"
+                    >
+                        <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" />
+                        <span>비밀 게임 소모임</span>
+                    </a>
 
-            {/* 좌측 하단 디스코드 소모임 버튼 */}
-            <a
-                href="https://discord.gg/knpBCvvfGa"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sidebar-discord-button"
-            >
-                <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" />
-                비밀 게임 소모임
-            </a>
-
-            {/* BigTech AI News 버튼 */}
-            <a
-                href="https://indigo-coder-github.github.io/Big-Tech-News/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sidebar-discord-button"
-            >
-                <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" />
-                BigTech AI News
-            </a>
+                    <a
+                        href="https://indigo-coder-github.github.io/Big-Tech-News/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="sidebar-external-link"
+                    >
+                        <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" />
+                        <span>BigTech AI News</span>
+                    </a>
+                </div>
             </div>
         </aside>
     );

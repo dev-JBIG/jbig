@@ -35,7 +35,11 @@ jest.mock("rehype-sanitize", () => ({
 
 jest.mock("./RecruitmentDetail", () => ({
     __esModule: true,
-    default: () => null,
+    default: ({ recruitment }: { recruitment?: { status_display?: string; max_members?: number } }) => (
+        <div data-testid="recruitment-section">
+            {recruitment?.status_display} ({recruitment?.max_members})
+        </div>
+    ),
 }));
 
 jest.mock("../../API/req", () => ({
@@ -304,4 +308,32 @@ describe('PostDetail 인증 오류 구분', () => {
         expect(showAlert).not.toHaveBeenCalled();
         expect(screen.getByText('본문 내용')).toBeInTheDocument();
     });
+
+    test('API 응답의 tag와 recruitment를 매핑해 렌더링한다', async () => {
+        mockedFetchPostDetail.mockResolvedValue({
+            ...makePostResponse(),
+            tag: '팀원모집',
+            recruitment: {
+                id: 7,
+                recruitment_type: 2,
+                status: 1,
+                status_display: '모집중',
+                max_members: 4,
+                accepted_count: 1,
+                deadline: '2026-12-31',
+                required_skills: ['Python'],
+                contact_info: 'open.kakao.com/test',
+                show_applicants: true,
+                is_owner: false,
+                has_applied: false,
+                my_application_status: null,
+            },
+        });
+
+        render(<PostDetail />);
+
+        expect(await screen.findByText('팀원모집')).toBeInTheDocument();
+        expect(screen.getByTestId('recruitment-section')).toHaveTextContent('모집중 (4)');
+    });
 });
+

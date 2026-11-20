@@ -451,11 +451,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
     
     const imageInputRef = React.useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        loadPopups();
-    }, [accessToken]);
-
-    const loadPopups = async () => {
+    const loadPopups = React.useCallback(async () => {
         setLoading(true);
         try {
             const data = await fetchAllPopups(accessToken);
@@ -466,7 +462,11 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [accessToken, showAlert]);
+
+    useEffect(() => {
+        loadPopups();
+    }, [loadPopups]);
 
     const resetForm = () => {
         setTitle("");
@@ -920,7 +920,7 @@ function Admin() {
             return;
         }
         setAuthorized(true);
-    }, [authReady, user, accessToken, navigate, signOutLocal, staffAuth]);
+    }, [authReady, user, accessToken, navigate, signOutLocal, staffAuth, showAlert]);
 
     const adminMenus = [
         { id: "dashboard", name: "대시보드" },

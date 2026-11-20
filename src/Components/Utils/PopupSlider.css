@@ -1,35 +1,37 @@
-/* 팝업 컨테이너 - 레이어 팝업 (화면 중앙, 내용에 맞게 확장) */
 .popup-container {
     position: fixed;
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    width: 320px;
-    max-height: 80vh;
+    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    color: var(--fgColor-default, #1f2328);
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.22));
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    max-height: 82vh;
     display: flex;
     flex-direction: column;
     z-index: 9999;
-    animation: popupFadeIn 0.3s ease-out;
-    border: 1px solid #e0e0e0;
+    animation: popupFadeIn 180ms ease-out;
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    overflow: hidden;
 }
 
-/* 팝업 헤더 */
 .popup-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 14px 18px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
     flex-shrink: 0;
 }
 
 .popup-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
     margin: 0;
     flex: 1;
 }
@@ -38,18 +40,18 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 4px;
-    display: flex;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #7f8c8d;
-    transition: all 0.2s ease-in-out;
-    border-radius: 4px;
+    color: var(--fgColor-muted, #59636e);
+    border-radius: var(--borderRadius-medium, 6px);
 }
 
 .popup-close-btn:hover {
-    background-color: #f4f6f9;
-    color: #2c3e50;
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
+    color: var(--fgColor-default, #1f2328);
 }
 
 .popup-close-btn:disabled {
@@ -57,7 +59,6 @@
     cursor: not-allowed;
 }
 
-/* 팝업 내용 */
 .popup-content {
     flex: 1;
     overflow-y: auto;
@@ -66,131 +67,116 @@
     min-height: 0;
 }
 
-/* 팝업 이미지 */
 .popup-image {
     width: 100%;
-    max-height: 280px;
+    max-height: 260px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     overflow: hidden;
+    background-color: var(--bgColor-inset, #f6f8fa);
 }
 
 .popup-image img {
     max-width: 100%;
-    max-height: 280px;
+    max-height: 260px;
     width: auto;
     height: auto;
     display: block;
     object-fit: contain;
 }
 
-/* 팝업 텍스트 */
 .popup-text {
-    padding: 20px 24px;
-    line-height: 1.7;
-    color: #34495e;
-    font-size: 15px;
+    padding: 16px 18px;
+    line-height: 1.65;
+    color: var(--fgColor-default, #1f2328);
+    font-size: 14px;
 }
 
 .popup-text p {
-    margin: 0 0 12px 0;
+    margin: 0 0 10px 0;
 }
 
 .popup-text p:last-child {
     margin-bottom: 0;
 }
 
-/* 게시글 제목 */
 .popup-post-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    margin: 0 0 10px;
     word-break: break-word;
 }
 
-/* 글 내용 로딩 */
 .popup-content-loading {
     margin: 0;
     font-size: 13px;
-    color: #7f8c8d;
+    color: var(--fgColor-muted, #59636e);
 }
 
-/* 글 본문 */
 .popup-post-body {
     font-size: 14px;
-    line-height: 1.7;
-    color: #34495e;
+    line-height: 1.65;
+    color: var(--fgColor-default, #1f2328);
 }
 
 .popup-post-body p {
     margin: 0 0 8px;
 }
 
-.popup-post-body p:last-child {
-    margin-bottom: 0;
-}
-
 .popup-post-body img {
     max-width: 100%;
-    border-radius: 4px;
+    border-radius: var(--borderRadius-medium, 6px);
 }
 
-/* 팝업 푸터 */
 .popup-footer {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid #e0e0e0;
+    gap: 10px;
+    padding: 14px 18px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-top: 1px solid var(--borderColor-default, #d1d9e0);
     flex-shrink: 0;
 }
 
 .popup-congrats-box {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
 }
 
 .popup-congrats-box input {
     width: 100%;
-    border: 1px solid #d0d7de;
-    border-radius: 6px;
-    padding: 8px 10px;
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--borderRadius-medium, 6px);
+    padding: 7px 10px;
     font-size: 14px;
-    color: #2c3e50;
-    outline: none;
-}
-
-.popup-congrats-box input:focus {
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    background-color: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-default, #1f2328);
 }
 
 .popup-congrats-error {
     margin: 0;
     font-size: 12px;
-    color: #dc2626;
-    line-height: 1.4;
+    color: var(--fgColor-danger, #d1242f);
 }
 
 .popup-congrats-submit-btn {
     width: 100%;
-    padding: 10px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 6px;
+    padding: 8px 14px;
+    background-color: var(--button-primary-bgColor-rest, #1f883d);
+    color: var(--button-primary-fgColor-rest, #ffffff);
+    border: 1px solid var(--button-primary-borderColor-rest, rgba(31, 35, 40, 0.15));
+    border-radius: var(--borderRadius-medium, 6px);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s ease-in-out;
 }
 
-.popup-congrats-submit-btn:hover {
-    background-color: #2980b9;
+.popup-congrats-submit-btn:hover:not(:disabled) {
+    background-color: var(--button-primary-bgColor-hover, #1c8139);
 }
 
 .popup-congrats-submit-btn:disabled {
@@ -202,38 +188,34 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .popup-nav-btn {
-    background: transparent;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    padding: 6px;
+    background-color: var(--bgColor-default, #ffffff);
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--borderRadius-medium, 6px);
+    padding: 5px;
     cursor: pointer;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #7f8c8d;
-    transition: all 0.2s ease-in-out;
+    color: var(--fgColor-muted, #59636e);
 }
 
 .popup-nav-btn:hover {
-    background-color: #3498db;
-    border-color: #3498db;
-    color: white;
-    transform: translateY(-1px);
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
+    color: var(--fgColor-default, #1f2328);
 }
 
 .popup-indicator {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    color: #7f8c8d;
-    min-width: 60px;
+    color: var(--fgColor-muted, #59636e);
+    min-width: 56px;
     text-align: center;
 }
 
-/* 애니메이션 - 페이드인 */
 @keyframes popupFadeIn {
     from {
         opacity: 0;
@@ -243,74 +225,4 @@
         opacity: 1;
         transform: translate(-50%, -50%);
     }
-}
-
-/* 모바일 반응형 */
-@media (max-width: 768px) {
-    .popup-container {
-        width: 90%;
-        max-width: 360px;
-        max-height: 85vh;
-        border-radius: 8px;
-    }
-
-    .popup-header {
-        padding: 16px 20px;
-    }
-
-    .popup-title {
-        font-size: 18px;
-    }
-
-    .popup-image {
-        max-height: 280px;
-    }
-
-    .popup-image img {
-        max-height: 280px;
-    }
-
-    .popup-text {
-        padding: 16px 20px;
-        font-size: 14px;
-    }
-
-    .popup-footer {
-        padding: 14px 20px;
-        gap: 10px;
-    }
-
-    .popup-congrats-box input {
-        font-size: 13px;
-        padding: 7px 9px;
-    }
-
-    .popup-congrats-submit-btn {
-        font-size: 13px;
-        padding: 9px;
-    }
-
-    .popup-indicator {
-        font-size: 13px;
-        min-width: 50px;
-    }
-}
-
-/* 스크롤바 스타일 */
-.popup-content::-webkit-scrollbar {
-    width: 6px;
-}
-
-.popup-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-.popup-content::-webkit-scrollbar-thumb {
-    background: #bdc3c7;
-    border-radius: 3px;
-}
-
-.popup-content::-webkit-scrollbar-thumb:hover {
-    background: #95a5a6;
 }

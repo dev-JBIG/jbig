@@ -1,116 +1,108 @@
-/* 댓글 영역 스타일 - PC & 모바일 개선 */
+/* 댓글 영역 스타일 - GitHub Primer */
 
-/* 댓글 섹션 전체 */
 .postdetail-comment-section {
-    margin-top: var(--space-3xl);
-    padding-top: var(--space-2xl);
-    border-top: 2px solid var(--color-border-light);
+    margin-top: var(--space-2xl);
+    padding-top: var(--space-xl);
+    border-top: 1px solid var(--borderColor-default, var(--color-border-light));
 }
 
-/* 댓글 헤더 */
 .postdetail-comment-header {
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-xl);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--fgColor-default, var(--color-text-primary));
+    margin-bottom: var(--space-md);
 }
 
-/* 댓글 목록 */
 .postdetail-comment-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 var(--space-2xl) 0;
+    margin: 0 0 var(--space-xl) 0;
 }
 
-/* 댓글 아이템 */
 .postdetail-comment-item {
-    padding: var(--space-lg) 0;
-    border-bottom: 1px solid var(--color-border-light);
+    padding: 14px 0;
+    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
 .comment-item {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: 6px;
     min-width: 0;
     width: 100%;
 }
 
-/* 댓글 메타 정보 */
 .comment-meta {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 .comment-author {
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-base);
-    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--fgColor-default, var(--color-text-primary));
     cursor: pointer;
     transition: color var(--transition-fast);
 }
 
 .comment-author:hover:not(.deleted) {
-    color: var(--color-primary);
+    color: var(--fgColor-accent, var(--color-primary));
+    text-decoration: underline;
 }
 
 .comment-author.deleted {
-    color: var(--color-text-tertiary);
+    color: var(--fgColor-muted, var(--color-text-tertiary));
     cursor: default;
 }
 
 .comment-date {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-tertiary);
+    font-size: 12px;
+    color: var(--fgColor-muted, var(--color-text-tertiary));
 }
 
-/* 답글쓰기 버튼 */
 .reply-write-btn {
-    font-size: var(--font-size-sm);
-    color: var(--color-primary);
-    font-weight: var(--font-weight-medium);
+    font-size: 12px;
+    color: var(--fgColor-accent, var(--color-primary));
+    font-weight: 500;
     cursor: pointer;
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
+    padding: 2px 8px;
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast);
 }
 
 .reply-write-btn:hover {
-    background-color: var(--color-bg-secondary);
-    color: var(--color-primary-hover);
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
 }
 
-/* 더보기 메뉴 */
 .more-wrapper {
     position: relative;
     margin-left: auto;
 }
 
 .more-btn {
-    padding: var(--space-xs) var(--space-sm);
-    background: none;
+    padding: 2px 8px;
+    background: transparent;
     border: none;
-    font-size: var(--font-size-xl);
-    color: var(--color-text-secondary);
+    font-size: 18px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
     cursor: pointer;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
+    border-radius: var(--radius-md);
     line-height: 1;
 }
 
 .more-btn:hover {
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    color: var(--fgColor-default, var(--color-text-primary));
 }
 
 .more-menu {
     position: absolute;
-    top: calc(100% + var(--space-xs));
+    top: calc(100% + 4px);
     right: 0;
-    background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-border-light);
+    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
     overflow: hidden;
@@ -119,27 +111,26 @@
 }
 
 .more-menu > div {
-    padding: var(--space-md);
+    padding: 8px 14px;
     cursor: pointer;
-    font-size: var(--font-size-sm);
-    color: var(--color-text-primary);
+    font-size: 13px;
+    color: var(--fgColor-default, var(--color-text-primary));
     transition: background-color var(--transition-fast);
 }
 
 .more-menu > div:hover {
-    background-color: var(--color-bg-secondary);
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
 }
 
 .more-menu > div:not(:last-child) {
-    border-bottom: 1px solid var(--color-border-light);
+    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
-/* 댓글 내용 */
 .postdetail-comment-section .comment-content {
-    font-size: var(--font-size-base);
-    line-height: 2;
-    color: var(--color-text-primary);
-    padding: var(--space-sm) 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--fgColor-default, var(--color-text-primary));
+    padding: 4px 0;
     word-break: break-word;
     overflow-wrap: break-word;
     white-space: pre-line !important;
@@ -150,72 +141,72 @@
 }
 
 .postdetail-comment-section .comment-content.deleted {
-    color: var(--color-text-tertiary);
+    color: var(--fgColor-muted, var(--color-text-tertiary));
     font-style: italic;
 }
 
-/* 댓글 좋아요 */
 .comment-like-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: var(--space-xs) var(--space-sm);
-    background: none;
-    border: none;
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
+    padding: 2px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .comment-like-btn:hover {
-    background-color: var(--color-bg-secondary);
-    color: var(--color-text-primary);
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    color: var(--fgColor-default, var(--color-text-primary));
 }
 
 .comment-like-btn.liked {
-    color: #e0245e;
+    color: var(--fgColor-danger, #cf222e);
 }
 
 .comment-like-count {
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+    font-size: 12px;
+    font-weight: 500;
 }
 
-/* 댓글 편집 */
 .comment-edit-box {
-    margin-top: var(--space-sm);
+    margin-top: 6px;
 }
 
 .comment-edit-box textarea {
     width: 100%;
-    padding: var(--space-md);
-    border: 1px solid var(--color-border-medium);
+    padding: 10px 12px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
-    line-height: var(--line-height-normal);
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
+    font-size: 14px;
+    line-height: 1.5;
     font-family: inherit;
     resize: vertical;
-    min-height: 80px;
-    transition: border-color var(--transition-fast);
+    min-height: 76px;
 }
 
 .comment-edit-box textarea:focus {
     outline: none;
-    border-color: var(--color-primary);
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
 }
 
-/* 답글 목록 */
 .reply-list {
     list-style: none;
-    padding: 0;
-    margin: var(--space-md) 0 0 var(--space-2xl);
+    padding: 0 0 0 16px;
+    margin: 10px 0 0 12px;
+    border-left: 2px solid var(--borderColor-muted, var(--color-border-light));
 }
 
 .reply-item {
-    padding: var(--space-md) 0;
-    border-bottom: 1px solid var(--color-border-light);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
 .reply-item:last-child {
@@ -225,37 +216,37 @@
 .reply-meta {
     display: flex;
     align-items: center;
-    gap: var(--space-md);
+    gap: 8px;
     flex-wrap: wrap;
-    margin-bottom: var(--space-sm);
+    margin-bottom: 4px;
 }
 
 .reply-author {
-    font-weight: var(--font-weight-medium);
-    font-size: var(--font-size-sm);
-    color: var(--color-text-primary);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--fgColor-default, var(--color-text-primary));
     cursor: pointer;
-    transition: color var(--transition-fast);
 }
 
 .reply-author:hover:not(.deleted) {
-    color: var(--color-primary);
+    color: var(--fgColor-accent, var(--color-primary));
+    text-decoration: underline;
 }
 
 .reply-author.deleted {
-    color: var(--color-text-tertiary);
+    color: var(--fgColor-muted, var(--color-text-tertiary));
     cursor: default;
 }
 
 .reply-date {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-tertiary);
+    font-size: 12px;
+    color: var(--fgColor-muted, var(--color-text-tertiary));
 }
 
 .reply-content {
-    font-size: var(--font-size-sm);
-    line-height: 2;
-    color: var(--color-text-primary);
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--fgColor-default, var(--color-text-primary));
     word-break: break-word;
     overflow-wrap: break-word;
     white-space: pre-line;
@@ -265,214 +256,159 @@
 }
 
 .reply-content.deleted {
-    color: var(--color-text-tertiary);
+    color: var(--fgColor-muted, var(--color-text-tertiary));
     font-style: italic;
 }
 
-/* 답글 입력창 */
 .reply-input-box {
-    margin: var(--space-lg) 0 0 var(--space-2xl);
-    padding: var(--space-md);
-    background-color: var(--color-bg-secondary);
+    margin: 10px 0 0 24px;
+    padding: 12px;
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
     border-radius: var(--radius-md);
-    border: 1px solid var(--color-border-light);
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
 }
 
 .reply-input {
     width: 100%;
-    padding: var(--space-md);
-    border: 1px solid var(--color-border-medium);
+    padding: 8px 12px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
-    line-height: var(--line-height-normal);
+    font-size: 14px;
+    line-height: 1.5;
     font-family: inherit;
-    background-color: var(--color-bg-primary);
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
     min-height: 60px;
-    transition: border-color var(--transition-fast);
 }
 
 .reply-input:focus {
     outline: none;
-    border-color: var(--color-primary);
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
 }
 
 .reply-action-row {
     display: flex;
     justify-content: flex-end;
-    gap: var(--space-md);
-    margin-top: var(--space-sm);
+    gap: 8px;
+    margin-top: 8px;
 }
 
 .reply-cancel-text,
 .reply-register-text {
-    padding: var(--space-sm) var(--space-lg);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-semibold);
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
     border-radius: var(--radius-md);
-    transition: all var(--transition-fast);
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .reply-cancel-text {
-    color: var(--color-text-secondary);
+    color: var(--fgColor-default, var(--color-text-primary));
+    background: var(--bgColor-default, var(--color-bg-primary));
 }
 
 .reply-cancel-text:hover {
-    background-color: var(--color-bg-tertiary);
-    color: var(--color-text-primary);
+    background-color: var(--bgColor-muted, var(--color-bg-tertiary));
 }
 
 .reply-register-text {
-    color: var(--color-text-tertiary);
+    color: var(--fgColor-muted, var(--color-text-tertiary));
+    background: var(--bgColor-muted, var(--color-bg-secondary));
     cursor: not-allowed;
 }
 
 .reply-register-text.active {
-    color: var(--color-primary);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    background-color: var(--bgColor-accent-emphasis, var(--color-primary));
+    border-color: var(--bgColor-accent-emphasis, var(--color-primary));
     cursor: pointer;
 }
 
 .reply-register-text.active:hover {
-    background-color: var(--color-primary);
-    color: var(--color-text-inverse);
+    filter: brightness(0.95);
 }
 
 /* 댓글 입력 영역 */
 .postdetail-comment-input-row {
     display: flex;
-    gap: var(--space-md);
+    gap: 10px;
     align-items: flex-end;
-    padding: var(--space-lg);
-    background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-border-light);
+    padding: 14px;
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    border-radius: var(--radius-md);
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
 }
 
 .postdetail-comment-input {
     flex: 1;
-    padding: var(--space-md);
-    border: 1px solid var(--color-border-medium);
+    padding: 10px 12px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
-    line-height: var(--line-height-normal);
+    font-size: 14px;
+    line-height: 1.5;
     font-family: inherit;
-    background-color: var(--color-bg-primary);
-    min-height: 80px;
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
+    min-height: 76px;
     max-height: 200px;
-    transition: border-color var(--transition-fast);
 }
 
 .postdetail-comment-input:focus {
     outline: none;
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
 }
 
 .postdetail-comment-btn {
-    padding: var(--space-md) var(--space-2xl);
-    background-color: var(--color-primary);
-    color: var(--color-text-inverse);
-    border: none;
+    padding: 8px 18px;
+    background-color: var(--bgColor-accent-emphasis, var(--color-primary));
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border: 1px solid rgba(31, 35, 40, 0.15);
     border-radius: var(--radius-md);
-    font-size: var(--font-size-base);
-    font-weight: var(--font-weight-semibold);
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition-fast);
     white-space: nowrap;
-    min-height: 48px;
+    min-height: 40px;
+    transition: filter var(--transition-fast);
 }
 
 .postdetail-comment-btn:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    filter: brightness(0.95);
 }
 
 .postdetail-comment-btn:disabled {
-    background-color: var(--color-border-medium);
-    color: var(--color-text-tertiary);
+    background-color: var(--bgColor-disabled, var(--color-border-medium));
+    color: var(--fgColor-disabled, var(--color-text-tertiary));
     cursor: not-allowed;
-    opacity: 0.6;
+    opacity: 0.65;
 }
 
-/* 모바일 스타일 */
 @media (max-width: 767px) {
     .postdetail-comment-section {
-        margin-top: var(--space-2xl);
-        padding-top: var(--space-xl);
-    }
-
-    .postdetail-comment-header {
-        font-size: var(--font-size-lg);
-        margin-bottom: var(--space-lg);
-    }
-
-    .postdetail-comment-item {
-        padding: var(--space-md) 0;
-    }
-
-    .comment-meta {
-        font-size: var(--font-size-sm);
-    }
-
-    .comment-author {
-        font-size: var(--font-size-sm);
-    }
-
-    .postdetail-comment-section .comment-content {
-        font-size: var(--font-size-sm);
+        margin-top: var(--space-xl);
+        padding-top: var(--space-lg);
     }
 
     .reply-list {
-        margin-left: var(--space-lg);
+        margin-left: 8px;
+        padding-left: 12px;
     }
 
     .reply-input-box {
-        margin-left: var(--space-lg);
+        margin-left: 12px;
     }
 
     .postdetail-comment-input-row {
         flex-direction: column;
         align-items: stretch;
-        padding: var(--space-md);
-    }
-
-    .postdetail-comment-input {
-        min-height: 100px;
+        padding: 12px;
     }
 
     .postdetail-comment-btn {
         width: 100%;
-        padding: var(--space-lg);
-        font-size: var(--font-size-lg);
-    }
-
-    .reply-action-row {
-        gap: var(--space-sm);
-    }
-
-    .reply-cancel-text,
-    .reply-register-text {
-        padding: var(--space-md) var(--space-lg);
-        font-size: var(--font-size-base);
-    }
-
-    .more-wrapper {
-        position: static;
-    }
-
-    .more-menu {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        top: auto;
-        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-        box-shadow: var(--shadow-xl);
-    }
-
-    .more-menu > div {
-        padding: var(--space-lg);
-        font-size: var(--font-size-base);
     }
 }

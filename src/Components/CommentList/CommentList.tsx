@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { Spinner } from "@primer/react";
 import { fetchUserComments } from "../../API/req";
 import { UserComment } from "../Utils/interfaces";
 import { useUser } from "../Utils/UserContext";
-import "./CommentList.css"
+import "./CommentList.css";
 
 interface CommentListProps {
     userId: string;
@@ -65,8 +66,12 @@ const CommentList: React.FC<CommentListProps> = ({ userId }) => {
                     </div>
                 );
             })}
-            {loading && <div style={{textAlign: "center", padding: "12px"}}>...</div>}
-            {!hasMore && <div style={{ textAlign: "center", padding: "12px" }}>모든 댓글을 불러왔습니다.</div>}
+            {loading && (
+                <div className="loading" role="status" aria-label="댓글 불러오는 중">
+                    <Spinner size="small" />
+                </div>
+            )}
+            {!hasMore && <div className="end">모든 댓글을 불러왔습니다.</div>}
         </div>
     );
 };

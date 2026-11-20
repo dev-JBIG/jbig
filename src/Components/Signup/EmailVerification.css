@@ -1,3 +1,5 @@
+/* GitHub Primer styled EmailVerification */
+
 .email-verification {
     overflow-wrap: anywhere;
 }
@@ -7,19 +9,25 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--space-md);
+    font-size: 13px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
 }
 
 .verification-expiring {
-    color: #c62828;
+    color: var(--fgColor-danger, #cf222e);
+    font-weight: 600;
 }
 
 .verification-resend {
     flex-shrink: 0;
     background: none;
     border: none;
-    color: var(--color-primary);
+    color: var(--fgColor-accent, var(--color-primary));
     cursor: pointer;
     text-decoration: underline;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0;
 }
 
 .email-verification button:disabled {

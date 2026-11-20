@@ -2,18 +2,19 @@ import React, { useEffect, useState, useCallback, useRef } from "react";
 import { NotionRenderer } from "react-notion-x";
 import { ExtendedRecordMap } from "notion-types";
 import { useNavigate } from "react-router-dom";
+import { Button, Spinner } from "@primer/react";
 import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
+import { useColorMode } from "../Utils/ThemeContext";
 import { fetchSiteSettings, fetchNotionPage as fetchNotionPageAPI } from "../../API/req";
-import { Code } from 'react-notion-x/build/third-party/code'
-import { Collection } from 'react-notion-x/build/third-party/collection'
-import { Equation } from 'react-notion-x/build/third-party/equation'
+import { Code } from 'react-notion-x/build/third-party/code';
+import { Collection } from 'react-notion-x/build/third-party/collection';
+import { Equation } from 'react-notion-x/build/third-party/equation';
 
 import "react-notion-x/src/styles.css";
-import Prism from "prismjs";
+import "prismjs";
 import "prismjs/components/prism-python";
 import "prismjs/components/prism-sql";
-
 
 import "./Note.css";
 
@@ -36,6 +37,7 @@ async function fetchNotionPage(pageId: string, accessToken: string): Promise<Ext
 const Note: React.FC = () => {
     const { user, authReady, accessToken } = useUser();
     const { showAlert } = useAlert();
+    const { resolvedColorMode } = useColorMode();
     const navigate = useNavigate();
     const [recordMap, setRecordMap] = useState<ExtendedRecordMap | null>(null);
     const [loading, setLoading] = useState(true);
@@ -103,7 +105,7 @@ const Note: React.FC = () => {
             }
         };
         init();
-    }, [authReady, user, accessToken, navigate, loadPage]);
+    }, [authReady, user, accessToken, navigate, loadPage, showAlert]);
 
     useEffect(() => {
         const onPopState = (e: PopStateEvent) => {
@@ -151,8 +153,8 @@ const Note: React.FC = () => {
                 <div className="note-header">
                     <a href="/" className="note-logo">JBIG</a>
                 </div>
-                <div className="note-loading">
-                    <div className="loading-spinner"></div>
+                <div className="note-loading" role="status">
+                    <Spinner size="medium" />
                     <p>로딩 중...</p>
                 </div>
             </div>
@@ -164,11 +166,11 @@ const Note: React.FC = () => {
             <div className="note-wrapper">
                 <div className="note-header">
                     <a href="/" className="note-logo">JBIG</a>
-                    <button className="refresh-button" onClick={() => window.location.reload()}>
+                    <Button variant="primary" size="small" onClick={() => window.location.reload()}>
                         다시 시도
-                    </button>
+                    </Button>
                 </div>
-                <div className="note-error">
+                <div className="note-error" role="alert">
                     <p>{error}</p>
                 </div>
             </div>
@@ -179,19 +181,20 @@ const Note: React.FC = () => {
         <div className="note-wrapper">
             <div className="note-header">
                 <a href="/" className="note-logo">JBIG</a>
-                <button
-                    className="refresh-button"
+                <Button
+                    variant="default"
+                    size="small"
                     onClick={() => loadPage(defaultPageIdRef.current, true)}
                 >
                     홈으로
-                </button>
+                </Button>
             </div>
             <div className="note-content" onClick={handleContentClick}>
                 {recordMap && (
                     <NotionRenderer
                         recordMap={recordMap}
                         fullPage={true}
-                        darkMode={false}
+                        darkMode={resolvedColorMode === "dark"}
                         mapPageUrl={mapPageUrl}
                         components={{
                             Code,

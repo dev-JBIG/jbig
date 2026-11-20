@@ -250,10 +250,10 @@ export const fetchBoardPosts = async (
     token?: string
 ): Promise<{ posts: PostItem[]; totalPages: number; postPermission: boolean; postTypes?: Map<number, number> }> => {
     const url = isHome
-        ? `${BASE_URL}/api/posts/all`
+        ? `${BASE_URL}/api/posts/all/`
         : boardId
             ? `${BASE_URL}/api/boards/${boardId}/posts/`
-            : `${BASE_URL}/api/posts/all`;
+            : `${BASE_URL}/api/posts/all/`;
 
     const config: { params?: Record<string, unknown>; headers?: Record<string, string> } = isHome
         ? {}
@@ -678,6 +678,7 @@ export const modifyPost = async (
         attachment_paths: { path: string; name: string; }[];
         board_id?: number;
         is_anonymous?: boolean;
+        tag?: string;
     },
     token: string
 ) => {

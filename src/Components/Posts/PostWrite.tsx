@@ -8,11 +8,13 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { safeSanitizePlugin } from "../Utils/safeMarkdown";
-import {createPost, fetchPostDetail, modifyPost, uploadAttachment, deleteUploadedFile, fetchDraft, saveDraft, deleteDraft} from "../../API/req"
+import { Button } from '@primer/react';
+import {createPost, fetchPostDetail, modifyPost, updateRecruitment, uploadAttachment, deleteUploadedFile, fetchDraft, saveDraft, deleteDraft} from "../../API/req"
 import {Board, Section, UploadFile, RecruitmentFormData, FormType} from "../Utils/interfaces";
 import {useUser} from "../Utils/UserContext";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
+import { useColorMode } from "../Utils/ThemeContext";
 import AbsenceForm from "./AbsenceForm";
 import FeedbackForm from "./FeedbackForm";
 import StudyForm from "./StudyForm";
@@ -30,11 +32,42 @@ interface PostWriteProps {
     boards?: Section[];
 }
 
-// Presigned URL에서 파일 키 추출
-const extractKeyFromUrl = (url: string, fallback: string): string => {
+// CDN/Presigned/권한 게이트 URL에서 스토리지 파일 키를 손상 없이 추출
+export const extractKeyFromUrl = (url: string, fallback: string, explicitPath?: string): string => {
+    if (typeof explicitPath === "string" && explicitPath.trim()) {
+        return explicitPath.trim();
+    }
+    if (!url || typeof url !== "string") {
+        return fallback;
+    }
+    const trimmed = url.trim();
+    if (!trimmed) {
+        return fallback;
+    }
+    if (trimmed.startsWith("media-key://")) {
+        return trimmed.slice("media-key://".length) || fallback;
+    }
     try {
-        const urlObj = new URL(url);
-        return urlObj.pathname.substring(urlObj.pathname.indexOf('/', 1) + 1);
+        const base = typeof window !== "undefined" && window.location?.origin
+            ? window.location.origin
+            : "http://localhost";
+        const urlObj = new URL(trimmed, base);
+        const queryKey = urlObj.searchParams.get("path") || urlObj.searchParams.get("key");
+        if (queryKey && queryKey.trim()) {
+            return queryKey.trim();
+        }
+        const pathname = urlObj.pathname;
+        // CDN(https://cdn.jbig.co.kr/uploads/...)과 오브젝트 스토리지(/bucket/uploads/...) 모두 uploads/ 접두사 보존
+        const uploadsMatch = pathname.match(/(uploads\/.+)$/);
+        if (uploadsMatch) {
+            return uploadsMatch[1];
+        }
+        // 권한 게이트 백엔드 다운로드 URL(/api/...)은 첫 세그먼트를 자르지 않고 원형 유지
+        if (pathname.startsWith("/api/")) {
+            return trimmed;
+        }
+        const normalized = pathname.replace(/^\/+/, "");
+        return normalized || fallback;
     } catch {
         return fallback;
     }
@@ -88,6 +121,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
     const [showRealName, setShowRealName] = useState(false);
     const [selectedTag, setSelectedTag] = useState('');
     const [recruitmentData, setRecruitmentData] = useState<RecruitmentFormData | null>(null);
+    const [editLoadVersion, setEditLoadVersion] = useState(0);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const imageInputRef = useRef<HTMLInputElement>(null);
@@ -107,12 +141,23 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
     const { signOutLocal, accessToken, user } = useUser();
     const { staffAuth } = useStaffAuth();
     const { showAlert, showConfirm } = useAlert();
+    const { resolvedColorMode } = useColorMode();
 
     const BOARD_LIST = useMemo(() => boards.flatMap((sec) => sec.boards), [boards]);
-    const activeBoard = useMemo(
-        () => selectedBoard || BOARD_LIST.find((b) => b.id === Number(category)) || null,
-        [selectedBoard, BOARD_LIST, category]
-    );
+    const activeBoard = useMemo(() => {
+        const base = selectedBoard || BOARD_LIST.find((b) => b.id === Number(category)) || null;
+        if (!base) return null;
+        const fromList = BOARD_LIST.find((b) => b.id === base.id);
+        if (!fromList) return base;
+        return {
+            ...fromList,
+            ...base,
+            available_tags: base.available_tags?.length ? base.available_tags : fromList.available_tags,
+            read_permission: base.read_permission ?? fromList.read_permission,
+            board_type: base.board_type ?? fromList.board_type,
+            form_type: base.form_type ?? fromList.form_type,
+        };
+    }, [selectedBoard, BOARD_LIST, category]);
     const isPhotoBoard = !!(activeBoard && (activeBoard.board_type === 4 || activeBoard.name === "사진첩"));
 
     // 공개범위 안내: 수정 모드에서 activeBoard에 read_permission이 없을 수 있어 BOARD_LIST로 보완
@@ -161,8 +206,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         STUDY_BOARD_NAME_KEYWORDS.every((keyword) => activeBoard.name.includes(keyword));
 
     useEffect(() => {
-        if (isPhotoBoard && content.trim()) {
-            setContent("");
+        if (isPhotoBoard) {
+            setContent((prev) => (prev.trim() ? "" : prev));
         }
     }, [isPhotoBoard]);
 
@@ -230,9 +275,12 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
     // blob URL 정리
     useEffect(() => {
+        const imageUrlMap = imageUrlMapRef.current;
         return () => {
-            imageUrlMapRef.current.forEach(URL.revokeObjectURL);
-            imageUrlMapRef.current.clear();
+            if (typeof URL.revokeObjectURL === "function") {
+                imageUrlMap.forEach((url) => URL.revokeObjectURL(url));
+            }
+            imageUrlMap.clear();
         };
     }, []);
 
@@ -260,13 +308,13 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         }
     }, [activeBoard, staffAuth, navigate, showAlert]);
 
-    // URL에서 게시판 설정
+    // URL에서 게시판 설정 (수정 모드에서는 기존 게시글 로드 상태를 덮어쓰지 않음)
     useEffect(() => {
-        if (!category) return;
+        if (!category || isEdit) return;
         setSelectedBoard(BOARD_LIST.find((b) => b.id === Number(category)) || null);
         setSelectedTag(''); // 게시판 변경 시 태그 초기화
         setRecruitmentData(null);
-    }, [category, BOARD_LIST]);
+    }, [category, BOARD_LIST, isEdit]);
 
     // 자랑게시판에서는 태그/모집 상태 비활성화
     useEffect(() => {
@@ -297,7 +345,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     return;
                 }
 
-                const confirmed = await showConfirm({
+                await showConfirm({
                     message: "이전에 임시 저장된 글이 있습니다. 불러올까요?",
                     title: "임시 저장 글 불러오기",
                     type: 'info',
@@ -328,7 +376,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 console.error('[Draft] Draft fetch failed:', err);
             }
         })();
-    }, [canUseDraft, accessToken, isEdit, BOARD_LIST]);
+    }, [canUseDraft, accessToken, isEdit, BOARD_LIST, showConfirm]);
 
     // 초안 자동 저장 (2초 debounce, DB - 단일 버퍼)
     useEffect(() => {
@@ -381,32 +429,66 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
                 setTitle(src.title || "");
                 setContent(src.content_md || "");
+                setShowRealName(src.is_anonymous === false);
+                setSelectedTag(typeof src.tag === "string" ? src.tag : "");
+
+                if (src.recruitment) {
+                    setRecruitmentData({
+                        recruitment_type: src.recruitment.recruitment_type ?? 2,
+                        max_members: src.recruitment.max_members ?? 0,
+                        deadline: src.recruitment.deadline ? String(src.recruitment.deadline).slice(0, 10) : '',
+                        required_skills: Array.isArray(src.recruitment.required_skills) ? src.recruitment.required_skills : [],
+                        contact_info: src.recruitment.contact_info ?? '',
+                        show_applicants: !!src.recruitment.show_applicants,
+                    });
+                } else {
+                    setRecruitmentData(null);
+                }
 
                 const boardId = typeof src.board?.id === "number" ? src.board.id : Number(category);
                 const fullBoard = BOARD_LIST.find(b => b.id === boardId);
                 const boardName = src.board?.name || fullBoard?.name || "";
-                // board_type/form_type을 함께 채워야 수정 모드에서도 폼(사유서·피드백·사진첩)이 올바르게 뜬다.
+                // board_type/form_type/read_permission/available_tags를 함께 채워 수정 모드에서도 폼과 태그가 올바르게 뜬다.
                 setSelectedBoard({
                     id: boardId,
                     name: boardName,
                     board_type: src.board?.board_type ?? fullBoard?.board_type,
                     form_type: src.board?.form_type ?? fullBoard?.form_type,
-                    available_tags: fullBoard?.available_tags,
+                    read_permission: src.board?.read_permission ?? src.board?.read_scope ?? fullBoard?.read_permission,
+                    available_tags: src.board?.available_tags ?? fullBoard?.available_tags,
                 } as Board);
 
                 const attachmentPaths = Array.isArray(src.attachment_paths) ? src.attachment_paths : [];
+                const normalizedExisting = attachmentPaths.map((att: any, idx: number) => {
+                    if (typeof att === "string") {
+                        const filename = att.split("/").pop() || `file_${idx}`;
+                        return {
+                            filename,
+                            url: att,
+                            sizeBytes: undefined,
+                            path: extractKeyFromUrl(att, `error_${idx}`),
+                        };
+                    }
+                    const explicitPath = typeof att?.path === "string"
+                        ? att.path
+                        : typeof att?.key === "string"
+                            ? att.key
+                            : undefined;
+                    return {
+                        filename: att?.name || `file_${idx}`,
+                        url: att?.url || "",
+                        sizeBytes: att?.size,
+                        path: extractKeyFromUrl(att?.url || "", `error_${idx}`, explicitPath),
+                    };
+                });
 
-                setAttachments(attachmentPaths.map((item: { url: string; name: string }, idx: number) => ({
-                    path: extractKeyFromUrl(item.url, `error_${idx}`),
-                    name: item.name
+                setAttachments(normalizedExisting.map((att: { path: string; filename: string }) => ({
+                    path: att.path,
+                    name: att.filename,
                 })));
 
-                setExistingAttachments(attachmentPaths.map((att: { url: string; name: string; size?: number }, idx: number) => ({
-                    filename: att.name,
-                    url: att.url,
-                    sizeBytes: att.size,
-                    path: extractKeyFromUrl(att.url, `error_${idx}`)
-                })));
+                setExistingAttachments(normalizedExisting);
+                setEditLoadVersion(v => v + 1);
             } catch {
                 if (cancelled) return;
                 showAlert({
@@ -417,7 +499,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             }
         })();
         return () => { cancelled = true; };
-    }, [isEdit, postId, accessToken, user?.email, navigate, category, BOARD_LIST]);
+    }, [isEdit, postId, accessToken, user?.email, navigate, category, BOARD_LIST, showAlert]);
 
     // 첨부파일 업로드
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -585,8 +667,19 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 await modifyPost(postIdNumber, {
                     title, content_md: content, attachment_paths: attachments,
                     ...(activeBoard ? { board_id: activeBoard.id } : {}),
+                    ...(hasTags ? { tag: selectedTag } : {}),
                     is_anonymous: !showRealName,
                 }, accessToken);
+                if (isRecruitmentTag && recruitmentData) {
+                    await updateRecruitment(postIdNumber, {
+                        recruitment_type: recruitmentData.recruitment_type,
+                        max_members: recruitmentData.max_members,
+                        deadline: recruitmentData.deadline ? recruitmentData.deadline + 'T23:59:59+09:00' : null,
+                        required_skills: recruitmentData.required_skills,
+                        contact_info: recruitmentData.contact_info,
+                        show_applicants: recruitmentData.show_applicants,
+                    }, accessToken);
+                }
                 savedRef.current = true;
                 navigate(`/board/${activeBoard?.id ?? Number(category)}/${postIdNumber}`);
                 return;
@@ -701,18 +794,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             )}
 
             {boardVisibilityNotice && (
-                <div
-                    className="postwrite-visibility-notice"
-                    style={{
-                        fontSize: '12.5px',
-                        color: '#64748b',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '6px',
-                        padding: '7px 10px',
-                        marginTop: '-8px',
-                    }}
-                >
+                <div className="postwrite-visibility-notice">
                     {boardVisibilityNotice}
                 </div>
             )}
@@ -720,17 +802,15 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             {hasTags && (
                 <div className="postwrite-row">
                     <label>글 태그</label>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', flex: 1 }}>
+                    <div className="postwrite-tag-group">
                         <button type="button"
                             className={`pagination-btn ${selectedTag === '' ? 'active' : ''}`}
-                            style={{ fontSize: '13px', padding: '5px 12px' }}
                             onClick={() => { setSelectedTag(''); setRecruitmentData(null); }}>
                             일반
                         </button>
                         {boardTags.map(tag => (
                             <button key={tag} type="button"
                                 className={`pagination-btn ${selectedTag === tag ? 'active' : ''}`}
-                                style={{ fontSize: '13px', padding: '5px 12px' }}
                                 onClick={() => setSelectedTag(tag)}>
                                 {tag}
                             </button>
@@ -740,7 +820,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             )}
 
             <div className="postwrite-row">
-                <label style={{ fontWeight: 'bold' }}>제목</label>
+                <label className="postwrite-label-bold">제목</label>
                 <input className="postwrite-title-input" type="text" value={title} onChange={e => setTitle(e.target.value)}
                     maxLength={120} required
                     placeholder={
@@ -755,13 +835,14 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             </div>
 
             <div className="postwrite-row">
-                <label style={{ fontWeight: 'bold' }}>본문</label>
+                <label className="postwrite-label-bold">본문</label>
                 {isPhotoBoard ? (
                     <div className="postwrite-photo-hint">
                         사진첩은 제목과 사진만 등록됩니다. 본문은 작성되지 않습니다.
                     </div>
                 ) : isRecruitmentTag ? (
                     <RecruitmentForm
+                        key={isEdit ? `edit-${postId}-${editLoadVersion}` : 'create'}
                         setContent={setContent}
                         initialContent={content}
                         setRecruitmentData={setRecruitmentData}
@@ -775,9 +856,9 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     <StudyForm setContent={setContent} initialContent={content} />
                 ) : (
                     <div className="content-body" onPaste={handlePaste}>
-                        <MDEditor 
+                        <MDEditor
                             ref={editorRef}
-                            value={content} 
+                            value={content}
                             enableScroll={false} //스크롤 동기화 해제
                             onChange={(v, event) => {
                                 setContent(v || "");
@@ -819,7 +900,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                                     }
                                 },
                             }}
-                            data-color-mode="light" height={400} preview="edit"
+                            data-color-mode={resolvedColorMode} height={400} preview="edit"
                             previewOptions={{
                                 remarkPlugins: [remarkMath], rehypePlugins: [safeSanitizePlugin, rehypeKatex],
                                 components: {
@@ -847,15 +928,14 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             </div>
 
             <div className="postwrite-row">
-                <label style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <label className="postwrite-checkbox-label">
                     <input
                         type="checkbox"
                         checked={showRealName}
                         onChange={(e) => setShowRealName(e.target.checked)}
-                        style={{ width: 'auto', marginRight: '4px' }}
                     />
-                    비회원에게도 실명이 표시돼요
-                    <span style={{ fontSize: '0.85em', color: '#666', fontWeight: 'normal' }}>
+                    <span>비회원에게도 실명이 표시돼요</span>
+                    <span className="postwrite-checkbox-hint">
                         (체크 안 하면 회원에게만 실명이 보입니다)
                     </span>
                 </label>
@@ -865,14 +945,14 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 <div className="postwrite-row">
                     <label className="attachments-top">사진</label>
                     <div className="photo-upload-panel">
-                        <button
+                        <Button
                             type="button"
-                            className="photo-upload-button"
+                            variant="default"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={remainingSlots === 0}
                         >
                             사진 선택
-                        </button>
+                        </Button>
                         <input
                             type="file"
                             ref={fileInputRef}
@@ -914,26 +994,26 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         multiple
                         disabled={remainingSlots === 0}
                         onChange={handleFileChange}
-                        style={{marginBottom: 8}}
+                        className="postwrite-file-input"
                     />
                     <div className="postwrite-files">
                         {existingAttachments.filter(a => attachments.some(att => att.path === a.path)).map((a) => (
                             <div className="postwrite-file-preview" key={`ex-${a.path}`}>
                                 {isImageFileName(a.filename)
-                                    ? <img src={a.url} alt={a.filename} style={{width: 48, height: 48, objectFit: "cover", marginRight: 8}} />
-                                    : <span style={{marginRight: 8, fontSize: 24}}>📄</span>}
+                                    ? <img src={a.url} alt={a.filename} className="postwrite-file-thumb" />
+                                    : <span className="postwrite-file-icon" aria-hidden="true">📄</span>}
                                 <span className="file-name">{a.filename}</span>
                                 {a.sizeBytes && <span className="file-size">({formatBytes(a.sizeBytes)})</span>}
-                                <button type="button" onClick={() => handleRemoveExistingAttachment(a.path)} style={{marginLeft: 8}}>삭제</button>
+                                <Button type="button" size="small" variant="danger" onClick={() => handleRemoveExistingAttachment(a.path)}>삭제</Button>
                             </div>
                         ))}
                         {files.map((item, idx) => (
                             <div className="postwrite-file-preview" key={`new-${idx}`}>
-                                {item.url ? <img src={item.url} alt="미리보기" style={{width: 48, height: 48, objectFit: "cover", marginRight: 8}} />
-                                    : <span style={{marginRight: 8, fontSize: 24}}>📄</span>}
+                                {item.url ? <img src={item.url} alt="미리보기" className="postwrite-file-thumb" />
+                                    : <span className="postwrite-file-icon" aria-hidden="true">📄</span>}
                                 <span className="file-name">{item.file.name}</span>
                                 <span className="file-size">({(item.file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                                <button type="button" onClick={() => handleRemoveFile(idx)} style={{marginLeft: 8}}>삭제</button>
+                                <Button type="button" size="small" variant="danger" onClick={() => handleRemoveFile(idx)}>삭제</Button>
                             </div>
                         ))}
                     </div>
@@ -941,7 +1021,11 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 </div>
             )}
 
-            <button className="postwrite-submit" type="submit" disabled={submitting} aria-busy={submitting}>등록하기</button>
+            <div className="postwrite-submit-row">
+                <Button className="postwrite-submit" variant="primary" size="large" type="submit" disabled={submitting} aria-busy={submitting}>
+                    {isEdit ? "수정하기" : "등록하기"}
+                </Button>
+            </div>
         </form>
     );
 };

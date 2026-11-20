@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./ChangePWD.css";
 import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@primer/react";
 import { requestVerificationCode, verifyCode, resetPassword } from "../../API/req";
 import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
@@ -46,7 +47,7 @@ const ChangePWD: React.FC = () => {
         }, 1000);
 
         return () => clearInterval(intervalId);
-    }, [isCodeSent, isCodeVerified]);
+    }, [isCodeSent, isCodeVerified, showAlert]);
 
 
     // 1. 인증코드 요청 핸들러
@@ -165,9 +166,9 @@ const ChangePWD: React.FC = () => {
                             placeholder="예: jbig@jbnu.ac.kr"
                             disabled={isLoading}
                         />
-                        <button className="changepwd-button" type="submit" disabled={isLoading}>
+                        <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
                             {isLoading ? "전송 중..." : "인증코드 받기"}
-                        </button>
+                        </Button>
                     </form>
                 )}
 
@@ -187,14 +188,14 @@ const ChangePWD: React.FC = () => {
                                 placeholder="이메일로 받은 인증코드를 입력하세요"
                                 disabled={isLoading}
                             />
-                            <span className="changepwd-timer" style={{color: timer <= 60 ? "red" : "black"}}>
+                            <span className={`changepwd-timer${timer <= 60 ? " is-expiring" : ""}`}>
                                 {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
                             </span>
                         </div>
 
-                        <button className="changepwd-button" type="submit" disabled={isLoading}>
+                        <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
                             {isLoading ? "확인 중..." : "인증코드 확인"}
-                        </button>
+                        </Button>
                     </form>
                 )}
 
@@ -225,9 +226,9 @@ const ChangePWD: React.FC = () => {
                             placeholder="비밀번호를 다시 한번 입력하세요"
                             disabled={isLoading}
                         />
-                        <button className="changepwd-button" type="submit" disabled={isLoading}>
+                        <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
                             {isLoading ? "변경 중..." : "비밀번호 변경"}
-                        </button>
+                        </Button>
                     </form>
                 )}
 
