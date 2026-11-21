@@ -99,12 +99,22 @@ test('shows banner only on the home route and hides it on board routes', async (
     expect(screen.queryByRole('button', { name: '홈으로 이동' })).not.toBeInTheDocument();
 });
 
-test('toggles Primer color mode and closes user dropdown on Escape', async () => {
+test('switches Primer theme via popover and closes menus on Escape', async () => {
     renderHome();
-    const themeBtn = await screen.findByRole('button', { name: /모드로 전환/ });
-    const initialMode = document.documentElement.getAttribute('data-color-mode');
+    const themeBtn = await screen.findByRole('button', { name: /테마 선택/ });
     fireEvent.click(themeBtn);
-    expect(document.documentElement.getAttribute('data-color-mode')).not.toBe(initialMode);
+
+    const dimmedOption = screen.getByRole('menuitemradio', { name: /다크 딤드/ });
+    fireEvent.click(dimmedOption);
+    expect(document.documentElement.getAttribute('data-color-mode')).toBe('dark');
+    expect(document.documentElement.getAttribute('data-dark-theme')).toBe('dark_dimmed');
+
+    fireEvent.click(themeBtn);
+    const darkOption = screen.getByRole('menuitemradio', { name: /깊은 미드나잇 다크/ });
+    darkOption.focus();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('menu', { name: '테마 선택' })).not.toBeInTheDocument();
+    expect(themeBtn).toHaveFocus();
 
     const userMenuBtn = screen.getByRole('button', { name: /홍길동/ });
     fireEvent.click(userMenuBtn);

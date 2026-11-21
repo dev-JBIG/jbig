@@ -266,6 +266,49 @@ img {
   border-width: 0;
 }
 
+/* Primer Button 내 한글·아이콘 수직/수평 정중앙 보정 (baseline 드리프트 제거) */
+[data-component="buttonContent"] > [data-component="text"],
+[data-component="buttonContent"] > [data-component="leadingVisual"],
+[data-component="buttonContent"] > [data-component="trailingVisual"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* 다크 모드 공간 계층(Elevation) 보정: 플로팅 오버레이가 카드보다 한 단계 밝게 떠 보이도록 조정 */
+[data-color-mode="dark"][data-dark-theme="dark"] {
+  --overlay-bgColor: #161b22;
+  --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.45);
+  --shadow-md: 0 4px 14px rgba(1, 4, 9, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-lg: 0 10px 28px rgba(1, 4, 9, 0.64), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-xl: 0 16px 40px rgba(1, 4, 9, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+[data-color-mode="dark"][data-dark-theme="dark_dimmed"] {
+  --shadow-sm: 0 1px 0 rgba(12, 16, 22, 0.35);
+  --shadow-md: 0 4px 14px rgba(12, 16, 22, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-lg: 0 10px 28px rgba(12, 16, 22, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --shadow-xl: 0 16px 40px rgba(12, 16, 22, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-color-mode="auto"][data-dark-theme="dark"] {
+    --overlay-bgColor: #161b22;
+    --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.45);
+    --shadow-md: 0 4px 14px rgba(1, 4, 9, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --shadow-lg: 0 10px 28px rgba(1, 4, 9, 0.64), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-xl: 0 16px 40px rgba(1, 4, 9, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  [data-color-mode="auto"][data-dark-theme="dark_dimmed"] {
+    --shadow-sm: 0 1px 0 rgba(12, 16, 22, 0.35);
+    --shadow-md: 0 4px 14px rgba(12, 16, 22, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --shadow-lg: 0 10px 28px rgba(12, 16, 22, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-xl: 0 16px 40px rgba(12, 16, 22, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
 /* Primer 포커스 링 */
 :focus-visible {
   outline: 2px solid var(--focus-outlineColor, #0969da);

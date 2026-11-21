@@ -165,12 +165,7 @@
 .write-button {
     flex-shrink: 0;
     font-weight: 600;
-}
-
-.write-button-inner {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
+    padding-inline: 10px;
 }
 
 /* 페이지당 항목 수 선택 */

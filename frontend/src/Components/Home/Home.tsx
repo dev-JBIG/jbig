@@ -20,6 +20,9 @@ import {
     Bell,
     Sun,
     Moon,
+    Monitor,
+    Contrast,
+    Check,
     Search as SearchIcon,
     ChevronDown,
     User as UserIcon,
@@ -30,7 +33,7 @@ import {
 import { Button } from "@primer/react";
 import {CalendarEventCreate, Section} from "../Utils/interfaces";
 import { useUser } from "../Utils/UserContext";
-import { useColorMode } from "../Utils/ThemeContext";
+import { ThemePreference, useColorMode } from "../Utils/ThemeContext";
 import Calendar from "../Utils/Calendar/Calendar";
 import EventModal from "../Utils/Calendar/EventModal";
 import LoginModal from "../Utils/LoginModal";
@@ -120,18 +123,21 @@ const Home: React.FC = () => {
     const [initialEvent, setInitialEvent] = useState<any>(null);
     const [isLoginModalOpen, setLoginModalOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [themeMenuOpen, setThemeMenuOpen] = useState(false);
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [headerSearch, setHeaderSearch] = useState("");
     const { user, signOutLocal, authReady, accessToken, refreshToken } = useUser();
     const { staffAuth } = useStaffAuth();
     const { showAlert } = useAlert();
-    const { resolvedColorMode, toggleColorMode } = useColorMode();
+    const { resolvedTheme, themePreference, setThemePreference } = useColorMode();
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
+    const themeMenuRef = useRef<HTMLDivElement>(null);
     const userMenuBtnRef = useRef<HTMLButtonElement>(null);
     const notificationBtnRef = useRef<HTMLButtonElement>(null);
+    const themeBtnRef = useRef<HTMLButtonElement>(null);
     const headerSearchRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const location = useLocation();
@@ -289,12 +295,16 @@ const Home: React.FC = () => {
             if (notificationRef.current && !notificationRef.current.contains(e.target as Node)) {
                 setNotificationOpen(false);
             }
+            if (themeMenuRef.current && !themeMenuRef.current.contains(e.target as Node)) {
+                setThemeMenuOpen(false);
+            }
         };
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
                 const activeEl = document.activeElement;
                 const focusInUserMenu = Boolean(activeEl && dropdownRef.current?.contains(activeEl));
                 const focusInNotification = Boolean(activeEl && notificationRef.current?.contains(activeEl));
+                const focusInThemeMenu = Boolean(activeEl && themeMenuRef.current?.contains(activeEl));
                 if (menuOpen) {
                     setMenuOpen(false);
                     if (focusInUserMenu) {
@@ -305,6 +315,12 @@ const Home: React.FC = () => {
                     setNotificationOpen(false);
                     if (focusInNotification) {
                         notificationBtnRef.current?.focus();
+                    }
+                }
+                if (themeMenuOpen) {
+                    setThemeMenuOpen(false);
+                    if (focusInThemeMenu) {
+                        themeBtnRef.current?.focus();
                     }
                 }
                 return;
@@ -342,7 +358,7 @@ const Home: React.FC = () => {
             document.removeEventListener("mousedown", handleClickOutside);
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [isModalOpen, isLoginModalOpen, menuOpen, notificationOpen]);
+    }, [isModalOpen, isLoginModalOpen, menuOpen, notificationOpen, themeMenuOpen]);
 
     // 알림 개수 주기적으로 조회 (30초마다)
     useEffect(() => {
@@ -570,15 +586,68 @@ const Home: React.FC = () => {
                     </form>
 
                     <div className="header-right-section">
-                        <button
-                            type="button"
-                            className="theme-toggle-btn"
-                            onClick={toggleColorMode}
-                            aria-label={resolvedColorMode === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
-                            title={resolvedColorMode === "dark" ? "라이트 모드" : "다크 모드"}
-                        >
-                            {resolvedColorMode === "dark" ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
-                        </button>
+                        <div className="theme-menu-wrapper" ref={themeMenuRef}>
+                            <button
+                                ref={themeBtnRef}
+                                type="button"
+                                className="theme-toggle-btn"
+                                onClick={() => {
+                                    setThemeMenuOpen((prev) => !prev);
+                                    setMenuOpen(false);
+                                    setNotificationOpen(false);
+                                }}
+                                aria-label="테마 선택"
+                                aria-haspopup="menu"
+                                aria-expanded={themeMenuOpen}
+                                title="테마 선택 (시스템 / 라이트 / 다크 딤드 / 다크)"
+                            >
+                                {themePreference === "auto" ? (
+                                    <Monitor size={17} aria-hidden="true" />
+                                ) : resolvedTheme === "light" ? (
+                                    <Sun size={17} aria-hidden="true" />
+                                ) : resolvedTheme === "dark_dimmed" ? (
+                                    <Contrast size={17} aria-hidden="true" />
+                                ) : (
+                                    <Moon size={17} aria-hidden="true" />
+                                )}
+                            </button>
+                            {themeMenuOpen && (
+                                <div className="theme-dropdown" role="menu" aria-label="테마 선택">
+                                    <div className="theme-dropdown-header">화면 테마</div>
+                                    {(
+                                        [
+                                            { id: "auto", label: "시스템 설정", desc: "OS 설정 자동 추적", Icon: Monitor },
+                                            { id: "light", label: "라이트", desc: "밝은 화이트 톤", Icon: Sun },
+                                            { id: "dark_dimmed", label: "다크 딤드", desc: "눈이 편안한 슬레이트", Icon: Contrast },
+                                            { id: "dark", label: "다크", desc: "깊은 미드나잇 다크", Icon: Moon },
+                                        ] as { id: ThemePreference; label: string; desc: string; Icon: React.ComponentType<{ size?: number; "aria-hidden"?: boolean }> }[]
+                                    ).map(({ id, label, desc, Icon }) => {
+                                        const isActive = themePreference === id;
+                                        return (
+                                            <button
+                                                key={id}
+                                                type="button"
+                                                role="menuitemradio"
+                                                aria-checked={isActive}
+                                                className={`theme-option${isActive ? " is-active" : ""}`}
+                                                onClick={() => {
+                                                    setThemePreference(id);
+                                                    setThemeMenuOpen(false);
+                                                    themeBtnRef.current?.focus();
+                                                }}
+                                            >
+                                                <Icon size={15} aria-hidden={true} />
+                                                <span className="theme-option-copy">
+                                                    <span className="theme-option-label">{label}</span>
+                                                    <span className="theme-option-desc">{desc}</span>
+                                                </span>
+                                                {isActive && <Check size={14} className="theme-option-check" aria-hidden="true" />}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
 
                         {/* 알림 아이콘 */}
                         {isLogin && (
@@ -769,13 +838,11 @@ const Home: React.FC = () => {
                                     <Button
                                         size="small"
                                         variant="default"
+                                        leadingVisual={() => <Plus size={13} aria-hidden="true" />}
                                         onClick={handleAddEvent}
                                         className="add-event-btn-home"
                                     >
-                                        <span className="add-event-btn-inner">
-                                            <Plus size={13} aria-hidden="true" />
-                                            일정 추가
-                                        </span>
+                                        일정 추가
                                     </Button>
                                 ) : undefined}
                                 calendarSlot={<Calendar staffAuth={staffAuth} compact />}

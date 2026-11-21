@@ -2,6 +2,7 @@ import React from 'react';
 import MDEditor from '@uiw/react-md-editor';
 import { TextBlock } from '../../types';
 import { safeSanitizePlugin } from '../../../Utils/safeMarkdown';
+import { useColorMode } from '../../../Utils/ThemeContext';
 
 interface Props {
   block: TextBlock;
@@ -9,8 +10,10 @@ interface Props {
 }
 
 const TextBlockEditor: React.FC<Props> = ({ block, onChange }) => {
+  const { resolvedColorMode } = useColorMode();
+
   return (
-    <div className="block-editor block-text-editor" data-color-mode="light">
+    <div className="block-editor block-text-editor" data-color-mode={resolvedColorMode}>
       <MDEditor
         value={block.data.markdown}
         onChange={(val) => onChange({ ...block, data: { markdown: val || '' } })}

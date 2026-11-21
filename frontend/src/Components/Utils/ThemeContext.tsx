@@ -2,36 +2,55 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { BaseStyles, ThemeProvider } from "@primer/react";
 
 export type AppColorMode = "light" | "dark" | "auto";
+export type DarkThemeVariant = "dark_dimmed" | "dark";
+export type ThemePreference = "auto" | "light" | "dark_dimmed" | "dark";
 export type ResolvedColorMode = "light" | "dark";
+export type ResolvedTheme = "light" | "dark_dimmed" | "dark";
 
-const COLOR_MODE_STORAGE_KEY = "jbig-color-mode";
+export const COLOR_MODE_STORAGE_KEY = "jbig-color-mode";
+
+const HEADER_THEME_COLORS: Record<ResolvedTheme, string> = {
+    light: "#ffffff",
+    dark_dimmed: "#212830",
+    dark: "#0d1117",
+};
 
 interface ColorModeContextValue {
+    /** Primer data-color-mode 호환 값 ("light" | "dark" | "auto") */
     colorMode: AppColorMode;
+    /** 실제 적용 중인 밝기 모드 ("light" | "dark") */
     resolvedColorMode: ResolvedColorMode;
+    /** 사용자가 선택한 4단계 테마 선호 ("auto" | "light" | "dark_dimmed" | "dark") */
+    themePreference: ThemePreference;
+    /** 실제 적용 중인 최종 테마 ("light" | "dark_dimmed" | "dark") */
+    resolvedTheme: ResolvedTheme;
     setColorMode: (mode: AppColorMode) => void;
+    setThemePreference: (pref: ThemePreference) => void;
     toggleColorMode: () => void;
 }
 
 const defaultContextValue: ColorModeContextValue = {
-    colorMode: "light",
+    colorMode: "auto",
     resolvedColorMode: "light",
+    themePreference: "auto",
+    resolvedTheme: "light",
     setColorMode: () => {},
+    setThemePreference: () => {},
     toggleColorMode: () => {},
 };
 
 const ColorModeContext = createContext<ColorModeContextValue>(defaultContextValue);
 
-const readStoredColorMode = (): AppColorMode => {
+const readStoredThemePreference = (): ThemePreference => {
     try {
         const stored = localStorage.getItem(COLOR_MODE_STORAGE_KEY);
-        if (stored === "light" || stored === "dark" || stored === "auto") {
+        if (stored === "light" || stored === "dark" || stored === "dark_dimmed" || stored === "auto") {
             return stored;
         }
     } catch {
-        // 스토리지 접근 불가 환경에서는 기본값 사용
+        // 스토리지 접근 불가 환경에서는 시스템 기본값 사용
     }
-    return "light";
+    return "auto";
 };
 
 const getSystemColorMode = (): ResolvedColorMode => {
@@ -42,7 +61,7 @@ const getSystemColorMode = (): ResolvedColorMode => {
 };
 
 export const ColorModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [colorMode, setColorModeState] = useState<AppColorMode>(readStoredColorMode);
+    const [themePreference, setThemePreferenceState] = useState<ThemePreference>(readStoredThemePreference);
     const [systemMode, setSystemMode] = useState<ResolvedColorMode>(getSystemColorMode);
 
     useEffect(() => {
@@ -58,37 +77,61 @@ export const ColorModeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return undefined;
     }, []);
 
+    const colorMode: AppColorMode = themePreference === "dark_dimmed" ? "dark" : themePreference;
+    const darkTheme: DarkThemeVariant = themePreference === "dark" ? "dark" : "dark_dimmed";
     const resolvedColorMode: ResolvedColorMode = colorMode === "auto" ? systemMode : colorMode;
+    const resolvedTheme: ResolvedTheme = resolvedColorMode === "dark" ? darkTheme : "light";
 
     useEffect(() => {
         const root = document.documentElement;
         root.setAttribute("data-color-mode", colorMode);
         root.setAttribute("data-light-theme", "light");
-        root.setAttribute("data-dark-theme", "dark");
+        root.setAttribute("data-dark-theme", darkTheme);
         root.style.colorScheme = resolvedColorMode;
-    }, [colorMode, resolvedColorMode]);
 
-    const setColorMode = useCallback((mode: AppColorMode) => {
-        setColorModeState(mode);
+        const themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+        if (themeColorMeta) {
+            themeColorMeta.setAttribute("content", HEADER_THEME_COLORS[resolvedTheme]);
+        }
+    }, [colorMode, darkTheme, resolvedColorMode, resolvedTheme]);
+
+    const setThemePreference = useCallback((pref: ThemePreference) => {
+        setThemePreferenceState(pref);
         try {
-            localStorage.setItem(COLOR_MODE_STORAGE_KEY, mode);
+            localStorage.setItem(COLOR_MODE_STORAGE_KEY, pref);
         } catch {
             // 스토리지 저장 실패 무시
         }
     }, []);
 
+    const setColorMode = useCallback((mode: AppColorMode) => {
+        if (mode === "dark") {
+            setThemePreference("dark_dimmed");
+            return;
+        }
+        setThemePreference(mode);
+    }, [setThemePreference]);
+
     const toggleColorMode = useCallback(() => {
-        setColorMode(resolvedColorMode === "dark" ? "light" : "dark");
-    }, [resolvedColorMode, setColorMode]);
+        setThemePreference(resolvedColorMode === "dark" ? "light" : "dark_dimmed");
+    }, [resolvedColorMode, setThemePreference]);
 
     const value = useMemo(
-        () => ({ colorMode, resolvedColorMode, setColorMode, toggleColorMode }),
-        [colorMode, resolvedColorMode, setColorMode, toggleColorMode]
+        () => ({
+            colorMode,
+            resolvedColorMode,
+            themePreference,
+            resolvedTheme,
+            setColorMode,
+            setThemePreference,
+            toggleColorMode,
+        }),
+        [colorMode, resolvedColorMode, themePreference, resolvedTheme, setColorMode, setThemePreference, toggleColorMode]
     );
 
     return (
         <ColorModeContext.Provider value={value}>
-            <ThemeProvider colorMode={colorMode} dayScheme="light" nightScheme="dark">
+            <ThemeProvider colorMode={colorMode} dayScheme="light" nightScheme={darkTheme}>
                 <BaseStyles>{children}</BaseStyles>
             </ThemeProvider>
         </ColorModeContext.Provider>

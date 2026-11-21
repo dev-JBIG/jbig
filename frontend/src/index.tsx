@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import '@primer/primitives/dist/css/primitives.css';
 import '@primer/primitives/dist/css/functional/themes/light.css';
 import '@primer/primitives/dist/css/functional/themes/dark.css';
+import '@primer/primitives/dist/css/functional/themes/dark-dimmed.css';
 import './index.css';
 import './Components/global-adaptive.css';
 import App from './App';
