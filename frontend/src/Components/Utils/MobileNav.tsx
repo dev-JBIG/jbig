@@ -4,7 +4,7 @@ import { Button, CounterLabel } from "@primer/react";
 import { Menu, X, FileText, SquareCheckBig, Lock } from "lucide-react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faDiscord, faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faDiscord, faGithub, faInstagram } from '@fortawesome/free-brands-svg-icons';
 import { Section, Board } from "./interfaces";
 import { getBoardIcon } from "./boardIcons";
 import { useUser } from "./UserContext";
@@ -226,13 +226,24 @@ const MobileNav: React.FC<MobileNavProps> = ({
 
               <div className="mobile-nav-external-links">
                 <a
+                  href="https://www.instagram.com/jbig.jbnu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sidebar-external-link"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <FontAwesomeIcon icon={faInstagram as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                  <span>JBIG 인스타그램</span>
+                </a>
+
+                <a
                   href="https://discord.gg/knpBCvvfGa"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="sidebar-external-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" />
+                  <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
                   <span>비밀 게임 소모임</span>
                 </a>
 
@@ -243,7 +254,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   className="sidebar-external-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" />
+                  <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
                   <span>BigTech AI News</span>
                 </a>
               </div>
