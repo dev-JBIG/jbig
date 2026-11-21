@@ -179,12 +179,11 @@ ${reportType === '에러' ? `| **재현 방법** | ${reproductionStepsWithBreaks
         <textarea
           id="description"
           name="description"
-          className="postwrite-title-input"
+          className="postwrite-title-input postwrite-textarea-md"
           rows={6}
           placeholder="에러나 피드백에 대한 상세한 내용을 입력하세요."
           value={formState.description}
           onChange={handleChange}
-          style={{ height: '120px', resize: 'vertical' }}
         />
       </div>
 
@@ -197,12 +196,11 @@ ${reportType === '에러' ? `| **재현 방법** | ${reproductionStepsWithBreaks
             <textarea
               id="reproductionSteps"
               name="reproductionSteps"
-              className="postwrite-title-input"
+              className="postwrite-title-input postwrite-textarea-sm"
               rows={4}
               placeholder="에러를 재현하는 단계를 입력하세요. (예: 1. 로그인 2. 게시판 클릭 3. 글 작성 버튼 클릭)"
               value={formState.reproductionSteps}
               onChange={handleChange}
-              style={{ height: '100px', resize: 'vertical' }}
             />
           </div>
 
@@ -212,12 +210,11 @@ ${reportType === '에러' ? `| **재현 방법** | ${reproductionStepsWithBreaks
             <textarea
               id="expectedBehavior"
               name="expectedBehavior"
-              className="postwrite-title-input"
+              className="postwrite-title-input postwrite-textarea-sm"
               rows={4}
               placeholder="정상적으로 동작했을 때 예상되는 결과를 입력하세요."
               value={formState.expectedBehavior}
               onChange={handleChange}
-              style={{ height: '100px', resize: 'vertical' }}
             />
           </div>
         </>

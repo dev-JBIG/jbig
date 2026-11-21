@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button, CounterLabel, Label } from "@primer/react";
 import "../Home/Home.css";
 import { SidebarProps, Board } from "./interfaces";
@@ -50,17 +50,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         (requiresLogin(board) && !accessToken) ||
         (board.read_permission === 'staff' && !(user?.is_staff));
 
-    const handleBoardClick = (board: Board) => {
+    const handleBoardClick = (e: React.MouseEvent<HTMLAnchorElement>, board: Board) => {
         if (requiresLogin(board) && !accessToken) {
+            e.preventDefault();
             showAlert({ message: '회원 전용 게시판입니다. 로그인 후 이용해주세요.', type: 'warning' });
             navigate("/signin");
             return;
         }
         if (board.read_permission === 'staff' && !(user?.is_staff)) {
+            e.preventDefault();
             showAlert({ message: '스태프 전용 게시판입니다.', type: 'warning' });
-            return;
         }
-        navigate(`/board/${board.id}`);
     };
 
     return (
@@ -80,25 +80,32 @@ const Sidebar: React.FC<SidebarProps> = ({
                 )}
                 <MemberQuickLinks isLogin={isLogin} />
                 <ul className="menu">
-                    <li
-                        className={`menu-item-viewall${activeBoardId === 0 ? " is-active" : ""}`}
-                        onClick={() => navigate("/board/0")}
-                    >
-                        <div className="board-item-content">
-                            <FileText size={16} className="board-icon" aria-hidden="true" />
-                            <span>전체 글 보기</span>
-                        </div>
-                        <CounterLabel>{totalCount.toLocaleString()}</CounterLabel>
+                    <li>
+                        <Link
+                            to="/board/0"
+                            className={`sidebar-nav-btn${activeBoardId === 0 ? " is-active" : ""}`}
+                            aria-current={activeBoardId === 0 ? "page" : undefined}
+                        >
+                            <span className="board-item-content">
+                                <FileText size={16} className="board-icon" aria-hidden="true" />
+                                <span>전체 글 보기</span>
+                            </span>
+                            <CounterLabel>{totalCount.toLocaleString()}</CounterLabel>
+                        </Link>
                     </li>
                     {quizURL && quizURL.trim() !== "" && (
-                        <li
-                            className="menu-item-viewall"
-                            onClick={() => window.open(quizURL, "_blank", "noopener,noreferrer")}
-                        >
-                            <div className="board-item-content">
-                                <SquareCheckBig size={16} className="board-icon" aria-hidden="true" />
-                                <span>이번 주 퀴즈</span>
-                            </div>
+                        <li>
+                            <a
+                                href={quizURL}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="sidebar-nav-btn"
+                            >
+                                <span className="board-item-content">
+                                    <SquareCheckBig size={16} className="board-icon" aria-hidden="true" />
+                                    <span>이번 주 퀴즈</span>
+                                </span>
+                            </a>
                         </li>
                     )}
                 </ul>
@@ -116,21 +123,24 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 const locked = isBoardLocked(board);
                                 const isActive = activeBoardId === board.id;
                                 return (
-                                    <li
-                                        key={board.id}
-                                        className={isActive ? "is-active" : undefined}
-                                        onClick={() => handleBoardClick(board)}
-                                    >
-                                        <div className="board-item-content">
-                                            <IconComponent className="board-icon" size={16} aria-hidden="true" />
-                                            <span>{board.name}</span>
-                                            {locked && (
-                                                <Lock size={13} className="board-lock-icon" aria-hidden="true" />
+                                    <li key={board.id}>
+                                        <Link
+                                            to={`/board/${board.id}`}
+                                            className={`sidebar-nav-btn${isActive ? " is-active" : ""}`}
+                                            aria-current={isActive ? "page" : undefined}
+                                            onClick={(e) => handleBoardClick(e, board)}
+                                        >
+                                            <span className="board-item-content">
+                                                <IconComponent className="board-icon" size={16} aria-hidden="true" />
+                                                <span>{board.name}</span>
+                                                {locked && (
+                                                    <Lock size={13} className="board-lock-icon" aria-hidden="true" />
+                                                )}
+                                            </span>
+                                            {hasNewPost && (
+                                                <Label variant="danger" size="small" className="sidebar-new-badge">N</Label>
                                             )}
-                                        </div>
-                                        {hasNewPost && (
-                                            <Label variant="danger" size="small" className="sidebar-new-badge">N</Label>
-                                        )}
+                                        </Link>
                                     </li>
                                 );
                             })}

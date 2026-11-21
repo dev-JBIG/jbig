@@ -12,7 +12,7 @@ const IdentityBlockEditor: React.FC<Props> = ({ block, onChange }) => {
 
   return (
     <div className="block-editor block-identity-editor">
-      <div style={{ fontSize: '0.8em', color: '#64748b', marginBottom: 8 }}>
+      <div style={{ fontSize: '0.8em', color: 'var(--fgColor-muted, #59636e)', marginBottom: 8 }}>
         이 블록의 내용은 본문이 아닌 페이지 상단 헤더에 표시됩니다.
       </div>
       <input

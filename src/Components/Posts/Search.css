@@ -1,7 +1,7 @@
 /* GitHub Primer styled Search */
 
 .search-container {
-    padding-top: 8px;
+    padding-top: 0;
 }
 
 .search-form {
@@ -10,10 +10,11 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 14px;
-    padding: 12px;
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    padding: 12px 14px;
+    background-color: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--radius-md);
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-sm);
 }
 
 .search-form select,

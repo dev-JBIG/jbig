@@ -135,13 +135,12 @@ ${plan}
         <textarea
           id="leaderIntro"
           name="leaderIntro"
-          className="postwrite-title-input"
+          className="postwrite-title-input postwrite-textarea-sm"
           rows={3}
           placeholder="간단한 자기소개를 입력해주세요.
           예시) OOO학과 n기 OOO입니다. ~에 관심이 있습니다. 등"
           value={formState.leaderIntro}
           onChange={handleChange}
-          style={{ resize: 'vertical' }}
         />
       </div>
 
@@ -176,7 +175,7 @@ ${plan}
 
       <div className="postwrite-row">
         <label htmlFor="deadline">지원 마감일</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+        <div className="postwrite-inline-group">
           <input
             id="deadline"
             name="deadline"
@@ -185,16 +184,14 @@ ${plan}
             value={formState.deadline}
             onChange={handleChange}
             disabled={formState.isDeadlineTbd}
-            style={{ flex: 1 }}
           />
-          <label style={{ display: 'flex', alignItems: 'center', fontSize: '14px', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          <label className="postwrite-checkbox-inline">
             <input
               type="checkbox"
               checked={formState.isDeadlineTbd}
               onChange={handleCheckboxChange}
-              style={{ marginRight: '5px' }}
             />
-            미정(상시)
+            <span>미정(상시)</span>
           </label>
         </div>
       </div>
@@ -239,7 +236,7 @@ ${plan}
       </div>
 
       <div className="postwrite-row">
-        <label style={{ fontWeight: 'bold' }}>활동 계획 (본문)</label>
+        <label className="postwrite-label-bold">활동 계획 (본문)</label>
         <div className="content-body">
           <MDEditor
             value={formState.plan}

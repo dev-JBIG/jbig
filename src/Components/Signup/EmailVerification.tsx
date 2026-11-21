@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Button } from "@primer/react";
 import { resendVerifyEmail, verifyAuthEmail } from "../../API/req";
 import "./Signup.css";
 import "./EmailVerification.css";
@@ -82,7 +83,11 @@ const EmailVerification: React.FC<Props> = ({ email, initialExpiresAt = null, on
                     재전송
                 </button>
             </div>
-            {secondsLeft === 0 && <div>안내 시간이 지났습니다. 코드가 만료되었다면 재전송해주세요.</div>}
+            {secondsLeft === 0 && (
+                <div className="verification-expired-hint">
+                    안내 시간이 지났습니다. 코드가 만료되었다면 재전송해주세요.
+                </div>
+            )}
             <label className="signup-label" htmlFor="verification-code">인증코드</label>
             <input
                 id="verification-code"
@@ -97,11 +102,15 @@ const EmailVerification: React.FC<Props> = ({ email, initialExpiresAt = null, on
                 required
             />
             {error && <div className="form-error" role="alert">{error}</div>}
-            {notice && <div role="status">{notice}</div>}
-            <button className="signup-button" type="submit" disabled={disabled}>
+            {notice && <div className="auth-status-banner" role="status">{notice}</div>}
+            <Button variant="primary" block className="signup-submit-btn" type="submit" disabled={disabled}>
                 {busy ? "처리 중..." : "이메일 인증하기"}
-            </button>
-            {onBack && <button type="button" className="verification-resend" disabled={disabled} onClick={onBack}>로그인 입력으로 돌아가기</button>}
+            </Button>
+            {onBack && (
+                <button type="button" className="verification-resend verification-back-btn" disabled={disabled} onClick={onBack}>
+                    로그인 입력으로 돌아가기
+                </button>
+            )}
         </form>
     );
 };

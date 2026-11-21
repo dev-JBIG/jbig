@@ -190,12 +190,11 @@ const AbsenceForm: React.FC<AbsenceFormProps> = ({ setContent, initialContent })
         <textarea
           id="reason"
           name="reason"
-          className="postwrite-title-input" // 임시로 재활용 (CSS 수정 필요할 수 있음)
+          className="postwrite-title-input postwrite-textarea-md"
           rows={6}
           placeholder="결석 사유를 입력하세요."
           value={formState.reason}
           onChange={handleChange}
-          style={{ height: '120px', resize: 'vertical' }}
         />
       </div>
     </div>

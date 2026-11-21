@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Button } from "@primer/react";
 import "./Signin.css";
 import EmailVerification from "../Signup/EmailVerification";
 import {Link, useNavigate} from "react-router-dom";
@@ -93,12 +94,15 @@ const Signin: React.FC = () => {
         <div className="signin-wrapper">
             <div className="signin-container">
                 <div className="signin-title-row">
-                    <Link to="/" className="signin-logo">JBIG</Link>
+                    <Link to="/" className="signin-logo">
+                        <span className="signin-logo-mark" aria-hidden="true">J</span>
+                        <span>JBIG</span>
+                    </Link>
                     <h2 className="signin-title">로그인</h2>
                 </div>
                 {verificationEmail !== null ? (
                     <>
-                        <p>이메일 인증을 마저 완료해주세요</p>
+                        <p className="signin-verify-lead">이메일 인증을 마저 완료해주세요</p>
                         <EmailVerification
                             email={verificationEmail}
                             onVerified={() => {
@@ -110,61 +114,62 @@ const Signin: React.FC = () => {
                     </>
                 ) : (
                     <>
-                {notice && <p role="status">{notice}</p>}
-                <form className="signin-form" onSubmit={handleSubmit}>
-                    <label className="signin-label" htmlFor="userid">
-                        아이디 (이메일)
-                    </label>
-                    <input
-                        ref={userIdRef}
-                        className={`signin-input ${fieldErrors.email ? "input-error" : ""}`}
-                        id="userid"
-                        type="text"
-                        value={userId}
-                        onChange={(e) => {
-                            onUserIdChange(e);
-                            if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
-                        }}
-                        onFocus={onUserIdFocus}
-                        onClick={onUserIdClick}
-                        onBlur={handleEmailBlur}
-                    />
-                    {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
+                        {notice && <p className="auth-status-banner" role="status">{notice}</p>}
+                        <form className="signin-form" onSubmit={handleSubmit}>
+                            <label className="signin-label" htmlFor="userid">
+                                아이디 (이메일)
+                            </label>
+                            <input
+                                ref={userIdRef}
+                                className={`signin-input ${fieldErrors.email ? "input-error" : ""}`}
+                                id="userid"
+                                type="text"
+                                value={userId}
+                                onChange={(e) => {
+                                    onUserIdChange(e);
+                                    if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
+                                }}
+                                onFocus={onUserIdFocus}
+                                onClick={onUserIdClick}
+                                onBlur={handleEmailBlur}
+                            />
+                            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
 
-                    <label className="signin-label" htmlFor="password">
-                        비밀번호
-                    </label>
-                    <div className="signin-password-row">
-                        <input
-                            className={`signin-input ${fieldErrors.password ? "input-error" : ""}`}
-                            id="password"
-                            type={showPassword ? "text" : "password"}
-                            value={password}
-                            onChange={(e) => {
-                                setPassword(e.target.value);
-                                if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
-                            }}
-                            onBlur={handlePasswordBlur}
-                        />
-                        <span
-                            className="signin-toggle"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                        >
-                            {showPassword ? "숨기기" : "보이기"}
-                        </span>
-                    </div>
-                    {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+                            <label className="signin-label" htmlFor="password">
+                                비밀번호
+                            </label>
+                            <div className="signin-password-row">
+                                <input
+                                    className={`signin-input ${fieldErrors.password ? "input-error" : ""}`}
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
+                                    }}
+                                    onBlur={handlePasswordBlur}
+                                />
+                                <button
+                                    type="button"
+                                    className="signin-toggle"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                >
+                                    {showPassword ? "숨기기" : "보이기"}
+                                </button>
+                            </div>
+                            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
 
-                    {error && <div className="form-error">{error}</div>}
+                            {error && <div className="form-error" role="alert">{error}</div>}
 
-                    <button className="signin-button" type="submit" disabled={loading}>
-                        {loading ? "로그인 중..." : "로그인"}
-                    </button>
-                </form>
-                <div className="signin-links">
-                    <a href="/signup" className="signin-link">가입하기</a>
-                    <a href="/changepwd" className="signin-link">비밀번호를 잊어버리셨나요?</a>
-                </div>
+                            <Button variant="primary" block className="signin-submit-btn" type="submit" disabled={loading}>
+                                {loading ? "로그인 중..." : "로그인"}
+                            </Button>
+                        </form>
+                        <div className="signin-links">
+                            <Link to="/signup" className="signin-link">가입하기</Link>
+                            <Link to="/changepwd" className="signin-link">비밀번호를 잊어버리셨나요?</Link>
+                        </div>
                     </>
                 )}
             </div>

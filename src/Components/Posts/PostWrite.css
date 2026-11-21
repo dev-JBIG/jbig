@@ -5,10 +5,41 @@
     background: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
     padding: 24px;
-    border-radius: var(--radius-md);
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     gap: 16px;
+}
+
+.postwrite-hidden-input {
+    display: none;
+}
+
+.postwrite-preview-img {
+    max-width: 100%;
+}
+
+.postwrite-textarea-sm {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.postwrite-textarea-md {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.postwrite-number-input {
+    max-width: 120px;
+}
+
+.postwrite-skills-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .postwrite-row {
@@ -110,12 +141,16 @@
     min-width: 160px;
 }
 
+.postwrite-inline-group .postwrite-number-input {
+    flex: 0 0 120px;
+    min-width: 100px;
+}
+
 /* 기술 스택 칩 */
 .postwrite-skill-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    margin-top: 6px;
 }
 
 .postwrite-skill-chip {

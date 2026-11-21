@@ -1,13 +1,17 @@
 import React, { ReactNode, useEffect, useMemo, useState } from "react";
+import { Label } from "@primer/react";
+import { BookOpen, CalendarDays, Mail } from "lucide-react";
 import "./JbigInfo.css";
 import { fetchSiteSettings, SiteSettings } from "../../API/req";
 
 interface JbigInfoProps {
     calendarSlot?: ReactNode;
+    calendarAction?: ReactNode;
 }
 
-const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot }) => {
-    // 하드코딩 제거
+const ACTIVITIES = ["데이터 사이언스", "딥러닝", "머신러닝", "AI"];
+
+const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => {
     const [settings, setSettings] = useState<SiteSettings>({
         notion_page_id: '',
         quiz_url: '',
@@ -21,7 +25,6 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot }) => {
         jbig_advisor_dept: ''
     });
 
-    // 2. 로딩 상태 추가
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -32,7 +35,6 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot }) => {
             } catch (error) {
                 console.error('Failed to load site settings:', error);
             } finally {
-                // 3. 데이터 로딩이 끝나면(성공하든 실패하든) 로딩 상태 해제
                 setLoading(false);
             }
         };
@@ -63,43 +65,54 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot }) => {
         });
     }, [settings.jbig_description]);
 
-    // 4. 로딩 중일 때는 화면에 아무것도 보여주지 않거나 로딩 표시
     if (loading) {
-        return <div className="jbig-info-container" style={{ minHeight: '400px' }}></div>; 
+        return (
+            <div className="jbig-info-container">
+                <span className="sr-only" role="status">JBIG 소개를 불러오는 중입니다.</span>
+                <div className="jbig-cover jbig-cover-skeleton" aria-hidden="true">
+                    <div className="jbig-skeleton-bar jbig-skeleton-kicker" />
+                    <div className="jbig-skeleton-bar jbig-skeleton-title" />
+                    <div className="jbig-skeleton-bar jbig-skeleton-desc" />
+                    <div className="jbig-skeleton-grid">
+                        <div className="jbig-skeleton-box" />
+                        <div className="jbig-skeleton-box" />
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="jbig-info-container">
             <section className="jbig-cover" aria-label="JBIG 대문">
-                <div className="jbig-cover-grid" aria-hidden="true" />
-                <div className="jbig-cover-panel" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
+                <div className="jbig-cover-header-bar">
+                    <div className="jbig-cover-header-left">
+                        <BookOpen size={15} className="jbig-cover-header-icon" aria-hidden="true" />
+                        <span className="jbig-cover-kicker">JBNU Big Data &amp; AI Group</span>
+                    </div>
+                    <div className="jbig-cover-topics" role="list" aria-label="주요 활동 분야">
+                        {ACTIVITIES.map((topic) => (
+                            <Label key={topic} variant="accent" size="small" role="listitem">
+                                {topic}
+                            </Label>
+                        ))}
+                    </div>
                 </div>
-                <div className="jbig-cover-node node-a" aria-hidden="true" />
-                <div className="jbig-cover-node node-b" aria-hidden="true" />
-                <div className="jbig-cover-node node-c" aria-hidden="true" />
-                <div className="jbig-cover-line line-a" aria-hidden="true" />
-                <div className="jbig-cover-line line-b" aria-hidden="true" />
-                <div className="jbig-cover-line line-c" aria-hidden="true" />
 
                 <div className="jbig-cover-main">
-                    <div className="jbig-cover-header">
-                        <div>
-                            <div className="jbig-cover-kicker">JBNU Big Data & AI Group</div>
-                            <h2 className="jbig-cover-title">JBIG</h2>
-                        </div>
+                    <div className="jbig-cover-hero">
+                        <h2 className="jbig-cover-title">JBIG</h2>
+                        {settings.jbig_description && (
+                            <p className="jbig-cover-description">
+                                {highlightedDescription}
+                            </p>
+                        )}
                     </div>
-
-                    <p className="jbig-cover-description">
-                        {highlightedDescription}
-                    </p>
 
                     <div className="jbig-cover-content-grid">
                         <div className="jbig-cover-info-stack">
                             <div className="jbig-cover-section">
-                                <h3><span>JBIG</span>가 무슨 약자인가요?</h3>
+                                <h3><span>JBIG</span>는 무엇의 약자인가요?</h3>
                                 <div className="jbig-cover-acronym" role="list">
                                     <div role="listitem"><strong>J</strong><span>JBNU</span></div>
                                     <div role="listitem"><strong>B</strong><span>Big Data</span></div>
@@ -109,48 +122,55 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot }) => {
                             </div>
 
                             <div className="jbig-cover-section">
-                                <h3>우리가 하는 활동</h3>
-                                <div className="jbig-cover-activities" role="list">
-                                    <span role="listitem">데이터 사이언스</span>
-                                    <span role="listitem">딥러닝</span>
-                                    <span role="listitem">머신러닝</span>
-                                    <span role="listitem">AI</span>
-                                </div>
-                            </div>
-
-                            <div className="jbig-cover-leaders">
-                                <div className="jbig-cover-leader jbig-cover-leader-advisor">
-                                    <span>지도 교수</span>
-                                    <strong>{settings.jbig_advisor}</strong>
-                                    <em>{settings.jbig_advisor_dept}</em>
-                                </div>
-                                <div className="jbig-cover-leader">
-                                    <span>회장</span>
-                                    <strong>{settings.jbig_president}</strong>
-                                    <em>{settings.jbig_president_dept}</em>
-                                </div>
-                                <div className="jbig-cover-leader">
-                                    <span>부회장</span>
-                                    <strong>{settings.jbig_vice_president}</strong>
-                                    <em>{settings.jbig_vice_president_dept}</em>
+                                <h3>운영진</h3>
+                                <div className="jbig-cover-leaders">
+                                    <div className="jbig-cover-leader jbig-cover-leader-advisor">
+                                        <span>지도 교수</span>
+                                        <strong>{settings.jbig_advisor}</strong>
+                                        <em>{settings.jbig_advisor_dept}</em>
+                                    </div>
+                                    <div className="jbig-cover-leader">
+                                        <span>회장</span>
+                                        <strong>{settings.jbig_president}</strong>
+                                        <em>{settings.jbig_president_dept}</em>
+                                    </div>
+                                    <div className="jbig-cover-leader">
+                                        <span>부회장</span>
+                                        <strong>{settings.jbig_vice_president}</strong>
+                                        <em>{settings.jbig_vice_president_dept}</em>
+                                    </div>
                                 </div>
                             </div>
 
                             <div className="jbig-cover-contact">
-                                <span>Contact</span>
-                                <strong>회장 {settings.jbig_president}</strong>
-                                <em>{settings.jbig_email}</em>
+                                <div className="jbig-cover-contact-label">
+                                    <Mail size={14} aria-hidden="true" />
+                                    <span>Contact</span>
+                                </div>
+                                <div className="jbig-cover-contact-body">
+                                    <strong>회장 {settings.jbig_president}</strong>
+                                    {settings.jbig_email ? (
+                                        <a href={`mailto:${settings.jbig_email}`} className="jbig-cover-contact-email">
+                                            {settings.jbig_email}
+                                        </a>
+                                    ) : null}
+                                </div>
                             </div>
                         </div>
 
                         {calendarSlot && (
                             <div className="jbig-cover-calendar">
-                                <div className="jbig-cover-calendar-title">Calendar</div>
+                                <div className="jbig-cover-calendar-header">
+                                    <div className="jbig-cover-calendar-title">
+                                        <CalendarDays size={15} aria-hidden="true" />
+                                        <span>Calendar</span>
+                                    </div>
+                                    {calendarAction}
+                                </div>
                                 {calendarSlot}
                             </div>
                         )}
                     </div>
-
                 </div>
             </section>
         </div>

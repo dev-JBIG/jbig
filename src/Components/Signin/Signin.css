@@ -16,7 +16,7 @@
     padding: 28px 24px;
     background-color: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--radius-md);
+    border-radius: var(--borderRadius-large, 12px);
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
@@ -41,12 +41,15 @@
 }
 
 .signin-logo {
-    font-size: 24px;
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 22px;
+    font-weight: 800;
     color: var(--fgColor-default, var(--color-text-primary));
     text-decoration: none;
     user-select: none;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     transition: color var(--transition-fast);
 }
 
@@ -54,13 +57,48 @@
     color: var(--fgColor-accent, var(--color-primary));
 }
 
+.signin-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background-color: var(--fgColor-default, #1f2328);
+    color: var(--bgColor-default, #ffffff);
+    font-size: 14px;
+    font-weight: 800;
+}
+
 .signin-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--fgColor-muted, var(--color-text-secondary));
     letter-spacing: -0.01em;
     margin: 0;
     text-align: left;
+}
+
+.signin-verify-lead {
+    width: 100%;
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    text-align: center;
+}
+
+.auth-status-banner {
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--borderColor-success-muted, #4ac26b);
+    background-color: var(--bgColor-success-muted, #dafbe1);
+    color: var(--fgColor-success, #1a7f37);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
 }
 
 .signin-form {
@@ -96,27 +134,8 @@
     box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
 }
 
-.signin-button {
-    width: 100%;
-    padding: 10px 16px;
+.signin-submit-btn {
     margin-top: 10px;
-    background: var(--bgColor-accent-emphasis, var(--color-primary));
-    color: var(--fgColor-onEmphasis, #ffffff);
-    font-size: 14px;
-    font-weight: 600;
-    border: 1px solid rgba(31, 35, 40, 0.15);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: filter var(--transition-fast);
-}
-
-.signin-button:hover:not(:disabled) {
-    filter: brightness(0.95);
-}
-
-.signin-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
 }
 
 .signin-links {
@@ -151,22 +170,27 @@
 
 .signin-password-row .signin-input {
     flex: 1;
-    padding-right: 56px;
+    padding-right: 60px;
     margin-bottom: 0;
 }
 
 .signin-toggle {
     position: absolute;
-    right: 10px;
+    right: 8px;
+    padding: 3px 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-family: inherit;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--fgColor-accent, var(--color-primary));
     cursor: pointer;
     user-select: none;
 }
 
 .signin-toggle:hover {
-    text-decoration: underline;
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
 }
 
 /* 폼 에러 / 안내 */
