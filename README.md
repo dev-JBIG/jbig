@@ -49,29 +49,17 @@ source .venv/bin/activate
 python manage.py test
 ```
 
-## GitHub Actions Secrets 설정 (운영 배포 전환 전 필수)
+## GitHub Actions Secrets 설정
 
-기존 두 저장소가 모두 `DEPLOY_PATH`라는 동일한 시크릿 이름을 사용하고 있었으므로, 모노레포에서는 경로 충돌 방지를 위해 **`FRONTEND_DEPLOY_PATH`** 와 **`BACKEND_DEPLOY_PATH`** 로 분리했습니다.
+기존 `dev-JBIG/jbig_frontend` 저장소를 `dev-JBIG/jbig`으로 Rename하여 기존 시크릿을 그대로 유지합니다.
 
-`Settings → Secrets and variables → Actions`에 아래 시크릿을 등록해야 `main` 머지 시 서버 배포가 동작합니다.
+| 구분 | Secret 이름 | 필수 여부 | 설명 |
+|---|---|---|---|
+| 공통 (SSH) | `DEPLOY_HOST` | 필수 | 운영 서버 호스트 |
+| 공통 (SSH) | `DEPLOY_USER` | 필수 | SSH 사용자명 |
+| 공통 (SSH) | `SSH_PRIVATE_KEY` | 필수 | SSH 개인키 |
+| Frontend 배포 | `FRONTEND_DEPLOY_PATH` 또는 `DEPLOY_PATH` | 필수 | 프론트엔드 배포 경로 (`FRONTEND_DEPLOY_PATH` 우선, 없으면 `DEPLOY_PATH` 사용) |
+| Frontend 빌드 | `REACT_APP_API_BASE_URL` | 필수 | API 베이스 URL |
+| Frontend 빌드 | `REACT_APP_TURNSTILE_SITE_KEY` | 필수 | Cloudflare Turnstile 사이트 키 |
+| Backend 배포 | `BACKEND_DEPLOY_PATH` | 선택 | 미설정 시 서버의 `gunicorn-jbig` systemd `WorkingDirectory`에서 `shared/`·`releases/` 구조를 검증해 자동 감지 |
 
-| 구분 | Secret 이름 | 설명 |
-|---|---|---|
-| 공통 (SSH) | `DEPLOY_HOST` | 운영 서버 호스트 |
-| 공통 (SSH) | `DEPLOY_USER` | SSH 사용자명 |
-| 공통 (SSH) | `SSH_PRIVATE_KEY` | SSH 개인키 |
-| Frontend 배포 | `FRONTEND_DEPLOY_PATH` | 기존 `jbig_frontend`의 `DEPLOY_PATH` 값 |
-| Frontend 빌드 | `REACT_APP_API_BASE_URL` | API 베이스 URL |
-| Frontend 빌드 | `REACT_APP_DEFAULT_NOTION_PAGE_ID` | 기본 Notion 교안 페이지 ID |
-| Frontend 빌드 | `REACT_APP_SERVER_HOST` | 서버 호스트 |
-| Frontend 빌드 | `REACT_APP_SERVER_PORT` | 서버 포트 |
-| Frontend 빌드 | `REACT_APP_USERID_SECRET` | 사용자 ID 시크릿 |
-| Frontend 빌드 | `REACT_APP_TURNSTILE_SITE_KEY` | Cloudflare Turnstile 사이트 키 |
-| Backend 배포 | `BACKEND_DEPLOY_PATH` | 기존 `jbig_backend`의 `DEPLOY_PATH` 값 |
-
-## 기존 저장소 전환 체크리스트
-
-1. 위 GitHub Actions Secrets 등록 완료
-2. `dev-JBIG/jbig`에서 프론트·백엔드 배포 워크플로 정상 동작 확인
-3. 기존 `jbig_frontend` PR #59 / `jbig_backend` PR #32 등 미머지 작업 필요 시 이관
-4. 기존 `dev-JBIG/jbig_frontend`, `dev-JBIG/jbig_backend` 저장소 Archive 처리(읽기 전용 보존)

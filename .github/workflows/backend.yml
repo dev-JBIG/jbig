@@ -113,12 +113,31 @@ jobs:
           script: |
             set -euo pipefail
 
-            if [ -z "${BACKEND_DEPLOY_PATH:-}" ]; then
-              echo "Error: BACKEND_DEPLOY_PATH secret is not configured." >&2
-              exit 1
+            if [ -n "${BACKEND_DEPLOY_PATH:-}" ]; then
+              APP_BASE_DIR="$HOME/${BACKEND_DEPLOY_PATH}"
+            else
+              GUNICORN_WD=$(systemctl show -p WorkingDirectory --value gunicorn-jbig 2>/dev/null || true)
+              if [ -z "$GUNICORN_WD" ]; then
+                GUNICORN_EXEC=$(systemctl show -p ExecStart --value gunicorn-jbig 2>/dev/null || true)
+                GUNICORN_WD=$(printf '%s\n' "$GUNICORN_EXEC" | grep -oE '/[^ ;]+/current' | head -n 1 || true)
+              fi
+              GUNICORN_WD="${GUNICORN_WD%/}"
+              if [ -z "$GUNICORN_WD" ]; then
+                echo "Error: BACKEND_DEPLOY_PATH secret is not configured and gunicorn-jbig path could not be detected." >&2
+                exit 1
+              fi
+              if [ "${GUNICORN_WD%/current}" != "$GUNICORN_WD" ]; then
+                APP_BASE_DIR="${GUNICORN_WD%/current}"
+              else
+                APP_BASE_DIR="$GUNICORN_WD"
+              fi
+              if [ "$APP_BASE_DIR" = "/" ] || [ "$APP_BASE_DIR" = "$HOME" ] || [ ! -d "$APP_BASE_DIR/shared" ] || [ ! -d "$APP_BASE_DIR/releases" ]; then
+                echo "Error: Auto-detected backend directory does not match expected shared/releases layout." >&2
+                exit 1
+              fi
+              echo "Auto-detected backend release directory from gunicorn-jbig systemd unit."
             fi
 
-            APP_BASE_DIR="$HOME/${BACKEND_DEPLOY_PATH}"
             RELEASES_DIR="$APP_BASE_DIR/releases"
             SHARED_DIR="$APP_BASE_DIR/shared"
             TIMESTAMP=$(date +%Y%m%d%H%M%S)

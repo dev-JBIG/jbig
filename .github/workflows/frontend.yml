@@ -89,20 +89,22 @@ jobs:
         uses: appleboy/ssh-action@v1.2.5
         env:
           FRONTEND_DEPLOY_PATH: ${{ secrets.FRONTEND_DEPLOY_PATH }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: FRONTEND_DEPLOY_PATH
+          envs: FRONTEND_DEPLOY_PATH,DEPLOY_PATH
           script: |
             set -euo pipefail
 
-            if [ -z "${FRONTEND_DEPLOY_PATH:-}" ]; then
-              echo "Error: FRONTEND_DEPLOY_PATH secret is not configured." >&2
+            RESOLVED_DEPLOY_PATH="${FRONTEND_DEPLOY_PATH:-${DEPLOY_PATH:-}}"
+            if [ -z "$RESOLVED_DEPLOY_PATH" ]; then
+              echo "Error: Neither FRONTEND_DEPLOY_PATH nor DEPLOY_PATH secret is configured." >&2
               exit 1
             fi
 
-            APP_BASE="$HOME/${FRONTEND_DEPLOY_PATH}"
+            APP_BASE="$HOME/${RESOLVED_DEPLOY_PATH}"
             APP_CURRENT="$APP_BASE/current"
             RELEASES_DIR="$HOME/releases"
             TIMESTAMP=$(date +%Y%m%d%H%M%S)
