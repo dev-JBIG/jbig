@@ -145,7 +145,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                         onFocus={onUserIdFocus}
                         onClick={onUserIdClick}
                         onBlur={handleEmailBlur}
-                        autoFocus
                     />
                     {fieldErrors.email && <span className="login-modal-field-error">{fieldErrors.email}</span>}
 

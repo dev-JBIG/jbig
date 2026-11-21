@@ -22,13 +22,18 @@ const isTopmostModal = (container: HTMLElement): boolean => {
         return false;
     }
 
-    // useFocusTrap 외부에서 렌더된 다른 aria-modal 다이얼로그가 현재 포커스를 보유 중이면 양보한다.
+    // useFocusTrap 외부에서 렌더된 미등록 aria-modal 다이얼로그가 현재 포커스를 보유 중일 때만 양보한다.
     const activeEl = document.activeElement;
     if (activeEl instanceof HTMLElement && !container.contains(activeEl)) {
         const activeDialog = activeEl.closest('[role="dialog"][aria-modal="true"]');
         const ownDialog = container.closest('[role="dialog"][aria-modal="true"]') ?? container;
         if (activeDialog && activeDialog !== ownDialog) {
-            return false;
+            const isRegisteredModal = activeModalStack.some(
+                (el) => (el.closest('[role="dialog"][aria-modal="true"]') ?? el) === activeDialog
+            );
+            if (!isRegisteredModal) {
+                return false;
+            }
         }
     }
 

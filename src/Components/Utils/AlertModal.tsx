@@ -28,6 +28,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
     cancelText = '취소'
 }) => {
     const modalRef = useRef<HTMLDivElement>(null);
+    const primaryBtnRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         if (show) {
@@ -41,7 +42,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
         };
     }, [show]);
 
-    useFocusTrap(modalRef, show, { onClose });
+    useFocusTrap(modalRef, show, { onClose, initialFocusRef: primaryBtnRef });
 
     const handleConfirm = () => {
         if (isConfirm && onConfirm) {
@@ -133,20 +134,20 @@ const AlertModal: React.FC<AlertModalProps> = ({
                                 {cancelText}
                             </Button>
                             <Button
+                                ref={primaryBtnRef}
                                 type="button"
                                 variant={type === 'danger' ? 'danger' : 'primary'}
                                 onClick={handleConfirm}
-                                autoFocus
                             >
                                 {confirmText}
                             </Button>
                         </>
                     ) : (
                         <Button
+                            ref={primaryBtnRef}
                             type="button"
                             variant="primary"
                             onClick={onClose}
-                            autoFocus
                         >
                             확인
                         </Button>
