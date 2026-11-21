@@ -1,11 +1,38 @@
 import {
     computeTargetDimensions,
     IMAGE_ENCODE_QUALITY,
+    isAnimatedImageFile,
     isOptimizableImage,
     MAX_IMAGE_DIMENSION,
     optimizeImageForUpload,
     replaceFileExtension,
 } from "./imageOptimize";
+
+function buildAnimatedWebpBytes(): Uint8Array {
+    // RIFF....WEBP + VP8X chunk with animation bit (0x02) set at byte 20
+    const bytes = new Uint8Array(30);
+    const writeAscii = (offset: number, s: string) => {
+        for (let i = 0; i < s.length; i++) bytes[offset + i] = s.charCodeAt(i);
+    };
+    writeAscii(0, "RIFF");
+    bytes[4] = 22;
+    writeAscii(8, "WEBP");
+    writeAscii(12, "VP8X");
+    bytes[16] = 10;
+    bytes[20] = 0x02; // animation flag
+    return bytes;
+}
+
+function buildApngBytes(): Uint8Array {
+    // PNG signature (8) + IHDR chunk (length 0, 12 bytes) + acTL chunk (length 0, 12 bytes)
+    const bytes = new Uint8Array(32);
+    bytes.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0);
+    // IHDR length = 0
+    bytes.set([0x49, 0x48, 0x44, 0x52], 12);
+    // acTL length = 0
+    bytes.set([0x61, 0x63, 0x54, 0x4c], 24);
+    return bytes;
+}
 
 describe("imageOptimize helpers", () => {
     test("isOptimizableImage optimizes raster photos and skips GIF, SVG, and non-images", () => {
@@ -32,6 +59,16 @@ describe("imageOptimize helpers", () => {
         expect(replaceFileExtension("my.photo.name.png", "webp")).toBe("my.photo.name.webp");
         expect(replaceFileExtension("clipboard", "webp")).toBe("clipboard.webp");
     });
+
+    test("isAnimatedImageFile detects animated WebP and APNG while returning false for static images", async () => {
+        const animWebp = new File([buildAnimatedWebpBytes()], "sticker.webp", { type: "image/webp" });
+        const apng = new File([buildApngBytes()], "badge.png", { type: "image/png" });
+        const staticJpg = new File(["plain-jpeg"], "photo.jpg", { type: "image/jpeg" });
+
+        expect(await isAnimatedImageFile(animWebp)).toBe(true);
+        expect(await isAnimatedImageFile(apng)).toBe(true);
+        expect(await isAnimatedImageFile(staticJpg)).toBe(false);
+    });
 });
 
 describe("optimizeImageForUpload", () => {
@@ -46,12 +83,16 @@ describe("optimizeImageForUpload", () => {
         }
     });
 
-    test("returns GIF and non-image files untouched", async () => {
+    test("returns GIF, animated WebP, APNG, and non-image files untouched", async () => {
         const gif = new File(["gif-bytes"], "dance.gif", { type: "image/gif" });
         const pdf = new File(["pdf-bytes"], "paper.pdf", { type: "application/pdf" });
+        const animWebp = new File([buildAnimatedWebpBytes()], "anim.webp", { type: "image/webp" });
+        const apng = new File([buildApngBytes()], "anim.png", { type: "image/png" });
 
         expect(await optimizeImageForUpload(gif)).toBe(gif);
         expect(await optimizeImageForUpload(pdf)).toBe(pdf);
+        expect(await optimizeImageForUpload(animWebp)).toBe(animWebp);
+        expect(await optimizeImageForUpload(apng)).toBe(apng);
     });
 
     test("re-encodes high-res photo via sRGB canvas to high-quality WebP and closes bitmap", async () => {
@@ -99,7 +140,7 @@ describe("optimizeImageForUpload", () => {
         expect(result.type).toBe("image/webp");
     });
 
-    test("falls back to JPEG when WebP canvas encoding is unsupported", async () => {
+    test("falls back to JPEG for opaque inputs and PNG for alpha-capable WebP when WebP encoding is unsupported", async () => {
         const closeMock = jest.fn();
         (globalThis as any).createImageBitmap = jest.fn().mockResolvedValue({
             width: 1600,
@@ -109,11 +150,10 @@ describe("optimizeImageForUpload", () => {
 
         const toBlob = jest.fn((cb: (b: Blob | null) => void, type?: string) => {
             if (type === "image/webp") {
-                // 구형 브라우저가 WebP 미지원 시 PNG로 돌려주는 동작 모사
                 cb(new Blob(["png"], { type: "image/png" }));
                 return;
             }
-            cb(new Blob(["jpeg-data"], { type: "image/jpeg" }));
+            cb(new Blob(["encoded"], { type: type || "image/png" }));
         });
         const fakeCanvas = {
             width: 0,
@@ -132,12 +172,16 @@ describe("optimizeImageForUpload", () => {
             return originalCreateElement(tag);
         }) as typeof document.createElement);
 
-        const input = new File(["raw"], "photo.jpeg", { type: "image/jpeg" });
-        const result = await optimizeImageForUpload(input);
+        const opaqueInput = new File(["raw"], "photo.jpeg", { type: "image/jpeg" });
+        const opaqueResult = await optimizeImageForUpload(opaqueInput);
+        expect(opaqueResult.name).toBe("photo.jpg");
+        expect(opaqueResult.type).toBe("image/jpeg");
 
-        expect(result.name).toBe("photo.jpg");
-        expect(result.type).toBe("image/jpeg");
-        expect(closeMock).toHaveBeenCalledTimes(1);
+        const alphaWebpInput = new File(["static-webp"], "transparent.webp", { type: "image/webp" });
+        const alphaResult = await optimizeImageForUpload(alphaWebpInput);
+        expect(alphaResult.name).toBe("transparent.png");
+        expect(alphaResult.type).toBe("image/png");
+        expect(closeMock).toHaveBeenCalledTimes(2);
     });
 
     test("falls back to original file safely when decoding fails", async () => {
