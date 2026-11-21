@@ -1,13 +1,28 @@
-name: Django Deploy
+name: Backend CI/CD
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  test:
+    name: Test Backend
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -16,6 +31,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: "backend/requirements.txt"
 
       - name: Install dependencies
         run: |
@@ -29,26 +46,43 @@ jobs:
           source .venv/bin/activate
           python -c "import gunicorn; print('gunicorn', gunicorn.__version__)"
 
-      - name: Run tests
+      - name: Run Django tests
         run: |
           source .venv/bin/activate
           python manage.py test
 
-      - name: Create build archive
-        run: |
-          # 버전 정보 파일 생성 (커밋 메시지 포함)
-          COMMIT_MSG=$(git log -1 --pretty=%s | sed 's/"/\\"/g')
-          cat > VERSION.json << EOF
-          {
-            "commit": "${{ github.sha }}",
-            "commit_short": "$(echo ${{ github.sha }} | cut -c1-7)",
-            "message": "$COMMIT_MSG",
-            "branch": "${{ github.ref_name }}",
-            "time": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          EOF
+  deploy:
+    name: Deploy Backend to Server
+    needs: test
+    # PR 이벤트에서는 테스트 검증(test)만 수행하고, 실제 서버 배포는 main 푸시 또는 main 수동 실행에서만 진행한다.
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-          tar czf /tmp/build.tar.gz \
+      - name: Create build archive
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          BRANCH_NAME: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import datetime, json, os, subprocess
+          msg = subprocess.check_output(["git", "log", "-1", "--pretty=%s"], text=True).strip()
+          sha = os.environ["COMMIT_SHA"]
+          payload = {
+              "commit": sha,
+              "commit_short": sha[:7],
+              "message": msg,
+              "branch": os.environ["BRANCH_NAME"],
+              "time": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+          }
+          with open("backend/VERSION.json", "w", encoding="utf-8") as f:
+              json.dump(payload, f, ensure_ascii=False, indent=2)
+          PY
+
+          tar czf /tmp/backend-build.tar.gz \
+            -C backend \
             --exclude='.venv' \
             --exclude='.git' \
             --exclude='*.pyc' \
@@ -56,27 +90,35 @@ jobs:
             --exclude='.env' \
             --exclude='media/*' \
             .
-          mv /tmp/build.tar.gz build.tar.gz
+          mv /tmp/backend-build.tar.gz backend-build.tar.gz
 
       - name: Upload build to server
-        uses: appleboy/scp-action@master
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "build.tar.gz"
+          source: "backend-build.tar.gz"
           target: "/tmp/"
 
       - name: Deploy new release on server
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          BACKEND_DEPLOY_PATH: ${{ secrets.BACKEND_DEPLOY_PATH }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: BACKEND_DEPLOY_PATH
           script: |
-            set -e
+            set -euo pipefail
 
-            APP_BASE_DIR="$HOME/${{ secrets.DEPLOY_PATH }}"
+            if [ -z "${BACKEND_DEPLOY_PATH:-}" ]; then
+              echo "Error: BACKEND_DEPLOY_PATH secret is not configured." >&2
+              exit 1
+            fi
+
+            APP_BASE_DIR="$HOME/${BACKEND_DEPLOY_PATH}"
             RELEASES_DIR="$APP_BASE_DIR/releases"
             SHARED_DIR="$APP_BASE_DIR/shared"
             TIMESTAMP=$(date +%Y%m%d%H%M%S)
@@ -88,8 +130,8 @@ jobs:
 
             # 빌드 압축 해제
             mkdir -p "$NEW_RELEASE"
-            tar xzf "/tmp/build.tar.gz" -C "$NEW_RELEASE"
-            rm -f "/tmp/build.tar.gz"
+            tar xzf "/tmp/backend-build.tar.gz" -C "$NEW_RELEASE"
+            rm -f "/tmp/backend-build.tar.gz"
 
             # 공유 디렉토리 심볼릭 링크 (media, .env 등)
             ln -sfn "$SHARED_DIR/media" "$NEW_RELEASE/media"
@@ -121,4 +163,4 @@ jobs:
             cd "$RELEASES_DIR"
             ls -t | tail -n +6 | xargs -r sudo rm -rf
 
-            echo "Deployed: $TIMESTAMP"
+            echo "Deployed new backend version: $TIMESTAMP"
