@@ -335,11 +335,13 @@ export interface SiteSettings {
 }
 
 // 사이트 설정 가져오기
-export const fetchSiteSettings = async (): Promise<SiteSettings> => {
+export const fetchSiteSettings = async (token?: string | null): Promise<SiteSettings> => {
     const url = `${BASE_URL}/api/settings/`;
     
     try {
-        const res = await axios.get(url);
+        const res = await axios.get(url, {
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         return res.data;
     } catch (err) {
         throw err;
@@ -470,7 +472,7 @@ export const fetchUserPosts = async (
         headers.Authorization = `Bearer ${token}`;
     }
 
-    const res = await axios.get(`${BASE_URL}/api/users/${userId}/posts/`, {
+    const res = await axios.get(`${BASE_URL}/api/users/${encodeURIComponent(userId)}/posts/`, {
         params: { page, page_size: pageSize },
         headers,
         withCredentials: true,
@@ -606,7 +608,12 @@ export const downloadGatedAttachment = async (
     token: string
 ): Promise<{ success: boolean; message?: string }> => {
     try {
-        const response = await axios.get(url, {
+        const apiRoot = `${BASE_URL.replace(/\/$/, "")}/api/`;
+        const resolved = new URL(url, BASE_URL).href;
+        if (!resolved.startsWith(apiRoot)) {
+            return { success: false, message: "허용되지 않는 다운로드 경로입니다." };
+        }
+        const response = await axios.get(resolved, {
             headers: { Authorization: `Bearer ${token}` },
             responseType: "blob",
         });
@@ -852,7 +859,7 @@ export const fetchUserInfo = async (
     userId: string,
     token: string
 ): Promise<UserProfile> => {
-    const url = `${BASE_URL}/api/users/${userId}/`;
+    const url = `${BASE_URL}/api/users/${encodeURIComponent(userId)}/`;
     const res = await axios.get(url, {
         headers: {
             Accept: "application/json",
@@ -892,7 +899,7 @@ export const fetchUserComments = async (
     page: number,
     token?: string | null
 ): Promise<{ comments: UserComment[]; totalPages: number }> => {
-    const url = `${BASE_URL}/api/users/${userId}/comments/`;
+    const url = `${BASE_URL}/api/users/${encodeURIComponent(userId)}/comments/`;
 
     const headers: any = {
         Accept: "application/json",
@@ -1121,7 +1128,7 @@ export const fetchPublicProfile = async (
     token?: string,
     includeActivity: boolean = false
 ): Promise<PublicProfile> => {
-    const url = `${BASE_URL}/api/users/profile/${username}/`;
+    const url = `${BASE_URL}/api/users/profile/${encodeURIComponent(username)}/`;
     const res = await axios.get(url, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         params: includeActivity ? { include_activity: "1" } : undefined,
@@ -1470,7 +1477,7 @@ export const fetchMyApplications = async (token: string): Promise<any[]> => {
 // ========== Notion 프록시 API ==========
 
 export const fetchNotionPage = async (pageId: string, token: string): Promise<any> => {
-    const url = `${BASE_URL}/api/notion/${pageId}/`;
+    const url = `${BASE_URL}/api/notion/${encodeURIComponent(pageId)}/`;
     const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
     return res.data;
 };

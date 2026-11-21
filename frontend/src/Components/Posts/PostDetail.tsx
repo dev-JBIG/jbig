@@ -9,7 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
-import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import rehypeSanitize from 'rehype-sanitize';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Button, Label } from '@primer/react';
@@ -30,22 +30,7 @@ import {useAlert} from "../Utils/AlertContext";
 import { useColorMode } from "../Utils/ThemeContext";
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
 import RecruitmentDetailSection from './RecruitmentDetail';
-
-// Sanitize 스키마: style 속성 허용 (text-align, color만)
-const sanitizeSchema = {
-    ...defaultSchema,
-    attributes: {
-        ...defaultSchema.attributes,
-        div: [
-            ...(defaultSchema.attributes?.div || []),
-            ['style', /^text-align:\s*(left|center|right);?$/i]
-        ],
-        span: [
-            ...(defaultSchema.attributes?.span || []),
-            ['style', /^color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|[a-zA-Z]+);?$/i]
-        ]
-    }
-};
+import { safeSanitizeSchema as sanitizeSchema } from '../Utils/safeMarkdown';
 
 // HeartBurst 애니메이션 컴포넌트 (분리하여 리렌더링 최적화)
 const HeartBurst = memo(({ triggerKey }: { triggerKey: number }) => {
@@ -1043,7 +1028,7 @@ const PostDetail: React.FC = () => {
 
                     {/* 사진첩 게시글: 이미지 첨부파일을 인라인으로 표시 */}
                     {post.board_type === 4 && post.attachments?.filter(att =>
-                        /^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || "")
+                        /^(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.fileType || "")
                     ).map(att => (
                         <img
                             key={att.id}
@@ -1060,7 +1045,7 @@ const PostDetail: React.FC = () => {
             {/* 첨부파일 (사진첩 게시글은 이미지 제외) */}
             {post.attachments && post.attachments.length > 0 && (() => {
                 const filtered = post.board_type === 4
-                    ? post.attachments.filter(att => !/^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || ""))
+                    ? post.attachments.filter(att => !/^(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.fileType || ""))
                     : post.attachments;
                 return filtered.length > 0 ? (
                     <section className="postdetail-attachments" aria-label="첨부파일">

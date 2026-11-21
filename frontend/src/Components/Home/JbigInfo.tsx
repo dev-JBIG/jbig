@@ -3,6 +3,7 @@ import { Label } from "@primer/react";
 import { BookOpen, CalendarDays, Mail } from "lucide-react";
 import "./JbigInfo.css";
 import { fetchSiteSettings, SiteSettings } from "../../API/req";
+import { sanitizeMailto } from "../Utils/safeUrl";
 
 interface JbigInfoProps {
     calendarSlot?: ReactNode;
@@ -149,11 +150,19 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => 
                                 </div>
                                 <div className="jbig-cover-contact-body">
                                     <strong>회장 {settings.jbig_president}</strong>
-                                    {settings.jbig_email ? (
-                                        <a href={`mailto:${settings.jbig_email}`} className="jbig-cover-contact-email">
-                                            {settings.jbig_email}
-                                        </a>
-                                    ) : null}
+                                    {(() => {
+                                        const safeMailto = sanitizeMailto(settings.jbig_email);
+                                        if (safeMailto) {
+                                            return (
+                                                <a href={safeMailto} className="jbig-cover-contact-email">
+                                                    {settings.jbig_email}
+                                                </a>
+                                            );
+                                        }
+                                        return settings.jbig_email ? (
+                                            <span className="jbig-cover-contact-email">{settings.jbig_email}</span>
+                                        ) : null;
+                                    })()}
                                 </div>
                             </div>
                         </div>

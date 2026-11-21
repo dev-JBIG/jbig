@@ -33,6 +33,18 @@ def version_info(request):
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Invalid VERSION.json'}, status=500)
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import URLValidator
+
+_HTTP_URL_VALIDATOR = URLValidator(schemes=['http', 'https'])
+
+
+def _validate_http_url(value: str) -> str:
+    cleaned = (value or '').strip()
+    _HTTP_URL_VALIDATOR(cleaned)
+    return cleaned
+
+
 @extend_schema(
     summary="Quiz URL Management",
     description="Retrieve or update the quiz URL. Only admins can update the URL.",
@@ -69,8 +81,12 @@ class QuizUrlView(APIView):
     )
     def put(self, request):
         url = request.data.get('quiz_url')
-        if not url:
+        if not url or not isinstance(url, str):
             return Response({'error': 'quiz_url is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            url = _validate_http_url(url)
+        except DjangoValidationError:
+            return Response({'error': 'quiz_url must be a valid http(s) URL.'}, status=status.HTTP_400_BAD_REQUEST)
         SiteSettings.set('quiz_url', url)
         return Response({'message': 'Quiz URL updated successfully', 'quiz_url': url})
 
@@ -107,9 +123,10 @@ class SiteSettingsView(APIView):
         ]
     )
     def get(self, request):
+        quiz_url = SiteSettings.get('quiz_url', '') if request.user.is_authenticated else ''
         return Response({
             'notion_page_id': SiteSettings.get('notion_page_id', ''),
-            'quiz_url': SiteSettings.get('quiz_url', ''),
+            'quiz_url': quiz_url,
             'jbig_description': SiteSettings.get('jbig_description', ''),
             'jbig_president': SiteSettings.get('jbig_president', ''),
             'jbig_president_dept': SiteSettings.get('jbig_president_dept', ''),
@@ -141,7 +158,9 @@ class SiteSettingsView(APIView):
         responses={200: OpenApiTypes.OBJECT}
     )
     def put(self, request):
-        updated = {}
+        from django.db import transaction
+
+        pending = {}
         fields = [
             'notion_page_id', 'quiz_url', 'jbig_description', 'jbig_president', 'jbig_president_dept',
             'jbig_vice_president', 'jbig_vice_president_dept', 'jbig_email',
@@ -150,16 +169,37 @@ class SiteSettingsView(APIView):
         
         for field in fields:
             if field in request.data:
-                SiteSettings.set(field, request.data[field])
-                updated[field] = request.data[field]
+                val = request.data[field]
+                if val is None:
+                    val = ''
+                if not isinstance(val, str):
+                    return Response({'error': f'{field} must be a string.'}, status=status.HTTP_400_BAD_REQUEST)
+                val = val.strip()
+                if field == 'quiz_url' and val:
+                    try:
+                        val = _validate_http_url(val)
+                    except DjangoValidationError:
+                        return Response({'error': 'quiz_url must be a valid http(s) URL.'}, status=status.HTTP_400_BAD_REQUEST)
+                if field == 'jbig_email' and val:
+                    from django.core.validators import EmailValidator
+                    try:
+                        EmailValidator()(val)
+                    except DjangoValidationError:
+                        return Response({'error': 'jbig_email must be a valid email address.'}, status=status.HTTP_400_BAD_REQUEST)
+                pending[field] = val
         
-        if not updated:
+        if not pending:
             return Response({'error': 'No valid fields provided'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'Settings updated', **updated})
+
+        with transaction.atomic():
+            for field, val in pending.items():
+                SiteSettings.set(field, val)
+        return Response({'message': 'Settings updated', **pending})
 
 class NotionPageView(APIView):
     """Notion 내부 API 프록시 (splitbee 대체)"""
     permission_classes = [IsAuthenticated]
+    throttle_scope = 'notion'
 
     def get(self, request, page_id):
         import re
@@ -177,8 +217,9 @@ class NotionPageView(APIView):
             logger.error(f'Notion API error: {e}')
             response = Response({'error': '페이지를 불러올 수 없습니다.'}, status=status.HTTP_502_BAD_GATEWAY)
 
-        for header, value in diagnostic_headers(diagnostics).items():
-            response[header] = value
+        if settings.DEBUG or request.user.is_staff:
+            for header, value in diagnostic_headers(diagnostics).items():
+                response[header] = value
         return response
 
 

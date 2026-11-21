@@ -3,11 +3,15 @@ import { Upload, X } from 'lucide-react';
 import { ImageBlock } from '../../types';
 import { uploadAttachment } from '../../../../API/req';
 import { useUser } from '../../../Utils/UserContext';
+import { sanitizeMediaUrl } from '../../../Utils/safeUrl';
 
 interface Props {
   block: ImageBlock;
   onChange: (block: ImageBlock) => void;
 }
+
+const ALLOWED_IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp)$/i;
+const MAX_BLOCK_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -16,7 +20,16 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !accessToken) return;
+    if (!ALLOWED_IMAGE_EXT_RE.test(file.name)) {
+      alert('PNG, JPG, GIF, WebP, BMP 이미지만 업로드할 수 있습니다.');
+      return;
+    }
+    if (file.size > MAX_BLOCK_IMAGE_BYTES) {
+      alert('이미지는 최대 10MB까지 업로드할 수 있습니다.');
+      return;
+    }
     setUploading(true);
     try {
       const result = await uploadAttachment(file, accessToken);
@@ -35,11 +48,13 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
     onChange({ ...block, data: { ...block.data, path: '', url: '', alt: '' } });
   };
 
+  const safePreviewUrl = sanitizeMediaUrl(block.data.url);
+
   return (
     <div className="block-editor block-image-editor">
-      {block.data.url ? (
+      {safePreviewUrl ? (
         <div className="block-image-preview-wrap">
-          <img src={block.data.url} alt={block.data.alt} className="block-image-preview" />
+          <img src={safePreviewUrl} alt={block.data.alt} className="block-image-preview" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
           <button type="button" className="block-image-remove" aria-label="이미지 제거" onClick={handleRemove}>
             <X size={16} aria-hidden="true" />
           </button>
@@ -50,7 +65,7 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
           <span>{uploading ? '업로드 중...' : '이미지를 선택하세요'}</span>
         </button>
       )}
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleUpload} />
+      <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.bmp" hidden onChange={handleUpload} />
       <div className="block-image-fields">
         <input
           type="text"

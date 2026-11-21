@@ -4,13 +4,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class DebugPermission(permissions.BasePermission):
-    def has_permission(self, request, view):
-        logger.warning(f"Request Headers: {request.headers}")
-        logger.warning(f"Request User: {request.user}")
-        logger.warning(f"Is Authenticated: {request.user.is_authenticated}")
-        return True
-
 def board_read_allowed(board, user):
     """게시판 read_permission 기준으로 사용자의 '게시판 진입' 허용 여부를 판정한다.
     - 'all'   : 비회원 포함 누구나
@@ -164,11 +157,15 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
         # 댓글인 경우 (post 속성이 있음)
         if hasattr(obj, 'post') and obj.post:
-            # 비회원 댓글(author=None)은 글 작성자가 삭제 가능
-            if obj.author is None:
-                return obj.post.author == request.user
-            # 본인 댓글이거나 글 작성자면 허용
-            return obj.author == request.user or obj.post.author == request.user
+            if request.method == 'DELETE':
+                # 본인 댓글이거나, 글 작성자가 비회원 댓글(author=None)을 삭제하는 경우만 허용
+                if obj.author is None:
+                    return obj.post.author == request.user
+                return obj.author == request.user
+            # 수정(PUT/PATCH)은 삭제되지 않은 본인 댓글만 허용 (타인 댓글 변조 차단)
+            if getattr(obj, 'is_deleted', False):
+                return False
+            return obj.author is not None and obj.author == request.user
 
         # 게시글인 경우
         if hasattr(obj, 'author'):

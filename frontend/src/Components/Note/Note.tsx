@@ -6,6 +6,7 @@ import { Button, Spinner } from "@primer/react";
 import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
 import { useColorMode } from "../Utils/ThemeContext";
+import { sanitizeMailto, sanitizeTel } from "../Utils/safeUrl";
 import { fetchSiteSettings, fetchNotionPage as fetchNotionPageAPI } from "../../API/req";
 import { Code } from 'react-notion-x/build/third-party/code';
 import { Collection } from 'react-notion-x/build/third-party/collection';
@@ -34,6 +35,16 @@ async function fetchNotionPage(pageId: string, accessToken: string): Promise<Ext
     return sanitizeRecordMap(data as ExtendedRecordMap);
 }
 
+const NOTION_PAGE_ID_RE = /^[0-9a-f-]{32,36}$/i;
+
+function normalizeNotionPageId(raw?: string | null): string | null {
+    if (!raw || typeof raw !== "string") return null;
+    const trimmed = raw.trim();
+    if (!NOTION_PAGE_ID_RE.test(trimmed)) return null;
+    const hex = trimmed.replace(/-/g, "");
+    return hex.length === 32 ? hex : null;
+}
+
 const Note: React.FC = () => {
     const { user, authReady, accessToken } = useUser();
     const { showAlert } = useAlert();
@@ -46,8 +57,9 @@ const Note: React.FC = () => {
     const defaultPageIdRef = useRef<string>("");
 
     const loadPage = useCallback(async (pageId: string, replace = false) => {
-        if (!pageId) {
-            setError("Notion 페이지 ID가 설정되지 않았습니다.");
+        const normalizedId = normalizeNotionPageId(pageId);
+        if (!normalizedId) {
+            setError("유효한 Notion 페이지 ID가 아닙니다.");
             setLoading(false);
             return;
         }
@@ -61,15 +73,20 @@ const Note: React.FC = () => {
         setError(null);
 
         try {
-            const data = await fetchNotionPage(pageId, accessToken);
+            const data = await fetchNotionPage(normalizedId, accessToken);
             setRecordMap(data);
-            setCurrentPageId(pageId);
-            const defaultId = defaultPageIdRef.current;
-            const newUrl = pageId === defaultId ? window.location.pathname : `${window.location.pathname}?page=${pageId}`;
+            setCurrentPageId(normalizedId);
+            const defaultId = normalizeNotionPageId(defaultPageIdRef.current);
+            const query = new URLSearchParams();
+            if (normalizedId !== defaultId) {
+                query.set("page", normalizedId);
+            }
+            const qs = query.toString();
+            const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
             if (replace) {
-                window.history.replaceState({ page: pageId }, "", newUrl);
+                window.history.replaceState({ page: normalizedId }, "", newUrl);
             } else {
-                window.history.pushState({ page: pageId }, "", newUrl);
+                window.history.pushState({ page: normalizedId }, "", newUrl);
             }
         } catch {
             setError("페이지를 불러올 수 없습니다.");
@@ -117,8 +134,8 @@ const Note: React.FC = () => {
     }, [loadPage]);
 
     const mapPageUrl = useCallback((pageId: string) => {
-        const cleanId = pageId.replace(/-/g, "");
-        return `${window.location.pathname}?page=${cleanId}`;
+        const cleanId = normalizeNotionPageId(pageId) || "";
+        return cleanId ? `${window.location.pathname}?page=${encodeURIComponent(cleanId)}` : window.location.pathname;
     }, []);
 
     const handleContentClick = useCallback((e: React.MouseEvent) => {
@@ -126,24 +143,58 @@ const Note: React.FC = () => {
         const anchor = target.closest("a");
         if (!anchor) return;
 
-        const href = anchor.getAttribute("href") || "";
-        const pageMatch = href.match(/[?&]page=([a-f0-9]+)/i);
-        if (pageMatch) {
+        const href = (anchor.getAttribute("href") || "").trim();
+        if (!href) return;
+
+        let parsed: URL;
+        try {
+            parsed = new URL(href, window.location.origin);
+        } catch {
             e.preventDefault();
-            loadPage(pageMatch[1]);
             return;
         }
 
-        const notionIdMatch = href.match(/\/([a-f0-9]{32})(?:\?|$)/i);
-        if (notionIdMatch) {
+        // 안전한 연락 스킴(mailto:, tel:)은 유효성 검증 후 브라우저 기본 동작을 유지한다.
+        if (parsed.protocol === "mailto:" || parsed.protocol === "tel:") {
+            const rawTarget = href.slice(parsed.protocol.length);
+            const validContact =
+                parsed.protocol === "mailto:" ? sanitizeMailto(rawTarget) : sanitizeTel(rawTarget);
+            if (!validContact) {
+                e.preventDefault();
+            }
+            return;
+        }
+
+        // javascript:, vbscript:, data: 등 비-HTTP(S) 스킴 링크 실행 차단
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            e.preventDefault();
+            return;
+        }
+
+        const pageParam = parsed.searchParams.get("page");
+        const normalizedParam = normalizeNotionPageId(pageParam);
+        if (parsed.origin === window.location.origin && normalizedParam) {
+            e.preventDefault();
+            loadPage(normalizedParam);
+            return;
+        }
+
+        const notionIdMatch = parsed.pathname.match(/\/([a-f0-9]{32})$/i);
+        const host = parsed.hostname.toLowerCase();
+        const isNotionHost =
+            host === "notion.so" ||
+            host.endsWith(".notion.so") ||
+            host === "notion.site" ||
+            host.endsWith(".notion.site");
+        if (notionIdMatch && (parsed.origin === window.location.origin || isNotionHost)) {
             e.preventDefault();
             loadPage(notionIdMatch[1]);
             return;
         }
 
-        if (href.startsWith("http") && !href.includes(window.location.host)) {
+        if (parsed.origin !== window.location.origin) {
             e.preventDefault();
-            window.open(href, "_blank", "noopener,noreferrer");
+            window.open(parsed.href, "_blank", "noopener,noreferrer");
         }
     }, [loadPage]);
 

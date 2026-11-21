@@ -5,6 +5,7 @@ import { fetchPublicProfile, fetchPublicProfileActivity, updateProfileBlocks, up
 import { useAlert } from "../Utils/AlertContext";
 import { ProfileBlock, IdentityBlock } from "./types";
 import ProfileBlockRenderer from "./ProfileBlockRenderer/ProfileBlockRenderer";
+import { buildSandboxedProfileSrcDoc, sanitizeMediaUrl } from "../Utils/safeUrl";
 import "./Profile.css";
 
 const ProfileBlockEditor = lazy(() => import("./ProfileBlockEditor/ProfileBlockEditor"));
@@ -31,6 +32,14 @@ const formatLastLogin = (isoString: string | null): string => {
 
 type TabKey = 'resume' | 'activity';
 
+const safeDecodePath = (raw: string): string => {
+    try {
+        return decodeURIComponent(raw);
+    } catch {
+        return raw;
+    }
+};
+
 const Profile: React.FC = () => {
     const { username: paramUsername } = useParams<{ username: string }>();
     const navigate = useNavigate();
@@ -39,7 +48,7 @@ const Profile: React.FC = () => {
     const { accessToken, signOutLocal } = useUser();
     const { showAlert } = useAlert();
 
-    const username = paramUsername || decodeURIComponent(location.pathname).match(/^\/@(.+)$/)?.[1];
+    const username = paramUsername || safeDecodePath(location.pathname).match(/^\/@([^/]+)$/)?.[1];
 
     const [profile, setProfile] = useState<PublicProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -235,7 +244,7 @@ const Profile: React.FC = () => {
 
     const displayName = identity?.realName?.trim() || profile.username;
     const headline = identity?.headline?.trim() || "";
-    const photoUrl = identity?.photoUrl?.trim() || "";
+    const photoUrl = sanitizeMediaUrl(identity?.photoUrl) || "";
     const locationText = identity?.location?.trim() || "";
 
     return (
@@ -244,7 +253,7 @@ const Profile: React.FC = () => {
             <header className="profile-header">
                 <div className="profile-avatar">
                     {photoUrl ? (
-                        <img src={photoUrl} alt={displayName} />
+                        <img src={photoUrl} alt={displayName} referrerPolicy="no-referrer" />
                     ) : (
                         <span>{displayName.charAt(0).toUpperCase()}</span>
                     )}
@@ -354,7 +363,8 @@ const Profile: React.FC = () => {
                                 className="profile-html-frame"
                                 title={`${profile.username} 이력서`}
                                 sandbox=""
-                                srcDoc={profile.profile_html}
+                                referrerPolicy="no-referrer"
+                                srcDoc={buildSandboxedProfileSrcDoc(profile.profile_html)}
                             />
                         </div>
                     ) : (

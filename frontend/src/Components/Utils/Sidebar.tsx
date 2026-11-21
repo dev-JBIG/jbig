@@ -11,6 +11,7 @@ import { getBoardIcon } from "./boardIcons";
 import { useUser } from "./UserContext";
 import { useAlert } from "./AlertContext";
 import MemberQuickLinks from "./MemberQuickLinks";
+import { sanitizeHttpUrl } from "./safeUrl";
 
 /**
  * 게시글이 24시간 이내에 작성되었는지 확인하는 함수
@@ -93,21 +94,25 @@ const Sidebar: React.FC<SidebarProps> = ({
                             <CounterLabel>{totalCount.toLocaleString()}</CounterLabel>
                         </Link>
                     </li>
-                    {quizURL && quizURL.trim() !== "" && (
-                        <li>
-                            <a
-                                href={quizURL}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="sidebar-nav-btn"
-                            >
-                                <span className="board-item-content">
-                                    <SquareCheckBig size={16} className="board-icon" aria-hidden="true" />
-                                    <span>이번 주 퀴즈</span>
-                                </span>
-                            </a>
-                        </li>
-                    )}
+                    {(() => {
+                        const safeQuizUrl = sanitizeHttpUrl(quizURL);
+                        if (!safeQuizUrl) return null;
+                        return (
+                            <li>
+                                <a
+                                    href={safeQuizUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="sidebar-nav-btn"
+                                >
+                                    <span className="board-item-content">
+                                        <SquareCheckBig size={16} className="board-icon" aria-hidden="true" />
+                                        <span>이번 주 퀴즈</span>
+                                    </span>
+                                </a>
+                            </li>
+                        );
+                    })()}
                 </ul>
                 <div className="sidebar-top-divider" />
 

@@ -50,11 +50,14 @@ from .permissions import (
     PostDetailPermission,
     board_read_allowed,
 )
+from rest_framework.permissions import SAFE_METHODS
+from jbig_backend.network import get_client_ip
 from jbig_backend.storage import (
     generate_presigned_upload_url,
     delete_files,
     delete_file,
     file_exists,
+    is_safe_upload_key,
     set_public_acl,
     public_media_url,
     get_file_stream,
@@ -69,10 +72,13 @@ def _with_post_list_summary(queryset):
 
 
 def _is_upload_owned_by(file_key, owner_id):
-    if not isinstance(file_key, str) or not file_key.startswith('uploads/'):
+    if owner_id is None or not isinstance(file_key, str):
         return False
-    parts = file_key.split('/')
-    if '..' in parts or len(parts) < 6:
+    normalized = file_key.strip().replace('\\', '/')
+    if not is_safe_upload_key(normalized):
+        return False
+    parts = normalized.split('/')
+    if len(parts) < 6:
         return False
     try:
         return int(parts[4]) == owner_id
@@ -81,26 +87,37 @@ def _is_upload_owned_by(file_key, owner_id):
 
 
 def _json_paths_reference(model, field_name, file_key):
+    normalized = file_key.replace('\\', '/')
+    legacy = normalized.replace('/', '\\')
     try:
-        return model.objects.filter(
-            **{f'{field_name}__contains': [{'path': file_key}]}
-        ).exists()
+        return (
+            model.objects.filter(**{f'{field_name}__contains': [{'path': normalized}]}).exists()
+            or (
+                legacy != normalized
+                and model.objects.filter(**{f'{field_name}__contains': [{'path': legacy}]}).exists()
+            )
+        )
     except NotSupportedError:
         paths_lists = model.objects.values_list(field_name, flat=True).iterator()
         return any(
-            isinstance(item, dict) and item.get('path') == file_key
+            isinstance(item, dict)
+            and isinstance(item.get('path'), str)
+            and item['path'].replace('\\', '/') == normalized
             for paths in paths_lists if isinstance(paths, list)
             for item in paths
         )
 
 
 def _is_upload_referenced(file_key):
-    marker = f'media-key://{file_key}'
+    normalized = file_key.replace('\\', '/')
+    legacy = normalized.replace('/', '\\')
+    marker_norm = f'media-key://{normalized}'
+    marker_legacy = f'media-key://{legacy}'
     return (
-        Post.objects.filter(content_md__contains=marker).exists()
-        or Draft.objects.filter(content_md__contains=marker).exists()
-        or _json_paths_reference(Post, 'attachment_paths', file_key)
-        or _json_paths_reference(Draft, 'uploaded_paths', file_key)
+        Post.objects.filter(Q(content_md__contains=marker_norm) | Q(content_md__contains=marker_legacy)).exists()
+        or Draft.objects.filter(Q(content_md__contains=marker_norm) | Q(content_md__contains=marker_legacy)).exists()
+        or _json_paths_reference(Post, 'attachment_paths', normalized)
+        or _json_paths_reference(Draft, 'uploaded_paths', normalized)
     )
 
 
@@ -108,7 +125,12 @@ def _is_upload_referenced(file_key):
 def verify_turnstile(token: str, ip: str) -> bool:
     """Cloudflare Turnstile 토큰 검증"""
     if not settings.TURNSTILE_SECRET_KEY:
-        return True  # 개발 환경에서는 검증 건너뛰기
+        if settings.IS_LOCAL or settings.DEBUG:
+            return True  # 로컬 개발 환경에서만 검증 건너뛰기
+        logger.error("TURNSTILE_SECRET_KEY is not configured in production; rejecting verification.")
+        return False
+    if not token or not isinstance(token, str):
+        return False
 
     try:
         response = requests.post(
@@ -118,10 +140,11 @@ def verify_turnstile(token: str, ip: str) -> bool:
                 'response': token,
                 'remoteip': ip,
             },
-            timeout=10
+            timeout=10,
+            allow_redirects=False,
         )
         result = response.json()
-        return result.get('success', False)
+        return bool(result.get('success', False))
     except Exception as e:
         logger.error(f"Turnstile 검증 실패: {e}")
         return False
@@ -437,9 +460,11 @@ class CommentLikeAPIView(generics.GenericAPIView):
 
 class PostSearchView(generics.ListAPIView):
     serializer_class = PostSummarySerializer
+    throttle_scope = 'search'
 
     def get_queryset(self):
-        query = self.request.query_params.get('q', None)
+        raw_query = self.request.query_params.get('q', '')
+        query = (raw_query or '').strip()[:100]
         if not query:
             return Post.objects.none()
 
@@ -458,20 +483,25 @@ class PostSearchView(generics.ListAPIView):
         # 글 단위 가시성을 함께 적용한다.
         queryset = base_queryset.readable_for_user(user)
 
-        # URL/링크를 제거하는 정규식 패턴
-        url_pattern = r'!\[.*?\]\(.*?\)|\[.*?\]\(.*?\)|https?://[^\s]+|www\.[^\s]+'
-        
-        # content_md에서 URL 제거 후 검색
-        queryset = queryset.annotate(
-            clean_content=RegexpReplace('content_md', url_pattern, '')
-        )
+        from django.db import connection
+        if connection.vendor == 'postgresql':
+            # URL/링크를 제거하는 정규식 패턴
+            url_pattern = r'!\[[^\]\n]*\]\([^\)\n]*\)|\[[^\]\n]*\]\([^\)\n]*\)|https?://[^\s]+|www\.[^\s]+'
+            # content_md에서 URL 제거 후 검색
+            queryset = queryset.annotate(
+                clean_content=RegexpReplace('content_md', url_pattern, '')
+            )
+            content_filter = Q(clean_content__icontains=query)
+        else:
+            content_filter = Q(content_md__icontains=query)
 
-        # 부분 검색되게 수정
-        search_filter = (
-            Q(title__icontains=query) |
-            Q(clean_content__icontains=query) |
-            Q(author__username__icontains=query)
-        )
+        # 비회원은 익명 게시글 작성자의 실명으로 역추적(de-anonymize)할 수 없도록 제한한다.
+        if user.is_authenticated:
+            author_filter = Q(author__username__icontains=query)
+        else:
+            author_filter = Q(author__username__icontains=query, is_anonymous=False)
+
+        search_filter = Q(title__icontains=query) | content_filter | author_filter
 
         queryset = queryset.filter(search_filter).distinct()
         return _with_post_list_summary(queryset).order_by('-created_at')
@@ -617,11 +647,11 @@ class PostListCreateAPIView(generics.ListCreateAPIView):
     lookup_url_kwarg = 'board_id'
 
     def get_permissions(self):
-        if self.request.method == 'GET':
+        if self.request.method in SAFE_METHODS:
             return [IsBoardReadable()]
         elif self.request.method == 'POST':
             return [IsPostWritable()]
-        return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -758,13 +788,40 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         # 게시판 변경 권한 검증
         board_id = request.data.get('board_id')
         if board_id is not None:
-            from .models import Board
-            new_board = Board.objects.filter(id=board_id).first()
-            if new_board and new_board.post_permission == 'staff' and not request.user.is_staff:
+            try:
+                board_id_int = int(board_id)
+            except (TypeError, ValueError):
                 return Response(
-                    {"detail": "해당 게시판에는 글을 작성할 권한이 없습니다."},
-                    status=status.HTTP_403_FORBIDDEN
+                    {"detail": "유효한 게시판 ID가 아닙니다."},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
+            new_board = Board.objects.filter(id=board_id_int).first()
+            if new_board is None:
+                return Response(
+                    {"detail": "대상 게시판을 찾을 수 없습니다."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            if new_board.id != instance.board_id:
+                if not board_read_allowed(new_board, request.user):
+                    return Response(
+                        {"detail": "대상 게시판에 접근할 권한이 없습니다."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+                if new_board.post_permission != 'all' and not request.user.is_staff:
+                    return Response(
+                        {"detail": "해당 게시판에는 글을 작성할 권한이 없습니다."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
+                # 사유서/스태프전용 비공개 글을 일반 공개 게시판으로 빼내는 이동은 스태프만 허용
+                if (
+                    instance.post_type in (Post.PostType.JUSTIFICATION_LETTER, Post.PostType.STAFF_ONLY)
+                    and new_board.read_permission != 'author'
+                    and not request.user.is_staff
+                ):
+                    return Response(
+                        {"detail": "비공개 게시글은 다른 게시판으로 이동할 수 없습니다."},
+                        status=status.HTTP_403_FORBIDDEN,
+                    )
 
         # 수정 전 파일 키 수집
         old_attachment_keys = set()
@@ -772,12 +829,17 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             for att in instance.attachment_paths:
                 if isinstance(att, dict) and 'path' in att:
                     file_key = att['path']
-                    if file_key.startswith('uploads/'):
-                        old_attachment_keys.add(file_key)
+                    if isinstance(file_key, str):
+                        normalized_key = file_key.replace('\\', '/')
+                        if normalized_key.startswith('uploads/'):
+                            old_attachment_keys.add(normalized_key)
 
         old_content_keys = set()
         if instance.content_md:
-            old_content_keys = set(re.findall(r'media-key://(uploads/[^\s\)]+)', instance.content_md))
+            old_content_keys = {
+                k.replace('\\', '/')
+                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
+            }
 
         # 실제 수정 수행
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -791,12 +853,17 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             for att in instance.attachment_paths:
                 if isinstance(att, dict) and 'path' in att:
                     file_key = att['path']
-                    if file_key.startswith('uploads/'):
-                        new_attachment_keys.add(file_key)
+                    if isinstance(file_key, str):
+                        normalized_key = file_key.replace('\\', '/')
+                        if normalized_key.startswith('uploads/'):
+                            new_attachment_keys.add(normalized_key)
 
         new_content_keys = set()
         if instance.content_md:
-            new_content_keys = set(re.findall(r'media-key://(uploads/[^\s\)]+)', instance.content_md))
+            new_content_keys = {
+                k.replace('\\', '/')
+                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
+            }
 
         # 삭제할 파일 키 계산 (기존에 있었지만 새로운 버전에 없는 것)
         removed_keys = (old_attachment_keys - new_attachment_keys) | (old_content_keys - new_content_keys)
@@ -822,33 +889,33 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         author_id = getattr(instance.author, 'id', None)
 
-        def _is_owned(file_key: str) -> bool:
-            # 경로: uploads/Y/M/D/<user_id>/... 본인 업로드 파일만 연쇄 삭제 허용.
-            parts = file_key.split('/')
-            if len(parts) < 6 or not file_key.startswith('uploads/'):
-                return False
-            try:
-                return int(parts[4]) == author_id
-            except (TypeError, ValueError):
-                return False
-
-        keys_to_delete = []
-
+        candidate_keys = set()
         if instance.attachment_paths and isinstance(instance.attachment_paths, list):
             for att in instance.attachment_paths:
                 if isinstance(att, dict) and 'path' in att:
                     file_key = att['path']
-                    if _is_owned(file_key):
-                        keys_to_delete.append(file_key)
+                    if isinstance(file_key, str):
+                        normalized_key = file_key.replace('\\', '/')
+                        if _is_upload_owned_by(normalized_key, author_id):
+                            candidate_keys.add(normalized_key)
 
         if instance.content_md:
-            content_keys = re.findall(r'media-key://(uploads/[^\s\)]+)', instance.content_md)
-            keys_to_delete.extend(k for k in content_keys if _is_owned(k))
+            content_keys = (
+                k.replace('\\', '/')
+                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
+            )
+            candidate_keys.update(k for k in content_keys if _is_upload_owned_by(k, author_id))
 
+        response = super().destroy(request, *args, **kwargs)
+
+        # DB에서 게시글이 삭제된 뒤에도 다른 글/임시저장(Draft)에서 참조하지 않는 파일만 제거한다.
+        keys_to_delete = {
+            key for key in candidate_keys if not _is_upload_referenced(key)
+        }
         if keys_to_delete:
-            delete_files(set(keys_to_delete))
+            delete_files(keys_to_delete)
 
-        return super().destroy(request, *args, **kwargs)
+        return response
 
 @extend_schema(tags=['댓글'])
 @extend_schema_view(
@@ -919,12 +986,8 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
                     comment=comment
                 )
         else:
-            # 비회원 댓글 - IP 주소 추출
-            x_forwarded_for = self.request.META.get('HTTP_X_FORWARDED_FOR')
-            if x_forwarded_for:
-                ip = x_forwarded_for.split(',')[0]
-            else:
-                ip = self.request.META.get('REMOTE_ADDR')
+            # 비회원 댓글 - 신뢰 프록시 기준 검증된 IP 주소 추출
+            ip = get_client_ip(self.request) or '0.0.0.0'
 
             # Turnstile CAPTCHA 검증
             turnstile_token = self.request.data.get('turnstile_token')
@@ -1052,6 +1115,14 @@ class AdminBoardUpdateAPIView(generics.UpdateAPIView):
 # 파일 업로드 허용 확장자 화이트리스트.
 # 블랙리스트 방식은 `.phtml`, `.svg` (XSS), `.html` 등 우회 여지를 남기기 때문에 화이트리스트로 운영한다.
 IMAGE_UPLOAD_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}
+SAFE_IMAGE_MIME_TYPES = {
+    'png': 'image/png',
+    'jpg': 'image/jpeg',
+    'jpeg': 'image/jpeg',
+    'gif': 'image/gif',
+    'webp': 'image/webp',
+    'bmp': 'image/bmp',
+}
 DOCUMENT_UPLOAD_EXTENSIONS = {
     'pdf', 'hwp', 'hwpx', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'txt', 'csv', 'md', 'zip',
 }
@@ -1090,41 +1161,27 @@ class DeleteFileAPIView(APIView):
         if not file_key or not isinstance(file_key, str):
             return Response({"error": "No file path provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        file_key = file_key.strip()
-        if not file_key.startswith('uploads/'):
+        file_key = file_key.strip().replace('\\', '/')
+        if not is_safe_upload_key(file_key):
             return Response({"error": "Invalid file path."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 파일 경로에서 사용자 ID 추출하여 본인 파일인지 확인
-        # 경로 형식: uploads/년/월/일/유저ID/uuid.확장자
+        parts = file_key.split('/')
+        if len(parts) < 6:
+            return Response({"error": "Invalid file path format."}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            parts = file_key.split('/')
-            if len(parts) >= 5:
-                file_owner_id = int(parts[4])  # uploads/년/월/일/유저ID/...
-                if file_owner_id != request.user.id:
-                    return Response(
-                        {"error": "You can only delete your own files."},
-                        status=status.HTTP_403_FORBIDDEN
-                    )
-            else:
-                return Response({"error": "Invalid file path format."}, status=status.HTTP_400_BAD_REQUEST)
+            file_owner_id = int(parts[4])  # uploads/년/월/일/유저ID/파일명
         except (ValueError, IndexError):
             return Response({"error": "Invalid file path format."}, status=status.HTTP_400_BAD_REQUEST)
+        if file_owner_id != request.user.id:
+            return Response(
+                {"error": "You can only delete your own files."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        # 게시글/드래프트에 이미 첨부된 파일은 삭제를 거부한다. 첨부 후 삭제하면
-        # 다른 사용자의 게시글이 참조하고 있던 파일까지 사라질 수 있어 UX/무결성 손상.
-        if Post.objects.filter(attachment_paths__contains=[{'path': file_key}]).exists():
+        # 게시글/드래프트에 이미 첨부 또는 본문 참조 중인 파일은 삭제를 거부한다.
+        if _is_upload_referenced(file_key):
             return Response(
-                {"error": "이 파일은 게시글에 첨부되어 있어 삭제할 수 없습니다."},
-                status=status.HTTP_409_CONFLICT,
-            )
-        if Post.objects.filter(content_md__contains=f'media-key://{file_key}').exists():
-            return Response(
-                {"error": "이 파일은 게시글 본문에서 참조 중이라 삭제할 수 없습니다."},
-                status=status.HTTP_409_CONFLICT,
-            )
-        if Draft.objects.filter(uploaded_paths__contains=[{'path': file_key}]).exists():
-            return Response(
-                {"error": "이 파일은 임시 저장(Draft)에서 참조 중입니다."},
+                {"error": "이 파일은 게시글 또는 임시 저장(Draft)에서 참조 중이라 삭제할 수 없습니다."},
                 status=status.HTTP_409_CONFLICT,
             )
 
@@ -1148,21 +1205,19 @@ class ConfirmUploadAPIView(APIView):
         if not file_key or not isinstance(file_key, str):
             return Response({"error": "No file_key provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-        file_key = file_key.strip()
-        if not file_key.startswith('uploads/'):
+        file_key = file_key.strip().replace('\\', '/')
+        if not is_safe_upload_key(file_key):
             return Response({"error": "Invalid file path."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 본인 파일인지 확인
+        parts = file_key.split('/')
+        if len(parts) < 6:
+            return Response({"error": "Invalid file path format."}, status=status.HTTP_400_BAD_REQUEST)
         try:
-            parts = file_key.split('/')
-            if len(parts) >= 5:
-                file_owner_id = int(parts[4])
-                if file_owner_id != request.user.id:
-                    return Response({"error": "You can only modify your own files."}, status=status.HTTP_403_FORBIDDEN)
-            else:
-                return Response({"error": "Invalid file path format."}, status=status.HTTP_400_BAD_REQUEST)
+            file_owner_id = int(parts[4])
         except (ValueError, IndexError):
             return Response({"error": "Invalid file path format."}, status=status.HTTP_400_BAD_REQUEST)
+        if file_owner_id != request.user.id:
+            return Response({"error": "You can only modify your own files."}, status=status.HTTP_403_FORBIDDEN)
 
         # 이미지는 마크다운 렌더러가 직접 `<img src=...>`로 로드해야 하므로 public-read로
         # 두고, 문서/압축 파일은 private 유지한 뒤 클라이언트가 요청할 때마다 서버가
@@ -1267,25 +1322,28 @@ class PostAttachmentDownloadView(APIView):
         item = attachments[index] if isinstance(attachments[index], dict) else {}
         file_key = (item.get('path') or item.get('url') or '').replace('\\', '/')
         file_name = item.get('name') or (file_key.rsplit('/', 1)[-1] if file_key else 'download')
-        if not file_key.startswith('uploads/') or '..' in file_key.split('/'):
+        if not is_safe_upload_key(file_key):
             raise Http404('첨부파일을 찾을 수 없습니다.')
 
         stream = get_file_stream(file_key)
         if stream is None:
             raise Http404('파일을 찾을 수 없습니다.')
-        body, content_type, content_length = stream
+        body, _content_type, content_length = stream
 
+        # 첨부 다운로드는 스토리지 메타데이터의 Content-Type을 신뢰하지 않고 항상 바이너리로 강제한다.
         response = StreamingHttpResponse(
             _iter_file(body),
-            content_type=content_type or 'application/octet-stream',
+            content_type='application/octet-stream',
         )
         if content_length is not None:
             response['Content-Length'] = str(content_length)
-        # 한글 파일명 대응: ASCII 폴백 + RFC 5987 filename*
-        ascii_name = file_name.encode('ascii', 'ignore').decode().strip() or 'download'
+        # 한글 파일명 대응: 헤더 인젝션(\r\n, 따옴표 등)을 제거한 ASCII 폴백 + RFC 5987 filename*
+        safe_file_name = re.sub(r'[\r\n\x00]', '', str(file_name)) or 'download'
+        ascii_name = re.sub(r'[^A-Za-z0-9._ -]', '', safe_file_name).strip() or 'download'
         response['Content-Disposition'] = (
-            f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(file_name)}"
+            f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(safe_file_name)}"
         )
+        response['X-Content-Type-Options'] = 'nosniff'
         response['Cache-Control'] = 'private, no-store'
         return response
 
@@ -1330,28 +1388,32 @@ class MediaStreamView(APIView):
         if file_key is None:
             return Response({'detail': '유효하지 않은 토큰입니다.'}, status=status.HTTP_403_FORBIDDEN)
 
-        # 토큰이 유효해도 key 형식을 재검증한다(서명 시점 이후의 방어적 검사).
-        file_key = file_key.replace('\\', '/')
-        if (
-            not isinstance(file_key, str)
-            or not file_key.startswith('uploads/')
-            or '..' in file_key.split('/')
-        ):
+        # 토큰이 유효해도 key 형식과 이미지 확장자를 재검증한다(Same-Origin Stored XSS 차단).
+        file_key = file_key.replace('\\', '/') if isinstance(file_key, str) else ''
+        if not is_safe_upload_key(file_key):
             return Response({'detail': '유효하지 않은 경로입니다.'}, status=status.HTTP_403_FORBIDDEN)
+
+        ext = file_key.rsplit('.', 1)[-1].lower() if '.' in file_key else ''
+        safe_content_type = SAFE_IMAGE_MIME_TYPES.get(ext)
+        if safe_content_type is None:
+            return Response({'detail': '허용되지 않는 미디어 형식입니다.'}, status=status.HTTP_403_FORBIDDEN)
 
         stream = get_file_stream(file_key)
         if stream is None:
             raise Http404('파일을 찾을 수 없습니다.')
-        body, content_type, content_length = stream
+        body, _s3_content_type, content_length = stream
 
+        # 업로더가 R2에 임의의 Content-Type(예: text/html)을 주입해도 무시하고 확장자 기반 안전 MIME만 사용.
         response = StreamingHttpResponse(
             _iter_file(body),
-            content_type=content_type or 'application/octet-stream',
+            content_type=safe_content_type,
         )
         if content_length is not None:
             response['Content-Length'] = str(content_length)
         # 이미지는 페이지 내에서 렌더되어야 하므로 다운로드가 아닌 inline 으로 내려보낸다.
         response['Content-Disposition'] = 'inline'
+        response['X-Content-Type-Options'] = 'nosniff'
+        response['Content-Security-Policy'] = "default-src 'none'; sandbox"
         # 서명 토큰이 붙은 사설 리소스라 공용 캐시는 피하고 짧게 사설 캐시만 허용.
         response['Cache-Control'] = 'private, max-age=3600'
         return response
@@ -1392,6 +1454,7 @@ class GeneratePresignedURLAPIView(APIView):
     파일 업로드를 위한 Presigned URL을 생성하는 API
     """
     permission_classes = [IsAuthenticated] # 로그인한 사용자만 이 API를 호출할 수 있음
+    throttle_scope = 'file_upload'
 
     def post(self, request, *args, **kwargs):
         filename = request.data.get('filename')

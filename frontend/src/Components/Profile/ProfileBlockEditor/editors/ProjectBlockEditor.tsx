@@ -3,11 +3,15 @@ import { Upload, X } from 'lucide-react';
 import { ProjectBlock } from '../../types';
 import { uploadAttachment } from '../../../../API/req';
 import { useUser } from '../../../Utils/UserContext';
+import { sanitizeMediaUrl } from '../../../Utils/safeUrl';
 
 interface Props {
   block: ProjectBlock;
   onChange: (block: ProjectBlock) => void;
 }
+
+const ALLOWED_IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp)$/i;
+const MAX_BLOCK_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -21,12 +25,23 @@ const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !accessToken) return;
+    if (!ALLOWED_IMAGE_EXT_RE.test(file.name)) {
+      alert('PNG, JPG, GIF, WebP, BMP 이미지만 업로드할 수 있습니다.');
+      return;
+    }
+    if (file.size > MAX_BLOCK_IMAGE_BYTES) {
+      alert('이미지는 최대 10MB까지 업로드할 수 있습니다.');
+      return;
+    }
     setUploading(true);
     try {
       const result = await uploadAttachment(file, accessToken);
-      update('imagePath', result.path);
-      update('imageUrl', result.url || '');
+      onChange({
+        ...block,
+        data: { ...block.data, imagePath: result.path, imageUrl: result.url || '' },
+      });
     } catch {
       alert('이미지 업로드에 실패했습니다.');
     } finally {
@@ -59,7 +74,7 @@ const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
           {block.data.tags.map((tag: string, i: number) => (
             <span key={i} className="block-tag">
               {tag}
-              <button onClick={() => removeTag(i)}><X size={12} /></button>
+              <button type="button" onClick={() => removeTag(i)}><X size={12} /></button>
             </span>
           ))}
         </div>
@@ -71,25 +86,28 @@ const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
           onKeyDown={handleTagKeyDown}
         />
       </div>
-      {block.data.imageUrl ? (
-        <div className="block-image-preview-wrap">
-          <img src={block.data.imageUrl} alt="" className="block-image-preview block-image-preview-sm" />
-          <button
-            type="button"
-            className="block-image-remove"
-            aria-label="썸네일 제거"
-            onClick={() => { update('imagePath', ''); update('imageUrl', ''); }}
-          >
-            <X size={16} aria-hidden="true" />
+      {(() => {
+        const safeThumbUrl = sanitizeMediaUrl(block.data.imageUrl);
+        return safeThumbUrl ? (
+          <div className="block-image-preview-wrap">
+            <img src={safeThumbUrl} alt="" className="block-image-preview block-image-preview-sm" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
+            <button
+              type="button"
+              className="block-image-remove"
+              aria-label="썸네일 제거"
+              onClick={() => onChange({ ...block, data: { ...block.data, imagePath: '', imageUrl: '' } })}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="block-image-upload-area block-image-upload-small" onClick={() => fileRef.current?.click()}>
+            <Upload size={18} aria-hidden="true" />
+            <span>{uploading ? '업로드 중...' : '썸네일 (선택)'}</span>
           </button>
-        </div>
-      ) : (
-        <button type="button" className="block-image-upload-area block-image-upload-small" onClick={() => fileRef.current?.click()}>
-          <Upload size={18} aria-hidden="true" />
-          <span>{uploading ? '업로드 중...' : '썸네일 (선택)'}</span>
-        </button>
-      )}
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleImageUpload} />
+        );
+      })()}
+      <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.bmp" hidden onChange={handleImageUpload} />
     </div>
   );
 };

@@ -25,10 +25,10 @@ jobs:
         working-directory: backend
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
           cache: "pip"
@@ -54,17 +54,21 @@ jobs:
   deploy:
     name: Deploy Backend to Server
     needs: test
-    # PR 이벤트에서는 테스트 검증(test)만 수행하고, 실제 서버 배포는 main 푸시 또는 main 수동 실행에서만 진행한다.
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    concurrency:
+      group: deploy-backend
+      cancel-in-progress: false
+    # 프로덕션 배포는 main 브랜치의 push 이벤트에서만 실행한다.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Create build archive
         env:
           COMMIT_SHA: ${{ github.sha }}
           BRANCH_NAME: ${{ github.ref_name }}
+          RUN_ID: ${{ github.run_id }}
         run: |
           python3 - <<'PY'
           import datetime, json, os, subprocess
@@ -81,7 +85,7 @@ jobs:
               json.dump(payload, f, ensure_ascii=False, indent=2)
           PY
 
-          tar czf /tmp/backend-build.tar.gz \
+          tar czf "backend-build-${RUN_ID}.tar.gz" \
             -C backend \
             --exclude='.venv' \
             --exclude='.git' \
@@ -90,31 +94,42 @@ jobs:
             --exclude='.env' \
             --exclude='media/*' \
             .
-          mv /tmp/backend-build.tar.gz backend-build.tar.gz
 
       - name: Upload build to server
-        uses: appleboy/scp-action@v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "backend-build.tar.gz"
-          target: "/tmp/"
+          source: "backend-build-${{ github.run_id }}.tar.gz"
+          target: "$HOME/releases/"
 
       - name: Deploy new release on server
-        uses: appleboy/ssh-action@v1.2.5
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         env:
           BACKEND_DEPLOY_PATH: ${{ secrets.BACKEND_DEPLOY_PATH }}
+          RUN_ID: ${{ github.run_id }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: BACKEND_DEPLOY_PATH
+          envs: BACKEND_DEPLOY_PATH,RUN_ID
           script: |
             set -euo pipefail
 
+            ARCHIVE_PATH="$HOME/releases/backend-build-${RUN_ID}.tar.gz"
+            trap 'rm -f -- "$ARCHIVE_PATH"' EXIT
+
+            HOME_REAL=$(realpath -m -- "$HOME")
             if [ -n "${BACKEND_DEPLOY_PATH:-}" ]; then
-              APP_BASE_DIR="$HOME/${BACKEND_DEPLOY_PATH}"
+              APP_BASE_DIR=$(realpath -m -- "$HOME_REAL/${BACKEND_DEPLOY_PATH}")
+              case "$APP_BASE_DIR" in
+                "$HOME_REAL"/*) ;;
+                *)
+                  echo "Error: BACKEND_DEPLOY_PATH escapes HOME." >&2
+                  exit 1
+                  ;;
+              esac
             else
               GUNICORN_WD=$(systemctl show -p WorkingDirectory --value gunicorn-jbig 2>/dev/null || true)
               if [ -z "$GUNICORN_WD" ]; then
@@ -127,12 +142,16 @@ jobs:
                 exit 1
               fi
               if [ "${GUNICORN_WD%/current}" != "$GUNICORN_WD" ]; then
-                APP_BASE_DIR="${GUNICORN_WD%/current}"
+                APP_BASE_DIR=$(realpath -m -- "${GUNICORN_WD%/current}")
               else
-                APP_BASE_DIR="$GUNICORN_WD"
+                APP_BASE_DIR=$(realpath -m -- "$GUNICORN_WD")
               fi
-              if [ "$APP_BASE_DIR" = "/" ] || [ "$APP_BASE_DIR" = "$HOME" ] || [ ! -d "$APP_BASE_DIR/shared" ] || [ ! -d "$APP_BASE_DIR/releases" ]; then
-                echo "Error: Auto-detected backend directory does not match expected shared/releases layout." >&2
+              if [ -z "$APP_BASE_DIR" ] || [ "$APP_BASE_DIR" = "/" ] || [ "$APP_BASE_DIR" = "$HOME_REAL" ]; then
+                echo "Error: Unsafe auto-detected backend deploy path." >&2
+                exit 1
+              fi
+              if [ ! -d "$APP_BASE_DIR/shared" ] || [ ! -d "$APP_BASE_DIR/releases" ]; then
+                echo "Error: Auto-detected backend deploy directory does not match expected shared/releases layout." >&2
                 exit 1
               fi
               echo "Auto-detected backend release directory from gunicorn-jbig systemd unit."
@@ -144,17 +163,17 @@ jobs:
             NEW_RELEASE="$RELEASES_DIR/$TIMESTAMP"
 
             # 디렉토리 생성
-            mkdir -p "$RELEASES_DIR"
-            mkdir -p "$SHARED_DIR/media"
+            mkdir -p -- "$RELEASES_DIR"
+            mkdir -p -- "$SHARED_DIR/media"
 
             # 빌드 압축 해제
-            mkdir -p "$NEW_RELEASE"
-            tar xzf "/tmp/backend-build.tar.gz" -C "$NEW_RELEASE"
-            rm -f "/tmp/backend-build.tar.gz"
+            mkdir -p -- "$NEW_RELEASE"
+            tar xzf "$ARCHIVE_PATH" -C "$NEW_RELEASE"
+            rm -f -- "$ARCHIVE_PATH"
 
             # 공유 디렉토리 심볼릭 링크 (media, .env 등)
-            ln -sfn "$SHARED_DIR/media" "$NEW_RELEASE/media"
-            ln -sfn "$SHARED_DIR/.env" "$NEW_RELEASE/.env"
+            ln -sfn -- "$SHARED_DIR/media" "$NEW_RELEASE/media"
+            ln -sfn -- "$SHARED_DIR/.env" "$NEW_RELEASE/.env"
 
             # 가상환경 설정 및 의존성 설치
             cd "$NEW_RELEASE"
@@ -169,17 +188,21 @@ jobs:
             python manage.py collectstatic --noinput
 
             # 새 릴리즈 활성화
-            ln -sfn "$NEW_RELEASE" "$APP_BASE_DIR/current"
+            ln -sfn -- "$NEW_RELEASE" "$APP_BASE_DIR/current"
 
-            # 서비스 재시작
-            sudo systemctl restart gunicorn-jbig || echo "Gunicorn restart failed"
+            # 서비스 재시작 (실패 시 배포 실패로 즉시 중단)
+            sudo systemctl restart gunicorn-jbig
             if systemctl cat jbig-arena-worker.service >/dev/null 2>&1; then
               sudo systemctl restart jbig-arena-worker
             fi
-            sudo systemctl reload nginx || echo "Nginx reload failed"
+            sudo systemctl reload nginx
 
-            # 오래된 릴리즈 정리 (최근 5개만 유지)
-            cd "$RELEASES_DIR"
-            ls -t | tail -n +6 | xargs -r sudo rm -rf
+            # 오래된 릴리즈 정리 (14자리 타임스탬프 디렉토리만 대상으로 최근 5개 유지)
+            find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -regextype posix-extended -regex '.*/[0-9]{14}$' -printf '%f\0' \
+              | sort -z -rn \
+              | tail -z -n +6 \
+              | while IFS= read -r -d '' old_rel; do
+                  sudo rm -rf -- "$RELEASES_DIR/$old_rel"
+                done
 
             echo "Deployed new backend version: $TIMESTAMP"

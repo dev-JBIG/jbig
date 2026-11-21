@@ -6,6 +6,7 @@ import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 import { useJbnuEmail } from "./useJbnuEmail";
 import { useFocusTrap } from "./useFocusTrap";
+import { sanitizeInternalPath } from "./safeUrl";
 
 interface LoginModalProps {
     onClose: () => void;
@@ -79,8 +80,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     result.refresh
                 );
                 onClose();
-                if (window.location.pathname !== redirectTo) {
-                    navigate(redirectTo);
+                const safeRedirect = sanitizeInternalPath(redirectTo, "/");
+                if (window.location.pathname !== safeRedirect) {
+                    navigate(safeRedirect);
                 }
             } else {
                 setError(result.message || "로그인에 실패했습니다.");

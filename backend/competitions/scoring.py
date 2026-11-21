@@ -47,13 +47,23 @@ def evaluate(submission):
     return tuple(rmse([labels[rid] for rid in ids], [predictions[rid] for rid in ids]) for ids in (public, private))
 
 
+MAX_SCORING_ATTEMPTS = 3
+
+
 def claim_next():
     now = timezone.now()
     ready = Q(status=Submission.Status.QUEUED) | Q(
         status=Submission.Status.SCORING, lease_until__lt=now,
     )
     with transaction.atomic():
-        query = Submission.objects.filter(ready).order_by('accepted_at', 'id')
+        # 최대 재시도 횟수를 초과해 lease가 만료된 작업(poison-pill)은 ERROR로 종결한다.
+        Submission.objects.filter(
+            status=Submission.Status.SCORING,
+            lease_until__lt=now,
+            attempts__gte=MAX_SCORING_ATTEMPTS,
+        ).update(status=Submission.Status.ERROR, worker_token=None, lease_until=None)
+
+        query = Submission.objects.filter(ready, attempts__lt=MAX_SCORING_ATTEMPTS).order_by('accepted_at', 'id')
         if connection.features.has_select_for_update_skip_locked:
             query = query.select_for_update(skip_locked=True)
         else:
@@ -62,7 +72,9 @@ def claim_next():
         if submission is None:
             return None
         token = uuid.uuid4()
-        updated = Submission.objects.filter(pk=submission.pk).filter(ready).update(
+        updated = Submission.objects.filter(
+            pk=submission.pk, attempts__lt=MAX_SCORING_ATTEMPTS
+        ).filter(ready).update(
             status=Submission.Status.SCORING, worker_token=token,
             lease_until=now + timedelta(minutes=5), attempts=F('attempts') + 1,
         )

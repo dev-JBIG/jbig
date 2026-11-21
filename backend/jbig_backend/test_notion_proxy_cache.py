@@ -53,6 +53,7 @@ class NotionProxyCacheReproductionTests(TestCase):
     def setUp(self):
         notion._cache.clear()
         notion._build_locks.clear()
+        notion._in_flight_refreshes.clear()
         self.original_notion_post = notion._notion_post
         self.original_thread = notion.threading.Thread
         self.original_sleep = notion._time.sleep
@@ -65,6 +66,7 @@ class NotionProxyCacheReproductionTests(TestCase):
             password='pw',
             is_active=True,
             is_verified=True,
+            is_staff=True,
         )
         self.client = APIClient()
         self.client.force_authenticate(user=user)
@@ -76,6 +78,7 @@ class NotionProxyCacheReproductionTests(TestCase):
         notion.MAX_INCOMPLETE_BUILD_RETRIES = self.original_max_incomplete_build_retries
         notion._cache.clear()
         notion._build_locks.clear()
+        notion._in_flight_refreshes.clear()
 
     def test_expired_cache_refresh_keeps_complete_cache_when_refresh_is_partial(self):
         def complete_map():

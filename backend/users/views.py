@@ -38,15 +38,18 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 
 MAX_VERIFICATION_ATTEMPTS = 5
-import random
-import string
+import logging
+import secrets
 from django.core.mail import send_mail
+from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404
 import pytz
 
 from rest_framework_simplejwt.exceptions import TokenError
 from boards.serializers import PostSummarySerializer, CommentSerializer
 from boards.models import Post, Comment
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -269,6 +272,9 @@ class SignInView(TokenObtainPairView):
 
 
 class CustomTokenRefreshView(APIView):
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'token_refresh'
+
     @extend_schema(
         tags=["사용자"],
         summary="JWT 토큰 재발급",
@@ -308,44 +314,64 @@ class CustomTokenRefreshView(APIView):
     def post(self, request, *args, **kwargs):
         refresh_token = request.data.get("refresh")
 
-        if not refresh_token:
+        if not refresh_token or not isinstance(refresh_token, str):
             return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             old_token = RefreshToken(refresh_token)
-
-            # simplejwt의 RefreshToken(...) 생성자는 서명/만료만 검증하고 blacklist는 확인하지 않는다.
-            # 탈취 후 로그아웃된 토큰이 재사용되는 것을 막기 위해 jti로 명시 조회한다.
-            from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
             jti = old_token.get('jti')
-            if jti and BlacklistedToken.objects.filter(token__jti=jti).exists():
-                raise AuthenticationFailed('Token is blacklisted', code='token_not_valid')
-
             user_id = old_token.get('user_id')
 
-            try:
-                user = User.objects.get(id=user_id)
-            except User.DoesNotExist:
-                raise AuthenticationFailed('User not found', code='user_not_found')
+            from rest_framework_simplejwt.token_blacklist.models import (
+                BlacklistedToken,
+                OutstandingToken,
+            )
 
-            if not user.is_active or not user.is_verified:
+            with transaction.atomic():
+                # 동시 refresh 요청이 같은 토큰으로 2회 재발급되는 레이스 컨디션을 막기 위해
+                # OutstandingToken 행에 배타 잠금을 건 뒤 블랙리스트 여부를 검사하고 즉시 블랙리스트한다.
+                if jti:
+                    outstanding = OutstandingToken.objects.select_for_update().filter(jti=jti).first()
+                    if outstanding is not None and BlacklistedToken.objects.filter(token=outstanding).exists():
+                        raise AuthenticationFailed('Token is blacklisted', code='token_not_valid')
+                    elif BlacklistedToken.objects.filter(token__jti=jti).exists():
+                        raise AuthenticationFailed('Token is blacklisted', code='token_not_valid')
+
+                try:
+                    user = User.objects.get(id=user_id)
+                except User.DoesNotExist:
+                    raise AuthenticationFailed('User not found', code='user_not_found')
+
+                if not user.is_active or not user.is_verified:
+                    try:
+                        old_token.blacklist()
+                    except Exception:
+                        pass
+                    return Response({"error": "Account disabled"}, status=status.HTTP_401_UNAUTHORIZED)
+
+                # 비밀번호 변경 이전에 발급된 리프레시 토큰 차단 (같은 초 포함)
+                from .authentication import is_token_valid_for_password, issue_tokens_for_user
+                if not is_token_valid_for_password(old_token, user):
+                    try:
+                        old_token.blacklist()
+                    except Exception:
+                        pass
+                    return Response(
+                        {"error": "Token invalidated by password change"},
+                        status=status.HTTP_401_UNAUTHORIZED,
+                    )
+
                 try:
                     old_token.blacklist()
-                except Exception:
+                except AttributeError:
                     pass
-                raise AuthenticationFailed('Account disabled', code='account_disabled')
 
-            # last_login 업데이트
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
+                # last_login 업데이트
+                user.last_login = timezone.now()
+                user.save(update_fields=['last_login'])
 
-            # 새로운 리프레시 토큰 생성
-            new_refresh_token = RefreshToken.for_user(user)
-
-            try:
-                old_token.blacklist()
-            except AttributeError:
-                pass
+                # 비밀번호 지문(pwh)을 포함한 새로운 리프레시 토큰 생성
+                new_refresh_token = issue_tokens_for_user(user)
 
             response_data = {
                 "isSuccess": True,
@@ -363,10 +389,11 @@ class CustomTokenRefreshView(APIView):
         except AuthenticationFailed as e:
             detail = e.detail if hasattr(e, 'detail') else str(e)
             return Response({"error": str(detail)}, status=status.HTTP_401_UNAUTHORIZED)
-        except TokenError as e:
-            return Response({"error": str(e)}, status=status.HTTP_401_UNAUTHORIZED)
-        except Exception as e:
-            return Response({"error": "An unexpected error occurred.", "detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except TokenError:
+            return Response({"error": "Token is invalid or expired."}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception:
+            logger.exception("Unexpected error during token refresh")
+            return Response({"error": "An unexpected error occurred."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @extend_schema(
@@ -431,33 +458,33 @@ class EmailVerifyView(APIView):
             return generic_error
 
         if user.is_verified:
-            # 이미 인증됐다면 코드 존재 여부와 무관하게 성공 응답을 준다.
-            return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
-
-        try:
-            verification_code_obj = EmailVerificationCode.objects.get(user=user)
-        except EmailVerificationCode.DoesNotExist:
+            # 이미 인증된 이메일에 200을 반환하면 이메일 존재 여부 오라클이 되므로 동일한 400으로 통일한다.
             return generic_error
 
-        if (timezone.now() - verification_code_obj.created_at).total_seconds() > 300:
-            verification_code_obj.delete()
-            return generic_error
+        with transaction.atomic():
+            try:
+                verification_code_obj = EmailVerificationCode.objects.select_for_update().get(user=user)
+            except EmailVerificationCode.DoesNotExist:
+                return generic_error
 
-        if not check_password(verifyCode, verification_code_obj.code):
-            verification_code_obj.attempt_count = models.F('attempt_count') + 1
-            verification_code_obj.save(update_fields=['attempt_count'])
-            verification_code_obj.refresh_from_db()
-            if verification_code_obj.attempt_count >= MAX_VERIFICATION_ATTEMPTS:
+            if (timezone.now() - verification_code_obj.created_at).total_seconds() > 300:
                 verification_code_obj.delete()
-            return generic_error
+                return generic_error
 
-        # 신규 가입 인증: 아직 한 번도 인증된 적 없는 계정만 활성화한다.
-        # 관리자가 이미 인증된 계정을 비활성화(`is_active=False`)한 경우 위 `is_verified=True`
-        # 분기에서 바로 성공 응답을 주므로 is_active에 손대지 않아 제재가 유지된다.
-        user.is_verified = True
-        user.is_active = True
-        user.save(update_fields=['is_verified', 'is_active'])
-        verification_code_obj.delete()
+            if not check_password(verifyCode, verification_code_obj.code):
+                verification_code_obj.attempt_count = models.F('attempt_count') + 1
+                verification_code_obj.save(update_fields=['attempt_count'])
+                verification_code_obj.refresh_from_db()
+                if verification_code_obj.attempt_count >= MAX_VERIFICATION_ATTEMPTS:
+                    verification_code_obj.delete()
+                return generic_error
+
+            # 신규 가입 인증: 아직 한 번도 인증된 적 없는 계정만 활성화한다.
+            user.is_verified = True
+            user.is_active = True
+            user.save(update_fields=['is_verified', 'is_active'])
+            verification_code_obj.delete()
+
         return Response({"message": "Email verified successfully."}, status=status.HTTP_200_OK)
 
 
@@ -489,7 +516,7 @@ class ResendVerificationEmailView(APIView):
         if user.is_verified:
             return generic_response
 
-        code = ''.join(random.choices(string.digits, k=6))
+        code = f'{secrets.randbelow(1_000_000):06d}'
         hashed_code = make_password(code)
 
         try:
@@ -589,17 +616,27 @@ class PasswordResetRequestView(APIView):
         except User.DoesNotExist:
             return generic_response
 
-        code = ''.join(random.choices(string.digits, k=6))
+        if not user.is_active or not user.is_verified:
+            return generic_response
+
+        code = f'{secrets.randbelow(1_000_000):06d}'
         hashed_code = make_password(code)
 
-        EmailVerificationCode.objects.update_or_create(
-            user=user,
-            defaults={'code': hashed_code, 'created_at': timezone.now(), 'attempt_count': 0},
-        )
+        try:
+            with transaction.atomic():
+                EmailVerificationCode.objects.update_or_create(
+                    user=user,
+                    defaults={'code': hashed_code, 'created_at': timezone.now(), 'attempt_count': 0},
+                )
 
-        subject = '[JBIG] 비밀번호 변경 인증 코드'
-        message = f'요청하신 비밀번호 변경 인증 코드는 다음과 같습니다: {code}'
-        send_mail(subject, message, None, [user.email])
+                subject = '[JBIG] 비밀번호 변경 인증 코드'
+                message = f'요청하신 비밀번호 변경 인증 코드는 다음과 같습니다: {code}'
+                if send_mail(subject, message, None, [user.email]) == 0:
+                    raise SMTPException('Password reset email was not accepted')
+        except Exception as exc:
+            # 메일 전송 장애 시에도 미등록 이메일과 동일한 200 응답을 반환해 계정 열거 오라클을 차단한다.
+            logger.error("Password reset email delivery failed for user_id=%s: %s", user.id, exc)
+            return generic_response
 
         return generic_response
 
@@ -641,27 +678,31 @@ class VerifyPasswordCodeView(APIView):
         except User.DoesNotExist:
             return generic_error
 
-        try:
-            verification_code_obj = EmailVerificationCode.objects.get(user=user)
-        except EmailVerificationCode.DoesNotExist:
+        if not user.is_active or not user.is_verified:
             return generic_error
 
-        if (timezone.now() - verification_code_obj.created_at).total_seconds() > 300:
-            verification_code_obj.delete()
-            return generic_error
+        with transaction.atomic():
+            try:
+                verification_code_obj = EmailVerificationCode.objects.select_for_update().get(user=user)
+            except EmailVerificationCode.DoesNotExist:
+                return generic_error
 
-        if not check_password(verification_code, verification_code_obj.code):
-            verification_code_obj.attempt_count = models.F('attempt_count') + 1
-            verification_code_obj.save(update_fields=['attempt_count'])
-            verification_code_obj.refresh_from_db()
-            if verification_code_obj.attempt_count >= MAX_VERIFICATION_ATTEMPTS:
+            if (timezone.now() - verification_code_obj.created_at).total_seconds() > 300:
                 verification_code_obj.delete()
-            return generic_error
+                return generic_error
 
-        reset_token, expires_in = issue_reset_token(user, request=request)
+            if not check_password(verification_code, verification_code_obj.code):
+                verification_code_obj.attempt_count = models.F('attempt_count') + 1
+                verification_code_obj.save(update_fields=['attempt_count'])
+                verification_code_obj.refresh_from_db()
+                if verification_code_obj.attempt_count >= MAX_VERIFICATION_ATTEMPTS:
+                    verification_code_obj.delete()
+                return generic_error
 
-        # 인증코드는 재설정 토큰으로 교체되므로 즉시 제거한다.
-        verification_code_obj.delete()
+            reset_token, expires_in = issue_reset_token(user, request=request)
+
+            # 인증코드는 재설정 토큰으로 교체되므로 즉시 제거한다.
+            verification_code_obj.delete()
 
         return Response(
             {
@@ -675,6 +716,8 @@ class VerifyPasswordCodeView(APIView):
 
 class PasswordResetView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'password_reset'
 
     @extend_schema(
         tags=["사용자"],
@@ -778,6 +821,8 @@ class UserProfileView(generics.RetrieveAPIView):
 
 class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'password_change'
 
     @extend_schema(
         tags=["사용자"],
@@ -940,6 +985,8 @@ class ProfileHtmlUpdateView(generics.UpdateAPIView):
 )
 class DeleteAccountView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'delete_account'
 
     def post(self, request):
         user = request.user
@@ -958,21 +1005,28 @@ class DeleteAccountView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # 모든 리프레시 토큰 블랙리스트 처리
-        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+        # 사용자 계정 삭제 (참조 보호 제약이 있는 경우 토큰 무효화 전에 409 반환)
         try:
-            outstanding_tokens = OutstandingToken.objects.filter(user=user)
-            for token_obj in outstanding_tokens:
+            with transaction.atomic():
+                # 모든 리프레시 토큰 블랙리스트 처리
+                from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
                 try:
-                    token = RefreshToken(token_obj.token)
-                    token.blacklist()
+                    outstanding_tokens = OutstandingToken.objects.filter(user=user)
+                    for token_obj in outstanding_tokens:
+                        try:
+                            token = RefreshToken(token_obj.token)
+                            token.blacklist()
+                        except Exception:
+                            pass
                 except Exception:
                     pass
-        except Exception:
-            pass
 
-        # 사용자 계정 삭제
-        user.delete()
+                user.delete()
+        except ProtectedError:
+            return Response(
+                {"error": "연관된 기록(대회 제출 등)이 있어 계정을 즉시 삭제할 수 없습니다. 운영진에게 문의해주세요."},
+                status=status.HTTP_409_CONFLICT,
+            )
 
         return Response(
             {"message": "회원 탈퇴가 완료되었습니다."},

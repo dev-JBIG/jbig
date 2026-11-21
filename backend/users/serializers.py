@@ -1,18 +1,26 @@
-import random
-import string
+import re
+import secrets
 from smtplib import SMTPException
+from urllib.parse import urlparse
 from django.db import transaction
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.mail import send_mail
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
+from django.contrib.auth.password_validation import validate_password
 from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer, TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from boards.serializers import sanitize_markdown
+from .authentication import issue_tokens_for_user
 from .models import User, EmailVerificationCode
 
 from django.contrib.auth import get_user_model
+
+# 타이밍 공격 완화를 위한 더미 해시 (존재하지 않는 이메일 로그인 시 동일한 해시 연산 수행)
+_DUMMY_PASSWORD_HASH = make_password('jbig-dummy-timing-guard-password')
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
@@ -31,6 +39,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         try:
             user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
+            check_password(password or '', _DUMMY_PASSWORD_HASH)
             raise invalid_credentials
 
         if not user.check_password(password):
@@ -55,8 +64,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
 
-        # 수동으로 토큰 생성
-        refresh = RefreshToken.for_user(user)
+        # 비밀번호 지문(pwh)을 포함한 토큰 생성
+        refresh = issue_tokens_for_user(user)
 
         data = {
             'refresh': str(refresh),
@@ -98,7 +107,7 @@ MAIL_DELIVERY_ERRORS = (SMTPException, OSError)
 
 class UserCreateSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, help_text="사용자 비밀번호")
-    semester = serializers.IntegerField(help_text="학기 정보")
+    semester = serializers.IntegerField(min_value=0, max_value=100, help_text="학기 정보")
 
     class Meta:
         model = User
@@ -126,6 +135,18 @@ class UserCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({
                 "username": "이미 가입된 사용자(기수+이름)입니다."
             })
+
+        password = attrs.get('password')
+        temp_user = User(
+            email=attrs.get('email', ''),
+            username=username or '',
+            semester=semester,
+        )
+        try:
+            validate_password(password, user=temp_user)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError({"password": list(exc.messages)})
+
         return attrs
 
     @transaction.atomic
@@ -137,8 +158,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
             semester=validated_data['semester']
         )
 
-        # 6자리 인증 코드 생성
-        code = ''.join(random.choices(string.digits, k=6))
+        # CSPRNG 기반 6자리 인증 코드 생성
+        code = f'{secrets.randbelow(1_000_000):06d}'
         EmailVerificationCode.objects.create(user=user, code=make_password(code))
 
         # 인증 코드 이메일 발송
@@ -269,6 +290,9 @@ class PublicProfileSerializer(serializers.ModelSerializer):
         return obj.email.split('@')[0] if obj.email else ''
 
     def get_last_login(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return None
         if not obj.last_login:
             return None
         return obj.last_login.isoformat()
@@ -379,6 +403,53 @@ class ResumeUpdateSerializer(serializers.ModelSerializer):
 ALLOWED_BLOCK_TYPES = {'text', 'image', 'links', 'divider', 'project', 'experience', 'skills', 'header', 'award', 'certification', 'education', 'activity', 'publication', 'contact', 'stats', 'gallery', 'embed', 'quote'}
 MAX_BLOCKS = 50
 MAX_JSON_SIZE = 200 * 1024  # 200KB
+_BLOCK_URL_KEYS = frozenset({'url', 'website', 'imageUrl', 'photoUrl', 'link', 'href', 'github', 'linkedin', 'blog', 'portfolio'})
+_ALLOWED_BLOCK_URL_SCHEMES = frozenset({'http', 'https', 'mailto'})
+
+
+def _validate_block_url(raw_url: str, field_name: str) -> str:
+    cleaned = raw_url.strip()
+    if not cleaned:
+        return ''
+    if any(ord(ch) <= 0x1F or ord(ch) == 0x7F for ch in cleaned):
+        raise serializers.ValidationError(f"허용되지 않는 문자가 포함된 URL입니다({field_name}).")
+    if cleaned.startswith('//') or cleaned.startswith('/\\') or '\\' in cleaned:
+        raise serializers.ValidationError(f"허용되지 않는 URL 형식입니다({field_name}).")
+    # 내부 미디어 상대 경로(/media/...)만 허용하되 상위 디렉토리 이동(..) 차단
+    if cleaned.startswith('/media/'):
+        if '..' in cleaned.split('/'):
+            raise serializers.ValidationError(f"허용되지 않는 미디어 경로입니다({field_name}).")
+        return cleaned
+    if cleaned.startswith('/'):
+        raise serializers.ValidationError(f"허용되지 않는 상대 URL입니다({field_name}).")
+    parsed = urlparse(cleaned)
+    scheme = (parsed.scheme or '').lower()
+    if not scheme:
+        # 스킴 없이 도메인만 입력한 경우(예: github.com/foo) 허용하되 콜론/비도메인 우회 차단
+        first_segment = cleaned.split('/', 1)[0]
+        if ':' in first_segment or '.' not in first_segment or first_segment.startswith('.'):
+            raise serializers.ValidationError(f"허용되지 않는 URL 형식입니다({field_name}).")
+        return cleaned
+    if scheme not in _ALLOWED_BLOCK_URL_SCHEMES:
+        raise serializers.ValidationError(f"허용되지 않는 URL 스킴입니다({field_name}): {scheme}")
+    return cleaned
+
+
+def _sanitize_block_data(obj, depth: int = 0):
+    if depth > 8:
+        raise serializers.ValidationError("프로필 블록 중첩 깊이가 너무 깊습니다.")
+    if isinstance(obj, dict):
+        for key, val in list(obj.items()):
+            if key == 'markdown' and isinstance(val, str):
+                obj[key] = sanitize_markdown(val)
+            elif key in _BLOCK_URL_KEYS and isinstance(val, str):
+                obj[key] = _validate_block_url(val, key)
+            elif isinstance(val, (dict, list)):
+                _sanitize_block_data(val, depth + 1)
+    elif isinstance(obj, list):
+        for item in obj:
+            if isinstance(item, (dict, list)):
+                _sanitize_block_data(item, depth + 1)
 
 
 class ProfileBlocksUpdateSerializer(serializers.ModelSerializer):
@@ -404,12 +475,27 @@ class ProfileBlocksUpdateSerializer(serializers.ModelSerializer):
             if block['type'] not in ALLOWED_BLOCK_TYPES:
                 raise serializers.ValidationError(f"허용되지 않는 블록 타입: {block['type']}")
             data = block.get('data')
-            if isinstance(data, dict) and isinstance(data.get('markdown'), str):
-                data['markdown'] = sanitize_markdown(data['markdown'])
+            if isinstance(data, dict):
+                _sanitize_block_data(data)
         return value
 
 
 MAX_PROFILE_HTML_SIZE = 2 * 1024 * 1024  # 2MB (base64 인라인 이미지 포함 여유분)
+_DANGEROUS_PROFILE_HTML_TAGS = ('script', 'iframe', 'object', 'embed', 'applet', 'base')
+
+
+def _strip_dangerous_profile_html(raw_html: str) -> str:
+    """선형 시간 HTML 파서(BeautifulSoup)로 위험한 활성 태그를 제거한다(보조 방어; 주 보안 경계는 iframe sandbox + CSP)."""
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(raw_html, 'html.parser')
+    for tag in soup.find_all(_DANGEROUS_PROFILE_HTML_TAGS):
+        tag.decompose()
+    for meta in soup.find_all('meta'):
+        http_equiv = meta.get('http-equiv')
+        if isinstance(http_equiv, str) and http_equiv.strip().lower() == 'refresh':
+            meta.decompose()
+    return str(soup)
 
 
 class ProfileHtmlUpdateSerializer(serializers.ModelSerializer):
@@ -432,4 +518,5 @@ class ProfileHtmlUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"HTML은 {MAX_PROFILE_HTML_SIZE // (1024 * 1024)}MB 이하여야 합니다."
             )
-        return value
+        # 프론트엔드 iframe sandbox="" + CSP와 함께 다층 방어: 선형 파서로 위험 태그 사전 제거
+        return _strip_dangerous_profile_html(value)

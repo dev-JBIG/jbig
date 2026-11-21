@@ -48,6 +48,17 @@ def _prepare_and_accept(user, content, content_hash, filename, request_key, veri
         return check_replay(existing, content_hash), False
     if not competition.dataset_id:
         raise ArenaError('NOT_OPEN', '대회가 아직 준비 중입니다.', 409)
+    now = timezone.now()
+    if verification:
+        if not participant.is_test:
+            raise ArenaError('TEST_ONLY', '서버 검증 계정만 사용할 수 있습니다.', 403)
+    elif competition.phase(now) != Competition.State.OPEN:
+        raise ArenaError('NOT_OPEN', '현재 제출을 접수하지 않습니다. 대회 상태와 일정을 확인해 주세요.', 409)
+    if used_today(participant, now) >= competition.daily_limit:
+        existing = Submission.objects.filter(participant=participant, request_key=request_key).first()
+        if existing:
+            return check_replay(existing, content_hash), False
+        raise ArenaError('DAILY_LIMIT', '오늘 제출 기회를 모두 사용했습니다. 일일 한도는 KST 자정에 갱신됩니다.', 429)
     validate_submission(content, set(read_expected_ids(competition.dataset)))
     filename = re.sub(r'[\x00-\x1f\x7f]', '', filename.replace('\\', '/').rsplit('/', 1)[-1])[:160] or 'submission.csv'
     return _accept(participant, competition.dataset_id, content, content_hash, filename, request_key, verification)

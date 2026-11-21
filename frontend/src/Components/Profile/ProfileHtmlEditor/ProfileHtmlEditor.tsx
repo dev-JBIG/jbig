@@ -1,4 +1,5 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
+import { buildSandboxedProfileSrcDoc } from "../../Utils/safeUrl";
 import "./ProfileHtmlEditor.css";
 
 interface ProfileHtmlEditorProps {
@@ -41,6 +42,7 @@ const ProfileHtmlEditor: React.FC<ProfileHtmlEditorProps> = ({ initialHtml, onSa
     };
 
     const tooLarge = byteLength(html) > MAX_HTML_BYTES;
+    const previewSrcDoc = useMemo(() => buildSandboxedProfileSrcDoc(html), [html]);
 
     return (
         <div className="profile-html-editor">
@@ -87,7 +89,8 @@ const ProfileHtmlEditor: React.FC<ProfileHtmlEditorProps> = ({ initialHtml, onSa
                         className="phe-preview"
                         title="프로필 미리보기"
                         sandbox=""
-                        srcDoc={html}
+                        referrerPolicy="no-referrer"
+                        srcDoc={previewSrcDoc}
                     />
                 </div>
             </div>

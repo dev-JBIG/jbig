@@ -1,6 +1,7 @@
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 
-// PostDetail과 동일한 화이트리스트 기반 스키마. text-align / color / background-color 스타일만 허용.
+// PostDetail/TextBlockView/에디터 프리뷰 공통 화이트리스트 스키마.
+// text-align 및 엄격한 color 값(hex / 숫자 rgba / CSS 영문 색상명)만 허용한다.
 export const safeSanitizeSchema = {
   ...defaultSchema,
   attributes: {
@@ -11,7 +12,10 @@ export const safeSanitizeSchema = {
     ],
     span: [
       ...(defaultSchema.attributes?.span || []),
-      ['style', /^color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|[a-zA-Z]+);?$/i],
+      [
+        'style',
+        /^color:\s*(#[0-9a-fA-F]{3,6}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)|[a-zA-Z]{3,20});?$/i,
+      ],
     ],
   },
 };

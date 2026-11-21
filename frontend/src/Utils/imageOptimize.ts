@@ -291,12 +291,14 @@ function getSrgb2DContext(canvas: HTMLCanvasElement): CanvasRenderingContext2D |
     return canvas.getContext("2d");
 }
 
+const MAX_INPUT_IMAGE_BYTES = 50 * 1024 * 1024;
+
 /**
  * 래스터 이미지를 고화질 sRGB WebP(미지원 시 투명도 가능 포맷은 PNG, 불투명 사진은 JPEG)로 변환한다.
  * 애니메이션 이미지(GIF/애니메이션 WebP/APNG)나 오류 발생 시 원본 파일을 그대로 반환한다.
  */
 export async function optimizeImageForUpload(file: File): Promise<File> {
-    if (!isOptimizableImage(file) || typeof document === "undefined") {
+    if (!isOptimizableImage(file) || typeof document === "undefined" || file.size > MAX_INPUT_IMAGE_BYTES) {
         return file;
     }
 

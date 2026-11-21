@@ -5,13 +5,36 @@ type AuthRequest = InternalAxiosRequestConfig & { sessionId?: string; retried?: 
 const client = axios.create();
 const apiRoot = `${BASE_URL.replace(/\/$/, "")}/api/`;
 
-function isAuthenticatedRequest(config: InternalAxiosRequestConfig) {
-    return new URL(config.url || "", BASE_URL).href.startsWith(apiRoot)
-        && !!config.headers.Authorization;
+function isApiRequest(config: InternalAxiosRequestConfig) {
+    try {
+        const uri = axios.getUri({ baseURL: config.baseURL, url: config.url });
+        return new URL(uri, BASE_URL).href.startsWith(apiRoot);
+    } catch {
+        return false;
+    }
+}
+
+function stripAuthorizationHeader(headers: InternalAxiosRequestConfig["headers"]) {
+    if (!headers) return;
+    if (typeof headers.delete === "function") {
+        headers.delete("Authorization");
+    }
+    for (const key of Object.keys(headers)) {
+        if (key.toLowerCase() === "authorization") {
+            delete (headers as Record<string, unknown>)[key];
+        }
+    }
 }
 
 client.interceptors.request.use(config => {
-    if (!isAuthenticatedRequest(config)) return config;
+    if (!isApiRequest(config)) {
+        stripAuthorizationHeader(config.headers);
+        return config;
+    }
+    const hasAuth =
+        (typeof config.headers?.get === "function" && !!config.headers.get("Authorization")) ||
+        Object.keys(config.headers || {}).some(k => k.toLowerCase() === "authorization" && !!(config.headers as Record<string, unknown>)[k]);
+    if (!hasAuth) return config;
     const request = config as AuthRequest;
     const session = readAuth().session;
     if (!session || (request.sessionId && request.sessionId !== session.id)) throw new SessionChangedError();

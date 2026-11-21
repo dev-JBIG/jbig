@@ -12,6 +12,7 @@ import { useAlert } from "./AlertContext";
 import { useFocusTrap } from "./useFocusTrap";
 import "./MobileNav.css";
 import MemberQuickLinks from "./MemberQuickLinks";
+import { sanitizeHttpUrl } from "./safeUrl";
 
 interface MobileNavProps {
   boards: Section[];
@@ -173,21 +174,25 @@ const MobileNav: React.FC<MobileNavProps> = ({
                 <CounterLabel>{totalCount.toLocaleString()}</CounterLabel>
               </button>
 
-              {quizURL && quizURL.trim() !== "" && (
-                <button
-                  type="button"
-                  className="mobile-nav-item"
-                  onClick={() => {
-                    window.open(quizURL, "_blank", "noopener,noreferrer");
-                    setIsOpen(false);
-                  }}
-                >
-                  <div className="mobile-nav-item-content">
-                    <SquareCheckBig size={16} aria-hidden="true" />
-                    <span>이번 주 퀴즈</span>
-                  </div>
-                </button>
-              )}
+              {(() => {
+                const safeQuizUrl = sanitizeHttpUrl(quizURL);
+                if (!safeQuizUrl) return null;
+                return (
+                  <button
+                    type="button"
+                    className="mobile-nav-item"
+                    onClick={() => {
+                      window.open(safeQuizUrl, "_blank", "noopener,noreferrer");
+                      setIsOpen(false);
+                    }}
+                  >
+                    <div className="mobile-nav-item-content">
+                      <SquareCheckBig size={16} aria-hidden="true" />
+                      <span>이번 주 퀴즈</span>
+                    </div>
+                  </button>
+                );
+              })()}
 
               <div className="mobile-nav-divider" />
 

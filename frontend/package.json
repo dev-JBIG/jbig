@@ -111,6 +111,11 @@
     "brace-expansion@1": "^1.1.16",
     "brace-expansion@2": "^2.1.2",
     "form-data@3": "^3.0.5",
-    "form-data@4": "^4.0.6"
+    "form-data@4": "^4.0.6",
+    "follow-redirects": "^1.16.3",
+    "node-forge": "^1.4.3",
+    "glob@10": "^14.0.6",
+    "minimatch@9": "^11.0.9",
+    "webpack-dev-middleware": "^7.4.6"
   }
 }
