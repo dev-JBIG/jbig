@@ -1,0 +1,31 @@
+# Dependencies & build artifacts
+node_modules/
+frontend/build/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables (never commit)
+.env
+.env.*
+*.env
+!*.env.example
+
+# Local SQLite DB & uploaded media
+db.sqlite3
+backend/media/
+
+# Backups & logs
+*.bak
+*.backup
+*.old
+*.log
+build.tar.gz
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
