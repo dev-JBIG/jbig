@@ -248,7 +248,7 @@
   bottom: 12px;
   width: 3px;
   background: var(--fgColor-accent, #0969da);
-  border-radius: 2px;
+  border-radius: var(--radius-sm);
 }
 .block-header-left { text-align: left; }
 .block-header-center { text-align: center; }

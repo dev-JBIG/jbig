@@ -50,7 +50,7 @@
     min-width: 0;
     width: 100%;
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-medium, 8px);
+    border-radius: var(--radius-md);
     background-color: var(--bgColor-default, #ffffff);
     overflow: visible;
 }
@@ -63,7 +63,7 @@
     padding: 8px 14px;
     background-color: var(--bgColor-muted, #f6f8fa);
     border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-medium, 8px) var(--borderRadius-medium, 8px) 0 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .comment-meta-actions {
@@ -255,7 +255,7 @@
 
 .reply-item {
     border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.8));
-    border-radius: var(--borderRadius-medium, 8px);
+    border-radius: var(--radius-md);
     background-color: var(--bgColor-default, #ffffff);
 }
 
@@ -267,7 +267,7 @@
     padding: 7px 12px;
     background-color: var(--bgColor-muted, #f6f8fa);
     border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.8));
-    border-radius: var(--borderRadius-medium, 8px) var(--borderRadius-medium, 8px) 0 0;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .reply-content {
@@ -371,7 +371,7 @@
 .postdetail-comment-input-row {
     padding: 14px;
     background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    border-radius: var(--borderRadius-medium, 8px);
+    border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-default, var(--color-border-light));
 }
 

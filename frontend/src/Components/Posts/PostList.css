@@ -8,7 +8,7 @@
 .postlist-home-card {
     background-color: var(--bgColor-default, #ffffff);
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
 }
@@ -383,7 +383,7 @@
         border-collapse: separate;
         border-spacing: 0;
         border: 1px solid var(--borderColor-default, var(--color-border-light));
-        border-radius: var(--borderRadius-large, 12px);
+        border-radius: var(--radius-md);
         overflow: hidden;
         background-color: var(--bgColor-default, var(--color-bg-primary));
         box-shadow: var(--shadow-sm);
@@ -527,7 +527,7 @@
     flex-direction: column;
     background-color: var(--bgColor-default, #ffffff);
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
@@ -610,7 +610,7 @@
     color: var(--fgColor-muted, var(--color-text-secondary));
     background-color: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     font-size: 14px;
 }

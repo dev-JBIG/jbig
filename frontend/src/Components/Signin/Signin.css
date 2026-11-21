@@ -16,7 +16,7 @@
     padding: 28px 24px;
     background-color: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
@@ -63,7 +63,7 @@
     justify-content: center;
     width: 26px;
     height: 26px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background-color: var(--fgColor-default, #1f2328);
     color: var(--bgColor-default, #ffffff);
     font-size: 14px;

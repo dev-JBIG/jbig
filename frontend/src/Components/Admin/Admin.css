@@ -64,7 +64,7 @@
     justify-content: center;
     width: 24px;
     height: 24px;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     background-color: var(--fgColor-default, #1f2328);
     color: var(--bgColor-default, #ffffff);
     font-size: 13px;
@@ -164,7 +164,7 @@
 .admin-card {
     background-color: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     padding: 20px;
     margin-bottom: 20px;
