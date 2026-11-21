@@ -1,0 +1,179 @@
+from rest_framework import permissions
+from boards.models import Board, Post
+import logging
+
+logger = logging.getLogger(__name__)
+
+class DebugPermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        logger.warning(f"Request Headers: {request.headers}")
+        logger.warning(f"Request User: {request.user}")
+        logger.warning(f"Is Authenticated: {request.user.is_authenticated}")
+        return True
+
+def board_read_allowed(board, user):
+    """게시판 read_permission 기준으로 사용자의 '게시판 진입' 허용 여부를 판정한다.
+    - 'all'   : 비회원 포함 누구나
+    - 'member': 로그인한 회원 전체
+    - 'author': 로그인한 회원 전체 진입 가능 — 단, 글은 본인 것만 보인다.
+                (글 단위 필터는 readable_for_user/PostDetailPermission이 담당)
+    - 'staff' : 스태프만
+    파일 다운로드 게이트 등에서도 재사용한다.
+    """
+    read_perm = getattr(board, 'read_permission', 'staff')
+    if read_perm == 'all':
+        return True
+    if read_perm in ('member', 'author'):
+        return user.is_authenticated
+    # 'staff' (및 알 수 없는 값)은 스태프만
+    return user.is_authenticated and user.is_staff
+
+
+class IsBoardReadable(permissions.BasePermission):
+    """
+    Allows access based on the board's `read_permission` field.
+    - 'all': Anyone can read (including non-authenticated users).
+    - 'member': Any authenticated member can read.
+    - 'staff': Only staff members can read.
+    """
+    def has_permission(self, request, view):
+        board = None
+        obj = None
+        # In PostListCreateAPIView, get_object() is overridden to return the board.
+        if hasattr(view, 'get_object'):
+            obj = view.get_object()
+            if isinstance(obj, Board):
+                board = obj
+            # For detail views, the object is a Post, so we get its board.
+            elif hasattr(obj, 'board'):
+                board = obj.board
+
+        if not board:
+            return False
+
+        # If the post is a justification letter, bypass board-level read permission.
+        # The PostDetailPermission will handle the fine-grained check.
+        if isinstance(obj, Post) and obj.post_type == Post.PostType.JUSTIFICATION_LETTER:
+            return True
+
+        return board_read_allowed(board, request.user)
+
+class IsPostWritable(permissions.BasePermission):
+    """
+    Allows access based on the board's `post_permission` field.
+    - 'all': Any authenticated user can write.
+    - 'staff': Only staff members can write.
+    """
+    def has_permission(self, request, view):
+        board = None
+        if hasattr(view, 'get_object'):
+            obj = view.get_object()
+            if isinstance(obj, Board):
+                board = obj
+            elif hasattr(obj, 'board'):
+                board = obj.board
+
+        if not board:
+            return False
+
+        # Renamed from write_permission in migration 0006
+        post_perm = getattr(board, 'post_permission', 'staff')
+
+        if not request.user.is_authenticated:
+            return False
+
+        if post_perm == 'all':
+            return True
+        
+        return request.user.is_staff
+
+class IsCommentWritable(permissions.BasePermission):
+    """
+    Allows access based on the board's `comment_permission` field.
+    - 'all': Anyone (including non-authenticated users) can comment.
+    - 'staff': Only staff members can comment.
+    """
+    def has_permission(self, request, view):
+        post_id = view.kwargs.get('post_id')
+        if not post_id:
+            return False
+        
+        try:
+            post = Post.objects.get(pk=post_id)
+            board = post.board
+        except Post.DoesNotExist:
+            return False
+
+        comment_perm = getattr(board, 'comment_permission', 'staff')
+
+        # 'all' 권한인 경우 비회원도 댓글 작성 가능
+        if comment_perm == 'all':
+            return True
+        
+        # 'staff' 권한인 경우 스태프만 작성 가능
+        return request.user.is_authenticated and request.user.is_staff
+
+class PostDetailPermission(permissions.BasePermission):
+    """
+    Object-level permission for post detail view.
+    Checks post.post_type to determine readability for SAFE_METHODS.
+    For other methods, it checks for ownership.
+    """
+    def has_object_permission(self, request, view, obj):
+        # Handle READ permissions for safe methods (GET, HEAD, OPTIONS)
+        if request.method in permissions.SAFE_METHODS:
+            if obj.post_type == Post.PostType.JUSTIFICATION_LETTER:
+                return request.user.is_authenticated and (
+                    (obj.author and obj.author.id == request.user.id) or request.user.is_staff
+                )
+            if obj.post_type == Post.PostType.STAFF_ONLY:
+                return request.user.is_authenticated and request.user.is_staff
+            # DEFAULT 글이라도 'author' 게시판에 있으면 작성자 본인+스태프만.
+            # (게시판을 나중에 author로 조였을 때 기존 글까지 소급 잠그기 위함)
+            if getattr(obj.board, 'read_permission', '') == 'author':
+                return request.user.is_authenticated and (
+                    (obj.author and obj.author.id == request.user.id) or request.user.is_staff
+                )
+            return True  # DEFAULT posts
+
+        # Handle WRITE permissions (PUT, PATCH, DELETE)
+        if not request.user.is_authenticated:
+            return False
+
+        if hasattr(obj, 'author'):
+            return obj.author == request.user or request.user.is_staff
+            
+        return False
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Object-level permission to allow only owners of an object to edit it.
+    Assumes the model instance has an `author` attribute.
+    Applies only for write methods. Staff can also edit.
+    """
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if not request.user.is_authenticated:
+            return False
+
+        # 스태프는 항상 허용
+        if request.user.is_staff:
+            return True
+
+        # 댓글인 경우 (post 속성이 있음)
+        if hasattr(obj, 'post') and obj.post:
+            # 비회원 댓글(author=None)은 글 작성자가 삭제 가능
+            if obj.author is None:
+                return obj.post.author == request.user
+            # 본인 댓글이거나 글 작성자면 허용
+            return obj.author == request.user or obj.post.author == request.user
+
+        # 게시글인 경우
+        if hasattr(obj, 'author'):
+            if obj.author is None:
+                return False
+            return obj.author == request.user
+
+        return False

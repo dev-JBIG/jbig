@@ -1,0 +1,509 @@
+"""
+Notion 내부 API 프록시 — splitbee 대체 셀프 호스팅
+
+Notion의 내부 API(loadPageChunk, syncRecordValues)를 호출하여
+react-notion-x가 그대로 소비할 수 있는 ExtendedRecordMap 포맷을 반환한다.
+공개 페이지만 접근 가능하며 API 키가 필요하지 않다.
+
+결과는 메모리 캐시에 저장하여 반복 요청 시 빠르게 반환한다.
+"""
+import re
+import time as _time
+import threading
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
+NOTION_API = 'https://www.notion.so/api/v3'
+HEADERS = {
+    'Content-Type': 'application/json',
+    'User-Agent': 'Mozilla/5.0',
+}
+REQUEST_TIMEOUT = 15
+
+# 메모리 캐시
+_cache = {}
+_cache_lock = threading.Lock()
+_build_locks = {}  # page_id별 빌드 락 (동시 빌드 방지)
+_build_locks_lock = threading.Lock()
+CACHE_TTL = 300  # 5분
+INCOMPLETE_CACHE_TTL = 30
+MAX_MISSING_ROUNDS = 10
+MAX_INCOMPLETE_BUILD_RETRIES = 0
+
+
+def _new_diagnostics(page_id: str, source: str) -> dict:
+    return {
+        'page_id': page_id,
+        'source': source,
+        'trace_id': f'{int(_time.time() * 1000)}-{threading.get_ident()}',
+        'started_at': _time.monotonic(),
+        'endpoints': {},
+    }
+
+
+def _record_endpoint_attempt(
+    diagnostics: dict,
+    endpoint: str,
+    attempt: int,
+    elapsed_ms: int,
+    status_code=None,
+    timeout=False,
+):
+    if diagnostics is None:
+        return
+
+    stats = diagnostics['endpoints'].setdefault(endpoint, {
+        'attempts': 0,
+        'elapsed_ms': 0,
+        'timeouts': 0,
+        'statuses': {},
+    })
+    stats['attempts'] += 1
+    stats['elapsed_ms'] += elapsed_ms
+    if timeout:
+        stats['timeouts'] += 1
+    if status_code is not None:
+        stats['statuses'][status_code] = stats['statuses'].get(status_code, 0) + 1
+
+
+def _finish_diagnostics(diagnostics: dict, event: str, **fields):
+    if diagnostics is None:
+        return
+
+    diagnostics['event'] = event
+    diagnostics['elapsed_ms'] = int((_time.monotonic() - diagnostics['started_at']) * 1000)
+    diagnostics['fields'] = fields
+
+
+def new_request_diagnostics(page_id: str) -> dict:
+    return _new_diagnostics(_cache_key(page_id), 'request')
+
+
+def diagnostic_headers(diagnostics: dict) -> dict:
+    if diagnostics is None:
+        return {}
+
+    elapsed_ms = diagnostics.get('elapsed_ms')
+    if elapsed_ms is None:
+        elapsed_ms = int((_time.monotonic() - diagnostics['started_at']) * 1000)
+
+    fields = diagnostics.get('fields', {})
+    event = diagnostics.get('event', 'in_progress')
+    cache_state = {
+        'cache_hit': 'hit',
+        'cache_hit_after_lock': 'hit',
+        'cache_stale': 'stale',
+        'cache_miss_complete': 'miss',
+        'request_error': 'error',
+    }.get(event, '-')
+
+    headers = {
+        'X-Notion-Trace-Id': diagnostics['trace_id'],
+        'X-Notion-Event': event,
+        'X-Notion-Cache': cache_state,
+        'X-Notion-Elapsed-Ms': str(elapsed_ms),
+    }
+
+    if 'block_count' in fields:
+        headers['X-Notion-Block-Count'] = str(fields['block_count'])
+    if 'missing_count' in fields:
+        headers['X-Notion-Missing-Count'] = str(fields['missing_count'])
+
+    for endpoint, header_key in (
+        ('loadPageChunk', 'LoadPageChunk'),
+        ('syncRecordValues', 'SyncRecordValues'),
+    ):
+        stats = diagnostics['endpoints'].get(endpoint)
+        if not stats:
+            continue
+        statuses = ','.join(
+            f'{status}:{count}'
+            for status, count in sorted(stats['statuses'].items())
+        ) or '-'
+        headers[f'X-Notion-{header_key}-Attempts'] = str(stats['attempts'])
+        headers[f'X-Notion-{header_key}-Ms'] = str(stats['elapsed_ms'])
+        headers[f'X-Notion-{header_key}-Timeouts'] = str(stats['timeouts'])
+        headers[f'X-Notion-{header_key}-Statuses'] = statuses
+
+    return headers
+
+
+def _format_uuid(page_id: str) -> str:
+    clean = re.sub(r'[^a-fA-F0-9]', '', page_id)
+    if len(clean) != 32:
+        return page_id
+    return f'{clean[:8]}-{clean[8:12]}-{clean[12:16]}-{clean[16:20]}-{clean[20:]}'
+
+
+def _cache_key(page_id: str) -> str:
+    clean = re.sub(r'[^a-fA-F0-9]', '', page_id)
+    if len(clean) != 32:
+        return page_id
+    return clean.lower()
+
+
+def _notion_post(endpoint: str, body: dict, retries: int = 1, diagnostics: dict = None) -> dict:
+    url = f'{NOTION_API}/{endpoint}'
+    for attempt in range(retries + 1):
+        started_at = _time.monotonic()
+        try:
+            resp = requests.post(url, json=body, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+            elapsed_ms = int((_time.monotonic() - started_at) * 1000)
+            _record_endpoint_attempt(
+                diagnostics,
+                endpoint,
+                attempt + 1,
+                elapsed_ms,
+                status_code=resp.status_code,
+            )
+            if resp.status_code == 200:
+                return resp.json()
+            if resp.status_code == 429:
+                wait = min(2 ** attempt, 5)
+                logger.warning(f'Notion rate limited, waiting {wait}s')
+                _time.sleep(wait)
+                continue
+            if attempt < retries:
+                _time.sleep(1)
+                continue
+            raise Exception(f'Notion API {endpoint} returned {resp.status_code}')
+        except requests.exceptions.Timeout:
+            elapsed_ms = int((_time.monotonic() - started_at) * 1000)
+            _record_endpoint_attempt(
+                diagnostics,
+                endpoint,
+                attempt + 1,
+                elapsed_ms,
+                timeout=True,
+            )
+            if attempt < retries:
+                logger.warning(f'Notion {endpoint} timeout, retrying')
+                continue
+            raise
+    return {}
+
+
+def _has_record_value(record: dict) -> bool:
+    return isinstance(record, dict) and isinstance(record.get('value'), dict)
+
+
+def _merge_record_maps(target: dict, source: dict):
+    for key, source_section in source.items():
+        if key not in target:
+            target[key] = source_section
+            continue
+        target_section = target[key]
+        if not isinstance(target_section, dict) or not isinstance(source_section, dict):
+            target[key] = source_section
+            continue
+        for item_id, source_item in source_section.items():
+            target_item = target_section.get(item_id)
+            if _has_record_value(target_item) and not _has_record_value(source_item):
+                continue
+            target_section[item_id] = source_item
+
+
+def _unwrap_nested_values(record_map: dict):
+    for section_key in ('block', 'collection', 'collection_view', 'notion_user'):
+        section = record_map.get(section_key, {})
+        keys_to_delete = []
+        for item_id, item in section.items():
+            if not isinstance(item, dict):
+                keys_to_delete.append(item_id)
+                continue
+            value = item.get('value')
+            if value is None:
+                keys_to_delete.append(item_id)
+                continue
+            if isinstance(value, dict) and 'value' in value and 'role' in value and isinstance(value['value'], dict):
+                section[item_id] = value
+        for k in keys_to_delete:
+            del section[k]
+
+
+def _same_block_id(left, right) -> bool:
+    if not isinstance(left, str) or not isinstance(right, str):
+        return False
+    return _cache_key(left) == _cache_key(right)
+
+
+def _should_skip_block_content(block_key: str, value: dict, root_page_id: str = None) -> bool:
+    if root_page_id is None or value.get('type') != 'page':
+        return False
+    return not (
+        _same_block_id(block_key, root_page_id)
+        or _same_block_id(value.get('id'), root_page_id)
+    )
+
+
+def _find_missing_block_ids(record_map: dict, root_page_id: str = None) -> list:
+    blocks = record_map.get('block', {})
+    missing = []
+    seen = set()
+    for block_key, bdata in blocks.items():
+        if not isinstance(bdata, dict):
+            continue
+        value = bdata.get('value', {})
+        if not isinstance(value, dict):
+            continue
+        if _should_skip_block_content(block_key, value, root_page_id):
+            continue
+        for cid in (value.get('content') or []):
+            if isinstance(cid, str) and not _has_record_value(blocks.get(cid)) and cid not in seen:
+                missing.append(cid)
+                seen.add(cid)
+    return missing
+
+
+def _record_map_stats(record_map: dict, root_page_id: str = None) -> tuple:
+    blocks = record_map.get('block', {})
+    if not isinstance(blocks, dict):
+        return 0, 0
+    return len(blocks), len(_find_missing_block_ids(record_map, root_page_id))
+
+
+def _fetch_missing_blocks(missing_ids: list, diagnostics: dict = None) -> dict:
+    results = {}
+    for i in range(0, len(missing_ids), 100):
+        batch = missing_ids[i:i + 100]
+        data = _notion_post('syncRecordValues', {
+            'requests': [
+                {'pointer': {'table': 'block', 'id': bid}, 'version': -1}
+                for bid in batch
+            ]
+        }, diagnostics=diagnostics)
+        block_data = (
+            data.get('recordMap', {}).get('block')
+            or data.get('recordMapWithRoles', {}).get('block')
+            or {}
+        )
+        for bid, bdata in block_data.items():
+            if isinstance(bdata, dict) and bdata.get('value') is not None:
+                results[bid] = bdata
+        if i + 100 < len(missing_ids):
+            _time.sleep(0.5)  # rate limit 방지
+    return results
+
+
+def _build_record_map_once(page_id: str, diagnostics: dict = None) -> dict:
+    uuid = _format_uuid(page_id)
+    merged = {}
+
+    chunk_number = 0
+    cursor = {'stack': []}
+
+    while True:
+        data = _notion_post('loadPageChunk', {
+            'page': {'id': uuid},
+            'limit': 100,
+            'cursor': cursor,
+            'chunkNumber': chunk_number,
+            'verticalColumns': False,
+        }, diagnostics=diagnostics)
+
+        _merge_record_maps(merged, data.get('recordMap', {}))
+
+        next_cursor = data.get('cursor', {})
+        if not next_cursor.get('stack', []):
+            break
+        cursor = next_cursor
+        chunk_number += 1
+        if chunk_number > 50:
+            break
+
+    _unwrap_nested_values(merged)
+
+    # 현재 페이지 안의 누락 블록만 보완하고, 하위 page 본문은 클릭 시 별도로 로드한다.
+    for _ in range(MAX_MISSING_ROUNDS):
+        missing = _find_missing_block_ids(merged, page_id)
+        if not missing:
+            break
+        fetched = _fetch_missing_blocks(missing, diagnostics=diagnostics)
+        for bid, bdata in list(fetched.items()):
+            if isinstance(bdata, dict) and 'value' in bdata:
+                inner = bdata['value']
+                if isinstance(inner, dict) and 'value' in inner and 'role' in inner:
+                    fetched[bid] = inner
+        if not fetched:
+            break
+        merged.setdefault('block', {}).update(fetched)
+
+    for key in ('block', 'collection', 'collection_view', 'notion_user', 'collection_query', 'signed_urls'):
+        merged.setdefault(key, {})
+    merged.pop('space', None)
+
+    return merged
+
+
+def _build_record_map(page_id: str, diagnostics: dict = None) -> tuple:
+    best_stats = None
+
+    for attempt in range(MAX_INCOMPLETE_BUILD_RETRIES + 1):
+        data = _build_record_map_once(page_id, diagnostics=diagnostics)
+        block_count, missing_count = _record_map_stats(data, page_id)
+        problem_count = missing_count or (1 if block_count == 0 else 0)
+        if problem_count == 0:
+            if attempt:
+                logger.info(
+                    'Notion record map recovered after retry: page_id=%s attempts=%s block_count=%s',
+                    page_id,
+                    attempt + 1,
+                    block_count,
+                )
+            return data, block_count, missing_count
+
+        if (
+            best_stats is None
+            or problem_count < best_stats[2]
+            or (problem_count == best_stats[2] and block_count > best_stats[0])
+        ):
+            best_stats = (block_count, missing_count, problem_count)
+
+        if attempt < MAX_INCOMPLETE_BUILD_RETRIES:
+            logger.warning(
+                'Notion record map incomplete, retrying: page_id=%s attempt=%s block_count=%s missing_count=%s',
+                page_id,
+                attempt + 1,
+                block_count,
+                problem_count,
+            )
+            _time.sleep(0.5)
+
+    block_count, missing_count, problem_count = best_stats
+    _finish_diagnostics(
+        diagnostics,
+        'request_error',
+        block_count=block_count,
+        missing_count=missing_count,
+    )
+    logger.warning(
+        'Notion record map incomplete after retries: page_id=%s block_count=%s missing_count=%s problem_count=%s',
+        page_id,
+        block_count,
+        missing_count,
+        problem_count,
+    )
+    raise Exception('Notion record map incomplete')
+
+
+def _refresh_cache(page_id: str):
+    key = _cache_key(page_id)
+    diagnostics = _new_diagnostics(key, 'refresh')
+    try:
+        data, new_block_count, new_missing_count = _build_record_map(page_id, diagnostics=diagnostics)
+        with _cache_lock:
+            cached = _cache.get(key)
+            if cached:
+                old_block_count, fallback_missing_count = _record_map_stats(cached['data'], key)
+                old_missing_count = cached.get('missing_count', fallback_missing_count)
+                if new_missing_count > old_missing_count:
+                    cached['expires'] = _time.time() + CACHE_TTL
+                    logger.warning(
+                        'Notion cache refresh rejected: page_id=%s old_blocks=%s new_blocks=%s old_missing=%s new_missing=%s',
+                        key,
+                        old_block_count,
+                        new_block_count,
+                        old_missing_count,
+                        new_missing_count,
+                    )
+                    return
+            ttl = CACHE_TTL if new_missing_count == 0 else INCOMPLETE_CACHE_TTL
+            _cache[key] = {
+                'data': data,
+                'expires': _time.time() + ttl,
+                'missing_count': new_missing_count,
+            }
+        logger.info(
+            'Notion cache refreshed: %s (%s blocks, %s missing)',
+            key,
+            new_block_count,
+            new_missing_count,
+        )
+        _finish_diagnostics(
+            diagnostics,
+            'refresh_complete',
+            block_count=new_block_count,
+            missing_count=new_missing_count,
+        )
+    except Exception as e:
+        with _cache_lock:
+            cached = _cache.get(key)
+            if cached:
+                cached['expires'] = max(cached['expires'], _time.time() + INCOMPLETE_CACHE_TTL)
+        _finish_diagnostics(diagnostics, 'refresh_error')
+        logger.error(f'Notion cache refresh failed: {key}: {e}')
+
+
+def _get_build_lock(page_id: str) -> threading.Lock:
+    with _build_locks_lock:
+        if page_id not in _build_locks:
+            _build_locks[page_id] = threading.Lock()
+        return _build_locks[page_id]
+
+
+def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
+    key = _cache_key(page_id)
+    if diagnostics is None:
+        diagnostics = new_request_diagnostics(key)
+    with _cache_lock:
+        cached = _cache.get(key)
+
+    if cached:
+        if _time.time() < cached['expires']:
+            block_count, missing_count = _record_map_stats(cached['data'], key)
+            _finish_diagnostics(
+                diagnostics,
+                'cache_hit',
+                block_count=block_count,
+                missing_count=missing_count,
+            )
+            return cached['data']
+        # 만료 → stale 반환 + 백그라운드 갱신
+        threading.Thread(target=_refresh_cache, args=(key,), daemon=True).start()
+        block_count, missing_count = _record_map_stats(cached['data'], key)
+        _finish_diagnostics(
+            diagnostics,
+            'cache_stale',
+            block_count=block_count,
+            missing_count=missing_count,
+        )
+        return cached['data']
+
+    # 첫 요청 → 동기 빌드 (page별 lock으로 동시 빌드 방지)
+    build_lock = _get_build_lock(key)
+    with build_lock:
+        # lock 획득 후 다시 캐시 확인 (다른 worker가 이미 빌드했을 수 있음)
+        with _cache_lock:
+            cached = _cache.get(key)
+        if cached:
+            block_count, missing_count = _record_map_stats(cached['data'], key)
+            _finish_diagnostics(
+                diagnostics,
+                'cache_hit_after_lock',
+                block_count=block_count,
+                missing_count=missing_count,
+            )
+            return cached['data']
+
+        try:
+            data, block_count, missing_count = _build_record_map(key, diagnostics=diagnostics)
+        except Exception:
+            if 'event' not in diagnostics:
+                _finish_diagnostics(diagnostics, 'request_error')
+            raise
+        ttl = CACHE_TTL if missing_count == 0 else INCOMPLETE_CACHE_TTL
+        with _cache_lock:
+            _cache[key] = {
+                'data': data,
+                'expires': _time.time() + ttl,
+                'missing_count': missing_count,
+            }
+        _finish_diagnostics(
+            diagnostics,
+            'cache_miss_complete',
+            block_count=block_count,
+            missing_count=missing_count,
+        )
+        return data

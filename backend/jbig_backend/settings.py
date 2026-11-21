@@ -1,0 +1,340 @@
+from pathlib import Path
+import os
+from dotenv import load_dotenv
+from datetime import timedelta
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ── .env 로드 & 로컬/서버 자동 감지 ─────────────────────────────
+# FORCE_LOCAL=1 → 강제 로컬 모드 (run-local.sh에서 사용)
+# .env 파일이 없으면 → 자동 로컬 모드
+# .env 파일이 있으면 → 서버(배포) 모드
+_force_local = os.getenv('FORCE_LOCAL') == '1'
+_env_path = BASE_DIR / '.env'
+
+# A separate grading OS account can use EnvironmentFile without reading the web .env.
+if not _force_local and os.getenv('JBIG_ENV_ONLY') == '1':
+    IS_LOCAL = False
+elif not _force_local and _env_path.is_file():
+    load_dotenv(_env_path)
+    IS_LOCAL = False
+else:
+    IS_LOCAL = True
+
+
+# --- Helpers for reading env vars ---
+def get_env_bool(key: str, default: bool = False) -> bool:
+    val = os.getenv(key)
+    if val is None:
+        return default
+    return str(val).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def get_env_int(key: str, default: int) -> int:
+    val = os.getenv(key)
+    if not val:
+        return default
+    return int(val)
+
+
+def get_env_list(key: str, default: list[str] | None = None) -> list[str]:
+    val = os.getenv(key)
+    if not val:
+        return [] if default is None else default
+    return [item.strip() for item in val.split(',') if item.strip()]
+
+
+# ── 로컬/서버 분기 설정 (한곳에 모아서 관리) ───────────────────────
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-local-dev-key-do-not-use-in-production')
+DEBUG = get_env_bool('DEBUG', IS_LOCAL)
+USE_LOCAL_STORAGE = IS_LOCAL
+
+if IS_LOCAL:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE'),
+            'NAME': os.getenv('DB_NAME'),
+            'USER': os.getenv('DB_USER'),
+            'PASSWORD': os.getenv('DB_PASSWORD'),
+            'HOST': os.getenv('DB_HOST'),
+            'PORT': os.getenv('DB_PORT'),
+            'CONN_MAX_AGE': get_env_int('DB_CONN_MAX_AGE', 60),
+            'CONN_HEALTH_CHECKS': get_env_bool('DB_CONN_HEALTH_CHECKS', True),
+        }
+    }
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# ── 오브젝트 스토리지 (S3 호환: Cloudflare R2) ──────────────────────────
+# 로컬 개발(USE_LOCAL_STORAGE=True)이면 storage.py에서 로컬 파일시스템으로 분기.
+STORAGE_ENDPOINT_URL = os.getenv('STORAGE_ENDPOINT_URL')
+STORAGE_ACCESS_KEY_ID = os.getenv('STORAGE_ACCESS_KEY_ID')
+STORAGE_SECRET_KEY = os.getenv('STORAGE_SECRET_KEY')
+STORAGE_BUCKET_NAME = os.getenv('STORAGE_BUCKET_NAME')
+# R2는 region이 'auto'
+STORAGE_REGION_NAME = os.getenv('STORAGE_REGION_NAME', 'auto')
+
+# 미디어 공개(CDN) 베이스 URL.
+#  - 설정 시: 읽기 URL이 "{MEDIA_PUBLIC_BASE_URL}/{key}" 형태의 고정 URL이 되어 CDN 캐시가 동작.
+#    예) https://cdn.jbig.co.kr  (R2 버킷에 연결된 Cloudflare 커스텀 도메인)
+#  - 미설정 시: "{endpoint}/{bucket}/{key}" 공개 URL로 폴백.
+MEDIA_PUBLIC_BASE_URL = os.getenv('MEDIA_PUBLIC_BASE_URL', '').rstrip('/')
+
+# 객체 단위 ACL 지원 여부.
+#  - Cloudflare R2: 미지원(False) → 공개는 버킷에 연결된 커스텀 도메인 단위로 처리
+#  - S3 호환 중 ACL 지원 스토리지: True → put_object_acl 로 public-read 설정
+STORAGE_SUPPORTS_ACL = get_env_bool('STORAGE_SUPPORTS_ACL', False)
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', [
+    'jbig.co.kr',
+    'www.jbig.co.kr',
+    'localhost',
+    '127.0.0.1',
+])
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+# 프로덕션(비-로컬) 환경에서만 강제되는 보안 헤더/쿠키 설정.
+# IS_LOCAL = True 인 개발 환경에서는 HTTPS가 아닐 수 있어 끄고 간다.
+if not IS_LOCAL:
+    SECURE_SSL_REDIRECT = get_env_bool('SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
+
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+
+    # 3rd party
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
+    'drf_spectacular_sidecar',
+    'corsheaders', # Add corsheaders
+
+    # local apps
+    'users',
+    'boards',
+    'jbig_backend',
+    'recruitments',
+    'competitions',
+]
+
+MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware', # Add corsheaders middleware
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'jbig_backend.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'jbig_backend.wsgi.application'
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('APP_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
+
+
+# Password validation
+# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.2/topics/i18n/
+
+LANGUAGE_CODE = 'ko-kr'
+
+TIME_ZONE = 'Asia/Seoul'
+
+USE_I18N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Note: STATIC_URL and STATIC_ROOT are already defined at the top of this file (lines 31-32)
+
+# Cloudflare Turnstile CAPTCHA
+TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'users.User'
+
+# CORS settings
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = get_env_list('CORS_ALLOWED_ORIGINS', [
+    'https://jbig.co.kr',
+    'https://www.jbig.co.kr',
+    'http://localhost:3000',
+])
+
+CORS_ALLOW_HEADERS = [
+    'Accept',
+    'Accept-Language',
+    'Content-Language',
+    'Content-Type',
+    'Authorization',
+    'Idempotency-Key',
+]
+
+# Arena files live outside every repository/release and are never served as media.
+_arena_local_root = BASE_DIR.parent / '.arena-private' if IS_LOCAL else None
+ARENA_PARTICIPANT_ROOT = os.getenv('ARENA_PARTICIPANT_ROOT', str(_arena_local_root / 'participant') if IS_LOCAL else '')
+ARENA_SUBMISSION_ROOT = os.getenv('ARENA_SUBMISSION_ROOT', str(_arena_local_root / 'submissions') if IS_LOCAL else '')
+# Supply this only to the grading worker in production, never to Gunicorn.
+ARENA_GRADING_ROOT = os.getenv('ARENA_GRADING_ROOT', str(_arena_local_root / 'grading') if IS_LOCAL else '')
+
+# CSRF trusted origins (comma-separated, e.g., https://example.com,https://www.example.com)
+CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', [])
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # Add this line
+    'DEFAULT_PAGINATION_CLASS': 'jbig_backend.pagination.CustomPagination',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+        'rest_framework.throttling.ScopedRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/min',
+        'user': '240/min',
+        'signin': '10/min',
+        'password_reset_request': '5/hour',
+        'password_reset_verify': '20/hour',
+        'email_verify': '20/hour',
+        'signup': '10/hour',
+    },
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'JBIG 백엔드 API',
+    'DESCRIPTION': 'JBIG 프로젝트 백엔드 API 문서입니다.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'DEFAULT_MODEL_RENDERING': 'example',
+        'DEFAULT_MODELS_EXPANSION': -1,
+        'DEFAULT_MODEL_DEPTH': -1,
+        'DOC_EXPANSION': 'none',
+        'PERSIST_AUTHORIZATION': True,
+        'DISPLAY_REQUEST_DURATION': True,
+    },
+    'TAGS': [
+        {'name': '사용자', 'description': '사용자 인증 및 회원 정보 관련 API'},
+        {'name': '게시판', 'description': '게시판 및 게시글 관련 API'},
+        {'name': '댓글', 'description': '게시글 댓글 관련 API'},
+        {'name': '파일', 'description': '파일 업로드 및 관리 API'},
+    ],
+    'SWAGGER_UI_DIST': 'SIDECAR',
+    'SWAGGER_UI_FAVICON_HREF': 'SIDECAR',
+    'REDOC_DIST': 'SIDECAR',
+}
+
+_ACCESS_TOKEN_HOURS = int(os.getenv('ACCESS_TOKEN_HOURS', '1'))
+_REFRESH_TOKEN_DAYS = int(os.getenv('REFRESH_TOKEN_DAYS', '7'))
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=_ACCESS_TOKEN_HOURS),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=_REFRESH_TOKEN_DAYS),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'JWK_URL': None,
+    'LEEWAY': 0,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'USER_AUTHENTICATION_RULE': 'rest_framework_simplejwt.authentication.default_user_authentication_rule',
+
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    'TOKEN_USER_CLASS': 'rest_framework_simplejwt.models.TokenUser',
+
+    'JTI_CLAIM': 'jti',
+
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}

@@ -1,0 +1,435 @@
+import random
+import string
+from smtplib import SMTPException
+from django.db import transaction
+from django.core.mail import send_mail
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer, TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import AuthenticationFailed
+from boards.serializers import sanitize_markdown
+from .models import User, EmailVerificationCode
+
+from django.contrib.auth import get_user_model
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+
+    def validate(self, attrs):
+        email = (attrs.get('email') or '').strip().lower()
+        password = attrs.get('password')
+        User = get_user_model()
+
+        # 사용자 열거 방지를 위해 존재하지 않는 이메일과 비밀번호 불일치는 동일한 응답을 준다.
+        invalid_credentials = AuthenticationFailed({
+            "isSuccess": False,
+            "errorCode": "INVALID_CREDENTIALS",
+            "message": "이메일 또는 비밀번호가 올바르지 않습니다."
+        }, code='authentication')
+
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            raise invalid_credentials
+
+        if not user.check_password(password):
+            raise invalid_credentials
+
+        # 자격 증명이 유효한 경우에만 추가 상태(인증/활성)를 확인한다.
+        if not user.is_verified:
+            raise AuthenticationFailed({
+                "isSuccess": False,
+                "errorCode": "ACCOUNT_NOT_VERIFIED",
+                "message": "이메일 인증이 완료되지 않았습니다. 이메일을 확인해주세요."
+            }, code='authentication')
+
+        if not user.is_active:
+            raise AuthenticationFailed({
+                "isSuccess": False,
+                "errorCode": "ACCOUNT_INACTIVE",
+                "message": "계정이 비활성화 상태입니다. 관리자에게 문의해주세요."
+            }, code='authentication')
+
+        # 모든 검증을 통과한 후, last_login 업데이트
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+
+        # 수동으로 토큰 생성
+        refresh = RefreshToken.for_user(user)
+
+        data = {
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }
+
+        # 응답 데이터에 사용자 정보 추가
+        data['isSuccess'] = True
+        data['message'] = '로그인에 성공했습니다.'
+        
+        data['username'] = user.username
+
+        data['semester'] = user.semester
+        data['is_staff'] = user.is_staff
+        
+        return data
+
+class CustomTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        refresh = RefreshToken(attrs['refresh'])
+        user_id = refresh.get('user_id')
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            raise AuthenticationFailed('User not found', code='user_not_found')
+
+        data['username'] = user.username
+        data['semester'] = user.semester
+        data['email'] = user.email
+
+        return data
+
+ALLOWED_SIGNUP_EMAIL_DOMAIN = '@jbnu.ac.kr'
+MAIL_DELIVERY_ERRORS = (SMTPException, OSError)
+
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, help_text="사용자 비밀번호")
+    semester = serializers.IntegerField(help_text="학기 정보")
+
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'password', 'semester')
+        extra_kwargs = {
+            'email': {'help_text': "사용자 이메일 주소"},
+            'username': {'help_text': "사용자 이름"}
+        }
+
+    def validate_email(self, value):
+        normalized = (value or '').strip().lower()
+        if not normalized.endswith(ALLOWED_SIGNUP_EMAIL_DOMAIN):
+            raise serializers.ValidationError(
+                f"가입은 {ALLOWED_SIGNUP_EMAIL_DOMAIN} 이메일로만 가능합니다."
+            )
+        if User.objects.filter(email__iexact=normalized).exists():
+            raise serializers.ValidationError("이미 가입된 이메일입니다.")
+        return normalized
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        semester = attrs.get('semester')
+
+        if User.objects.filter(username=username, semester=semester).exists():
+            raise serializers.ValidationError({
+                "username": "이미 가입된 사용자(기수+이름)입니다."
+            })
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            email=validated_data['email'],
+            username=validated_data['username'],
+            password=validated_data['password'],
+            semester=validated_data['semester']
+        )
+
+        # 6자리 인증 코드 생성
+        code = ''.join(random.choices(string.digits, k=6))
+        EmailVerificationCode.objects.create(user=user, code=make_password(code))
+
+        # 인증 코드 이메일 발송
+        subject = '[JBIG] 회원가입 인증 코드'
+        message = f'회원가입을 완료하려면 다음 인증 코드를 입력하세요: {code}'
+        # SMTP 접수 후 응답 유실은 롤백으로 취소할 수 없다. 재시도/로그인 인증 재개로 복구한다.
+        if send_mail(subject, message, None, [user.email]) == 0:
+            raise SMTPException('Verification email was not accepted')
+
+        return user
+
+class PasswordResetEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+
+    class Meta:
+        fields = ('email',)
+
+class UserSerializer(serializers.ModelSerializer):
+    is_self = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('email', 'username', 'semester', 'is_self')
+
+    def get_is_self(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user == obj
+        return False
+
+class EmailSendSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="인증 코드를 받을 이메일 주소")
+
+class EmailResendSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="인증 코드를 재전송할 이메일 주소")
+
+class EmailVerificationSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="인증할 이메일 주소")
+    verifyCode = serializers.CharField(help_text="이메일로 전송된 6자리 인증 코드")
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True, required=True)
+    new_password1 = serializers.CharField(write_only=True, required=True)
+    new_password2 = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, data):
+        if data['new_password1'] != data['new_password2']:
+            raise serializers.ValidationError({"new_password2": "Passwords do not match."})
+        return data
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="비밀번호 변경을 요청할 이메일 주소")
+
+
+class VerifyPasswordCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="비밀번호를 변경할 이메일 주소")
+    verification_code = serializers.CharField(max_length=6, help_text="이메일로 전송된 6자리 인증 코드")
+
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField(help_text="비밀번호를 변경할 이메일 주소")
+    reset_token = serializers.CharField(
+        write_only=True,
+        help_text="VerifyPasswordCodeView 응답으로 받은 단기 재설정 토큰",
+    )
+    new_password1 = serializers.CharField(write_only=True, help_text="새로운 비밀번호")
+    new_password2 = serializers.CharField(write_only=True, help_text="새로운 비밀번호 확인")
+
+    def validate(self, data):
+        if data['new_password1'] != data['new_password2']:
+            raise serializers.ValidationError({'new_password2': "두 비밀번호가 일치하지 않습니다."})
+
+        return data
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    is_self = serializers.SerializerMethodField()
+    date_joined = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+    post_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
+
+    username=serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'semester', 'is_staff', 'date_joined', 'is_self', 'post_count', 'comment_count')
+
+    def get_username(self, obj):
+        return obj.username
+
+    def get_is_self(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user == obj
+        return False
+
+    def get_post_count(self, obj):
+        return obj.posts.count()
+
+    def get_comment_count(self, obj):
+        return obj.comments.count()
+
+
+class PublicProfileSerializer(serializers.ModelSerializer):
+    email_id = serializers.SerializerMethodField()
+    is_self = serializers.SerializerMethodField()
+    date_joined = serializers.DateTimeField(format="%Y-%m-%d", read_only=True)
+    last_login = serializers.SerializerMethodField()
+    posts = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
+    profile_html = serializers.SerializerMethodField()
+
+    username=serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('username', 'email_id', 'semester', 'resume', 'profile_blocks', 'profile_type', 'profile_html', 'date_joined', 'last_login', 'is_self', 'posts', 'comments')
+
+    def get_username(self, obj):
+        return obj.username
+
+    def get_profile_html(self, obj):
+        # HTML 방식일 때만 본문 전송 (블록 방식이면 불필요한 대용량 전송 방지)
+        return obj.profile_html if obj.profile_type == User.PROFILE_TYPE_HTML else ''
+
+    def get_email_id(self, obj):
+        return obj.email.split('@')[0] if obj.email else ''
+
+    def get_last_login(self, obj):
+        if not obj.last_login:
+            return None
+        return obj.last_login.isoformat()
+
+    def get_is_self(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return request.user == obj
+        return False
+
+    def _include_activity(self):
+        request = self.context.get('request')
+        if not request:
+            return False
+        return request.query_params.get('include_activity') in {'1', 'true', 'yes'}
+
+    def get_posts(self, obj):
+        if not self._include_activity():
+            return []
+
+        from boards.models import Post
+
+        request = self.context.get('request')
+        if not request:
+            return []
+        request_user = request.user if request else None
+        is_staff = request_user and request_user.is_authenticated and request_user.is_staff
+        is_authenticated = request and request.user.is_authenticated
+
+        posts = Post.objects.filter(author=obj).visible_for_user(request_user).order_by('-created_at')
+
+        if not is_staff:
+            posts = posts.filter(board__read_permission='all')
+
+        # 비회원인 경우 익명 글(is_anonymous=True) 제외
+        if not is_authenticated:
+            posts = posts.filter(is_anonymous=False)
+
+        posts = posts[:10]
+
+        return [{
+            'id': p.id,
+            'board_id': p.board_id,
+            'board_post_id': p.board_post_id,
+            'title': p.title,
+            'created_at': p.created_at.strftime('%Y-%m-%d'),
+            'views': p.views,
+        } for p in posts]
+
+    def get_comments(self, obj):
+        if not self._include_activity():
+            return []
+
+        from boards.models import Comment, Post
+
+        request = self.context.get('request')
+        if not request:
+            return []
+        request_user = request.user if request else None
+        is_staff = request_user and request_user.is_authenticated and request_user.is_staff
+        is_authenticated = request and request.user.is_authenticated
+
+        visible_posts = Post.objects.visible_for_user(request_user)
+        if not is_staff:
+            visible_posts = visible_posts.filter(board__read_permission='all')
+
+        comments = (
+            Comment.objects
+            .filter(author=obj, is_deleted=False, post__in=visible_posts)
+            .select_related('post')
+            .order_by('-created_at')
+        )
+
+        # 비회원인 경우 익명 댓글(is_anonymous=True) 제외
+        if not is_authenticated:
+            comments = comments.filter(is_anonymous=False)
+
+        comments = comments[:10]
+
+        return [{
+            'id': c.id,
+            'content': c.content,
+            'post_id': c.post_id,
+            'board_id': c.post.board_id if c.post else None,
+            'board_post_id': c.post.board_post_id if c.post else None,
+            'post_title': c.post.title if c.post else '',
+            'created_at': c.created_at.strftime('%Y-%m-%d %H:%M'),
+        } for c in comments]
+
+
+MAX_RESUME_LENGTH = 8 * 1024  # 8KB
+
+
+class ResumeUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('resume',)
+
+    def validate_resume(self, value):
+        value = value or ''
+        if len(value) > MAX_RESUME_LENGTH:
+            raise serializers.ValidationError(
+                f"자기소개는 {MAX_RESUME_LENGTH}자 이하여야 합니다."
+            )
+        return sanitize_markdown(value)
+
+
+ALLOWED_BLOCK_TYPES = {'text', 'image', 'links', 'divider', 'project', 'experience', 'skills', 'header', 'award', 'certification', 'education', 'activity', 'publication', 'contact', 'stats', 'gallery', 'embed', 'quote'}
+MAX_BLOCKS = 50
+MAX_JSON_SIZE = 200 * 1024  # 200KB
+
+
+class ProfileBlocksUpdateSerializer(serializers.ModelSerializer):
+    profile_blocks = serializers.JSONField()
+
+    class Meta:
+        model = User
+        fields = ('profile_blocks',)
+
+    def validate_profile_blocks(self, value):
+        import json
+        if not isinstance(value, list):
+            raise serializers.ValidationError("profile_blocks는 배열이어야 합니다.")
+        if len(value) > MAX_BLOCKS:
+            raise serializers.ValidationError(f"블록은 최대 {MAX_BLOCKS}개까지 가능합니다.")
+        if len(json.dumps(value, ensure_ascii=False)) > MAX_JSON_SIZE:
+            raise serializers.ValidationError("프로필 데이터가 너무 큽니다.")
+        for block in value:
+            if not isinstance(block, dict):
+                raise serializers.ValidationError("각 블록은 객체여야 합니다.")
+            if not all(k in block for k in ('id', 'type', 'data')):
+                raise serializers.ValidationError("각 블록에는 id, type, data가 필요합니다.")
+            if block['type'] not in ALLOWED_BLOCK_TYPES:
+                raise serializers.ValidationError(f"허용되지 않는 블록 타입: {block['type']}")
+            data = block.get('data')
+            if isinstance(data, dict) and isinstance(data.get('markdown'), str):
+                data['markdown'] = sanitize_markdown(data['markdown'])
+        return value
+
+
+MAX_PROFILE_HTML_SIZE = 2 * 1024 * 1024  # 2MB (base64 인라인 이미지 포함 여유분)
+
+
+class ProfileHtmlUpdateSerializer(serializers.ModelSerializer):
+    """프로필 방식(blocks/html) 및 업로드된 raw HTML 수정."""
+
+    class Meta:
+        model = User
+        fields = ('profile_type', 'profile_html')
+
+    def validate_profile_type(self, value):
+        valid = {choice[0] for choice in User.PROFILE_TYPE_CHOICES}
+        if value not in valid:
+            raise serializers.ValidationError(f"허용되지 않는 프로필 방식입니다: {value}")
+        return value
+
+    def validate_profile_html(self, value):
+        value = value or ''
+        # bytes 기준 크기 제한 (멀티바이트 문자 고려)
+        if len(value.encode('utf-8')) > MAX_PROFILE_HTML_SIZE:
+            raise serializers.ValidationError(
+                f"HTML은 {MAX_PROFILE_HTML_SIZE // (1024 * 1024)}MB 이하여야 합니다."
+            )
+        return value

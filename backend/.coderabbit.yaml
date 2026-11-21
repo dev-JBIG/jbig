@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "ko-KR"
+early_access: false
+
+reviews:
+  profile: "chill"
+  high_level_summary: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  review_status: true
+  poem: false
+  in_progress_fortune: false
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+  path_filters:
+    - "!**/migrations/**"
+    - "!staticfiles/**"
+    - "!**/__pycache__/**"
+    - "!**/*.min.*"
+  path_instructions:
+    - path: "boards/**"
+      instructions: |
+        - 게시판 3축 권한 매트릭스(read_permission: all/member/author/staff, post_permission, comment_permission) 및 PostQuerySet.visible_for_user / readable_for_user 우회 가능성을 최우선으로 점검하세요.
+        - 비공개·회원전용·작성자전용(author)·스태프전용·사유서(JUSTIFICATION_LETTER) 게시글에서 R2/CDN 공개 URL이 노출되지 않고 is_post_media_gated()를 통해 다운로드 엔드포인트 또는 서명 토큰 스트림으로 게이팅되는지 확인하세요.
+        - 파일 업로드/수정/삭제 시 uploads/Y/m/d/<user_id>/... 소유권 검증과 타 게시글·임시저장(Draft) 참조 여부(_is_upload_referenced)를 확인하세요.
+        - JBIG 익명성 모델(is_anonymous=True는 비로그인 외부 방문자에게만 익명화, 로그인 회원은 실명 표시)이 의도대로 유지되는지 확인하세요.
+        - 목록/상세 쿼리에서 select_related / prefetch_related / Count annotation 누락으로 인한 N+1 쿼리를 점검하세요.
+    - path: "recruitments/**"
+      instructions: |
+        - 운영 DB는 PostgreSQL(Supabase), CI는 SQLite입니다. select_for_update()를 nullable FK(예: Post.author)와 select_related()로 함께 사용할 때 PostgreSQL NotSupportedError(FOR UPDATE on outer join)가 발생하지 않도록 of=('self',) 사용 여부를 반드시 확인하세요.
+        - 게시판 조회 권한 게이트(readable_for_user) 및 지원서/연락처(contact_info)/recruiter_note 노출 권한을 점검하세요.
+        - 정원(max_members) 및 accepted_count 동시성·트랜잭션 정합성을 확인하세요.
+    - path: "competitions/**"
+      instructions: |
+        - 보안 경계: HTTP 뷰(views.py, services.py)가 scoring.py 또는 data_setup.py를 절대 import하지 않아야 하며, private_rmse는 FINALIZED 이전 API·Admin 어디에도 노출되면 안 됩니다.
+        - 파일 저장·읽기 시 ARENA_PARTICIPANT_ROOT / ARENA_SUBMISSION_ROOT / ARENA_GRADING_ROOT 격리와 권한 모드(0640/0600), 경로 탈출 방지를 확인하세요.
+        - Idempotency-Key 재전송, KST 일일 할당량(DailyQuota) 차감 시점(검증 실패 시 미차감), worker_token 리스 펜싱, 장기 실행 워커의 DB 커넥션 관리(close_old_connections)를 점검하세요.
+    - path: "users/**"
+      instructions: |
+        - 인증/비밀번호 재설정/이메일 인증에서 계정 열거 방지(anti-enumeration), 스로틀링, 토큰 재사용·동시성, AUTH_PASSWORD_VALIDATORS 적용, CSPRNG(secrets) 사용을 확인하세요.
+        - Refresh 토큰 회전 및 블랙리스트 처리 시 트랜잭션·경쟁 상태를 점검하세요.
+        - profile_html 저장 시 크기 제한 및 프론트엔드 샌드박스 가정 위반 여부를 확인하세요.
+    - path: "jbig_backend/**"
+      instructions: |
+        - settings.py 보안 설정(DEBUG, ALLOWED_HOSTS, CORS, SECRET_KEY, HTTPS/HSTS)과 IS_LOCAL 분기 안전성을 점검하세요.
+        - storage.py / local_upload.py의 경로 순회(path traversal) 방지와 R2 공개/비공개 경계를 확인하세요.
+        - notion.py 캐시 동시성·예외 처리 및 SiteSettings / PopupViewSet 접근 권한 일관성을 확인하세요.
+    - path: ".github/workflows/**"
+      instructions: |
+        - 프로덕션 배포가 main 브랜치 push에만 제한되는지, 시크릿 노출이나 셸 인젝션·릴리즈 정리 실수가 없는지 점검하세요.
+  tools:
+    ruff:
+      enabled: true
+    flake8:
+      enabled: false
+    pylint:
+      enabled: false
+    languagetool:
+      enabled: false
+    markdownlint:
+      enabled: false
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    opengrep:
+      enabled: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    shellcheck:
+      enabled: true
+    yamllint:
+      enabled: true
