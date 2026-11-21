@@ -129,6 +129,9 @@ body {
     --fontStack-sansSerif,
     -apple-system,
     BlinkMacSystemFont,
+    'Pretendard Variable',
+    'Pretendard',
+    'Apple SD Gothic Neo',
     'Segoe UI',
     'Noto Sans KR',
     Helvetica,
@@ -139,7 +142,13 @@ body {
   line-height: var(--line-height-normal);
   color: var(--fgColor-default, #1f2328);
   background-color: var(--bgColor-inset, #f6f8fa);
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--bgColor-accent-muted, #ddf4ff);
+  color: var(--fgColor-default, #1f2328);
 }
 
 /* 스크롤바 스타일링 */
@@ -261,4 +270,15 @@ img {
 :focus-visible {
   outline: 2px solid var(--focus-outlineColor, #0969da);
   outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

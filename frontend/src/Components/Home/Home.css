@@ -17,7 +17,6 @@
     top: 0;
     z-index: 100;
     width: 100%;
-    box-shadow: var(--shadow-sm);
 }
 
 .home-header-inner {
@@ -212,7 +211,7 @@
 
 /* 사진첩 카드 & 슬라이더 (Primer Box 패턴) */
 .photo-album-card {
-    margin-top: var(--space-xl);
+    margin-top: var(--space-lg);
     background-color: var(--bgColor-default, #ffffff);
     border: 1px solid var(--borderColor-default, #d1d9e0);
     border-radius: var(--radius-md);
@@ -773,7 +772,7 @@
     }
 
     .home-banner-wrap {
-        padding: var(--space-md) var(--space-lg) 0;
+        padding: var(--space-lg) var(--space-lg) 0;
     }
 
     .banner-image {
@@ -781,7 +780,7 @@
     }
 
     .home-content {
-        padding: var(--space-md) var(--space-lg) var(--space-2xl);
+        padding: var(--space-lg) var(--space-lg) var(--space-2xl);
         gap: var(--space-lg);
         align-items: flex-start;
     }

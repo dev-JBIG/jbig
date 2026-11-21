@@ -4,6 +4,7 @@
     margin-bottom: 10px;
 }
 
+a.member-quick-link,
 .member-quick-link {
     display: flex;
     align-items: center;
@@ -35,6 +36,7 @@
     opacity: 0.65;
 }
 
+a.member-quick-link:hover,
 .member-quick-link:hover {
     background-color: var(--bgColor-accent-emphasis, #0969da);
     border-color: var(--bgColor-accent-emphasis, #0969da);
@@ -42,6 +44,7 @@
     text-decoration: none;
 }
 
+a.member-quick-link.member-quick-link-news,
 .member-quick-link-news {
     border-color: var(--borderColor-default, #d1d9e0);
     background-color: var(--bgColor-muted, #f6f8fa);
@@ -52,6 +55,7 @@
     color: var(--fgColor-accent, #0969da);
 }
 
+a.member-quick-link.member-quick-link-news:hover,
 .member-quick-link-news:hover {
     background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
     border-color: var(--borderColor-emphasis, #818b98);
