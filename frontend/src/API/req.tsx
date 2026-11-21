@@ -1,6 +1,7 @@
 import { AxiosError, isAxiosError } from "axios";
 import axios from "./client";
 import { BASE_URL } from "./auth";
+import { optimizeImageForUpload } from "../Utils/imageOptimize";
 import {
     PostItem,
     Reply,
@@ -491,28 +492,30 @@ export const fetchUserPosts = async (
 
 // 첨부파일 업로드 (Presigned URL 방식)
 export const uploadAttachment = async (file: File, token: string): Promise<{ path: string; name: string; url?: string; message?: string }> => {
+    const preparedFile = await optimizeImageForUpload(file);
+
     let generateUrlResponse;
     try {
         generateUrlResponse = await axios.post(
             `${BASE_URL}/api/boards/files/generate-upload-url/`,
-            { filename: file.name },
+            { filename: preparedFile.name },
             { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
         );
     } catch (error: unknown) {
-        return { path: "", name: file.name, message: getErrorMessage(error, "업로드 URL 요청에 실패했습니다.") };
+        return { path: "", name: preparedFile.name, message: getErrorMessage(error, "업로드 URL 요청에 실패했습니다.") };
     }
 
     const { upload_url, file_key, url } = generateUrlResponse.data;
     if (!upload_url || !file_key) {
-        return { path: "", name: file.name, message: "서버에서 유효한 업로드 URL을 받지 못했습니다." };
+        return { path: "", name: preparedFile.name, message: "서버에서 유효한 업로드 URL을 받지 못했습니다." };
     }
 
     try {
-        await axios.put(upload_url, file, {
-            headers: { "Content-Type": file.type || "application/octet-stream" },
+        await axios.put(upload_url, preparedFile, {
+            headers: { "Content-Type": preparedFile.type || "application/octet-stream" },
         });
     } catch {
-        return { path: "", name: file.name, message: "클라우드 스토리지 업로드에 실패했습니다." };
+        return { path: "", name: preparedFile.name, message: "클라우드 스토리지 업로드에 실패했습니다." };
     }
 
     // 업로드 완료 후 public-read ACL 적용
@@ -528,7 +531,7 @@ export const uploadAttachment = async (file: File, token: string): Promise<{ pat
 
     return {
         path: file_key,
-        name: file.name,
+        name: preparedFile.name,
         url: url,
     };
 };

@@ -169,11 +169,12 @@ a {
   text-decoration: none;
 }
 
-/* 이미지 기본 설정 */
+/* 이미지 기본 설정 (HDR 사진으로 인한 주변 배경 회색화/EDR 감광 방지) */
 img {
   max-width: 100%;
   height: auto;
   display: block;
+  dynamic-range-limit: standard;
 }
 
 /* 유틸리티 클래스 */

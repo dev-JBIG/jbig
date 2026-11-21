@@ -1032,6 +1032,9 @@ const PostDetail: React.FC = () => {
                                 <a {...props} target="_blank" rel="noopener noreferrer">
                                     {children}
                                 </a>
+                            ),
+                            img: ({node, alt, ...props}) => (
+                                <img {...props} alt={alt ?? ""} loading="lazy" decoding="async" />
                             )
                         }}
                     >
@@ -1048,6 +1051,7 @@ const PostDetail: React.FC = () => {
                             alt={att.fileName}
                             className="photo-album-inline-image"
                             loading="lazy"
+                            decoding="async"
                         />
                     ))}
                 </div>
