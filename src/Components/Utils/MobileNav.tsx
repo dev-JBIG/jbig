@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Button, CounterLabel } from "@primer/react";
 import { Menu, X, FileText, SquareCheckBig, Lock } from "lucide-react";
@@ -9,6 +9,7 @@ import { Section, Board } from "./interfaces";
 import { getBoardIcon } from "./boardIcons";
 import { useUser } from "./UserContext";
 import { useAlert } from "./AlertContext";
+import { useFocusTrap } from "./useFocusTrap";
 import "./MobileNav.css";
 import MemberQuickLinks from "./MemberQuickLinks";
 
@@ -30,9 +31,19 @@ const MobileNav: React.FC<MobileNavProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const toggleBtnRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
   const { accessToken, user } = useUser();
   const { showAlert } = useAlert();
   const location = useLocation();
+
+  const closeDrawer = useCallback(() => setIsOpen(false), []);
+  useFocusTrap(drawerRef, isOpen, {
+    onClose: closeDrawer,
+    initialFocusRef: closeBtnRef,
+    restoreFocusRef: toggleBtnRef,
+  });
 
   const activeBoardMatch = location.pathname.match(/^\/board\/(\d+)/);
   const activeBoardId = activeBoardMatch ? Number(activeBoardMatch[1]) : null;
@@ -76,6 +87,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
   return (
     <>
       <button
+        ref={toggleBtnRef}
         type="button"
         className="mobile-nav-toggle"
         onClick={() => setIsOpen(!isOpen)}
@@ -86,14 +98,23 @@ const MobileNav: React.FC<MobileNavProps> = ({
       </button>
 
       {isOpen && (
-        <div className="mobile-nav-overlay" onClick={() => setIsOpen(false)}>
-          <div className="mobile-nav-drawer" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="모바일 내비게이션">
+        <div className="mobile-nav-overlay" onClick={closeDrawer}>
+          <div
+            ref={drawerRef}
+            className="mobile-nav-drawer"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label="모바일 내비게이션"
+            tabIndex={-1}
+          >
             <div className="mobile-nav-header">
               <h2 className="mobile-nav-title">JBIG 메뉴</h2>
               <button
+                ref={closeBtnRef}
                 type="button"
                 className="mobile-nav-close"
-                onClick={() => setIsOpen(false)}
+                onClick={closeDrawer}
                 aria-label="메뉴 닫기"
               >
                 <X size={20} aria-hidden="true" />

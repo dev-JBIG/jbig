@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@primer/react";
@@ -8,6 +8,7 @@ import { CalendarEvent } from "../interfaces";
 import { deleteCalendarEvent, fetchCalendarEvents } from "../../../API/req";
 import { useUser } from "../UserContext";
 import { useAlert } from "../AlertContext";
+import { useFocusTrap } from "../useFocusTrap";
 
 interface CalendarProps {
     staffAuth: boolean;
@@ -38,7 +39,11 @@ const formatEventTimeRange = (event: CalendarEvent): string => {
     return start || end || "시간 미정";
 };
 
-const getEventDayKeys = (event: CalendarEvent): string[] => {
+const getEventDayKeysInRange = (
+    event: CalendarEvent,
+    rangeStart: Date,
+    rangeEnd: Date
+): string[] => {
     if (!event.start || Number.isNaN(event.start.getTime())) return [];
     const startDay = new Date(event.start.getFullYear(), event.start.getMonth(), event.start.getDate());
     let endDay = new Date(startDay);
@@ -57,13 +62,15 @@ const getEventDayKeys = (event: CalendarEvent): string[] => {
         }
     }
 
+    const clampedStart = startDay > rangeStart ? startDay : rangeStart;
+    const clampedEnd = endDay < rangeEnd ? endDay : rangeEnd;
+    if (clampedStart > clampedEnd) return [];
+
     const keys: string[] = [];
-    const cursor = new Date(startDay);
-    let safety = 0;
-    while (cursor <= endDay && safety < 90) {
+    const cursor = new Date(clampedStart);
+    while (cursor <= clampedEnd) {
         keys.push(toDayKey(cursor));
         cursor.setDate(cursor.getDate() + 1);
-        safety++;
     }
     return keys;
 };
@@ -96,6 +103,21 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
     const [expandedDay, setExpandedDay] = useState<{ key: string; label: string; events: CalendarEvent[] } | null>(null);
     const [deleting, setDeleting] = useState(false);
 
+    const savedOverridesRef = useRef<Map<string, CalendarEvent>>(new Map());
+    const deletedIdsRef = useRef<Set<string>>(new Set());
+    const expandedDialogRef = useRef<HTMLDivElement>(null);
+    const detailDialogRef = useRef<HTMLDivElement>(null);
+
+    const closeExpandedDay = useCallback(() => setExpandedDay(null), []);
+    const closeSelectedEvent = useCallback(() => setSelectedEvent(null), []);
+
+    useFocusTrap(expandedDialogRef, Boolean(expandedDay) && !selectedEvent, {
+        onClose: closeExpandedDay,
+    });
+    useFocusTrap(detailDialogRef, Boolean(selectedEvent), {
+        onClose: closeSelectedEvent,
+    });
+
     useEffect(() => {
         let cancelled = false;
 
@@ -104,17 +126,30 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
             try {
                 const fetched = await fetchCalendarEvents();
                 if (!cancelled) {
-                    setEvents(
-                        (fetched ?? []).map((ev: any) => ({
-                            ...ev,
-                            id: String(ev.id),
-                            start: ev.start instanceof Date ? ev.start : new Date(ev.start),
-                            end: ev.end ? (ev.end instanceof Date ? ev.end : new Date(ev.end)) : null,
-                        }))
-                    );
+                    const normalized: CalendarEvent[] = (fetched ?? []).map((ev: any) => ({
+                        ...ev,
+                        id: String(ev.id),
+                        start: ev.start instanceof Date ? ev.start : new Date(ev.start),
+                        end: ev.end ? (ev.end instanceof Date ? ev.end : new Date(ev.end)) : null,
+                    }));
+
+                    const merged = new Map<string, CalendarEvent>();
+                    normalized.forEach((ev) => {
+                        if (!deletedIdsRef.current.has(ev.id)) {
+                            merged.set(ev.id, ev);
+                        }
+                    });
+                    savedOverridesRef.current.forEach((ev, id) => {
+                        if (!deletedIdsRef.current.has(id)) {
+                            merged.set(id, ev);
+                        }
+                    });
+                    setEvents(Array.from(merged.values()));
                 }
             } catch {
-                if (!cancelled) setEvents([]);
+                if (!cancelled) {
+                    setEvents(Array.from(savedOverridesRef.current.values()));
+                }
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -132,7 +167,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
             const custom = e as CustomEvent<{ mode: "create" | "edit"; event: CalendarEvent }>;
             const detail = custom.detail;
             if (!detail?.event) return;
-            const saved = {
+            const saved: CalendarEvent = {
                 ...detail.event,
                 id: String(detail.event.id),
                 start: detail.event.start instanceof Date ? detail.event.start : new Date(detail.event.start),
@@ -141,9 +176,15 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
                     : null,
             };
 
+            deletedIdsRef.current.delete(saved.id);
+            savedOverridesRef.current.set(saved.id, saved);
+
             setEvents(prev => {
                 if (detail.mode === "edit") {
-                    return prev.map(item => (item.id === saved.id ? saved : item));
+                    const exists = prev.some(item => item.id === saved.id);
+                    return exists
+                        ? prev.map(item => (item.id === saved.id ? saved : item))
+                        : [...prev, saved];
                 }
                 return [...prev.filter(item => item.id !== saved.id), saved];
             });
@@ -153,19 +194,6 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
         return () => window.removeEventListener("CALENDAR_EVENT_SAVED", handleEventSaved);
     }, []);
 
-    // ESC 키로 상세 모달 닫기
-    useEffect(() => {
-        if (!selectedEvent && !expandedDay) return;
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
-                setSelectedEvent(null);
-                setExpandedDay(null);
-            }
-        };
-        document.addEventListener("keydown", onKeyDown);
-        return () => document.removeEventListener("keydown", onKeyDown);
-    }, [selectedEvent, expandedDay]);
-
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
 
@@ -173,8 +201,11 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
 
     const eventsByDay = useMemo(() => {
         const map = new Map<string, CalendarEvent[]>();
+        if (gridDays.length === 0) return map;
+        const rangeStart = gridDays[0];
+        const rangeEnd = gridDays[gridDays.length - 1];
         events.forEach(ev => {
-            getEventDayKeys(ev).forEach(dayKey => {
+            getEventDayKeysInRange(ev, rangeStart, rangeEnd).forEach(dayKey => {
                 const list = map.get(dayKey);
                 if (list) list.push(ev);
                 else map.set(dayKey, [ev]);
@@ -184,7 +215,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
             list.sort((a, b) => a.start.getTime() - b.start.getTime());
         });
         return map;
-    }, [events]);
+    }, [events, gridDays]);
 
     const handlePrevMonth = () => setViewDate(new Date(year, month - 1, 1));
     const handleNextMonth = () => setViewDate(new Date(year, month + 1, 1));
@@ -234,6 +265,8 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
         setDeleting(true);
         try {
             await deleteCalendarEvent(ev.id, accessToken);
+            deletedIdsRef.current.add(ev.id);
+            savedOverridesRef.current.delete(ev.id);
             setEvents(prev => prev.filter(item => item.id !== ev.id));
             setSelectedEvent(null);
             setExpandedDay(prev => {
@@ -369,18 +402,18 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
             {expandedDay && ReactDOM.createPortal(
                 <div
                     className="primer-calendar-modal-backdrop"
-                    onClick={() => setExpandedDay(null)}
+                    onClick={closeExpandedDay}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="calendar-day-modal-title"
                 >
-                    <div className="primer-calendar-modal" onClick={e => e.stopPropagation()}>
+                    <div ref={expandedDialogRef} className="primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
                         <div className="primer-calendar-modal-header">
                             <h3 id="calendar-day-modal-title">{expandedDay.label} 일정</h3>
                             <button
                                 type="button"
                                 className="primer-calendar-modal-close"
-                                onClick={() => setExpandedDay(null)}
+                                onClick={closeExpandedDay}
                                 aria-label="닫기"
                             >
                                 <X size={16} aria-hidden="true" />
@@ -418,12 +451,12 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
             {selectedEvent && ReactDOM.createPortal(
                 <div
                     className="primer-calendar-modal-backdrop"
-                    onClick={() => setSelectedEvent(null)}
+                    onClick={closeSelectedEvent}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="calendar-event-modal-title"
                 >
-                    <div className="primer-calendar-modal" onClick={e => e.stopPropagation()}>
+                    <div ref={detailDialogRef} className="primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
                         <div className="primer-calendar-modal-header">
                             <div className="primer-calendar-modal-title-wrap">
                                 <span

@@ -670,6 +670,16 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     ...(hasTags ? { tag: selectedTag } : {}),
                     is_anonymous: !showRealName,
                 }, accessToken);
+
+                // 게시글 수정이 성공했으므로 커밋된 첨부·본문 파일의 임시 업로드 소유권을 해제한다.
+                // 이후 updateRecruitment가 실패해 에디터에 남더라도 저장된 게시글의 파일을 삭제하지 않는다.
+                const committedKeys = new Set<string>(attachments.map((att) => att.path));
+                uploadedPathsRef.current.forEach((path) => {
+                    if (committedKeys.has(path) || content.includes(path)) {
+                        uploadedPathsRef.current.delete(path);
+                    }
+                });
+
                 if (isRecruitmentTag && recruitmentData) {
                     await updateRecruitment(postIdNumber, {
                         recruitment_type: recruitmentData.recruitment_type,

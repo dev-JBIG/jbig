@@ -1,5 +1,5 @@
 import React from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Calendar from "./Calendar";
 import { fetchCalendarEvents, deleteCalendarEvent } from "../../../API/req";
 import { useUser } from "../UserContext";
@@ -97,4 +97,83 @@ describe("Primer React Calendar", () => {
         fireEvent.click(screen.getByRole("button", { name: "오늘" }));
         expect(screen.getByText(currentHeading)).toBeInTheDocument();
     });
+
+    test("90일을 초과하는 장기 일정도 현재 보이는 달에서 잘리지 않고 표시된다", async () => {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth() - 4, 1);
+        const end = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+        mockedFetchEvents.mockResolvedValue([
+            {
+                id: "202",
+                title: "장기 프로젝트",
+                start,
+                end,
+                allDay: true,
+                description: "6개월 장기 프로젝트",
+                color: "#1a7f37",
+            },
+        ]);
+
+        render(<Calendar staffAuth={false} />);
+
+        const matches = await screen.findAllByRole("button", { name: /장기 프로젝트/ });
+        expect(matches.length).toBeGreaterThan(20);
+    });
+
+    test("초기 fetch 완료 전에 저장된 이벤트는 fetch가 끝난 뒤에도 보존된다", async () => {
+        let resolveFetch!: (events: any[]) => void;
+        mockedFetchEvents.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+
+        render(<Calendar staffAuth={true} />);
+
+        const now = new Date();
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, "0");
+
+        act(() => {
+            window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
+                detail: {
+                    mode: "create",
+                    event: {
+                        id: "303",
+                        title: "즉시 저장 일정",
+                        start: new Date(`${y}-${m}-10T10:00:00`),
+                        end: new Date(`${y}-${m}-10T11:00:00`),
+                        description: "테스트",
+                    },
+                },
+            }));
+        });
+
+        expect(await screen.findByRole("button", { name: /즉시 저장 일정/ })).toBeInTheDocument();
+
+        await act(async () => {
+            resolveFetch([]);
+        });
+
+        await waitFor(() => {
+            expect(screen.getByRole("button", { name: /즉시 저장 일정/ })).toBeInTheDocument();
+        });
+    });
+
+    test("상세 모달 열림 시 포커스가 내부로 이동하고 Escape 닫기 시 트리거로 복원된다", async () => {
+        render(<Calendar staffAuth={false} />);
+
+        const eventButton = await screen.findByRole("button", { name: /정기 세미나/ });
+        eventButton.focus();
+        expect(document.activeElement).toBe(eventButton);
+
+        fireEvent.click(eventButton);
+
+        const dialog = await screen.findByRole("dialog");
+        expect(dialog.contains(document.activeElement)).toBe(true);
+
+        fireEvent.keyDown(document, { key: "Escape" });
+
+        await waitFor(() => {
+            expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        });
+        expect(document.activeElement).toBe(eventButton);
+    });
 });
+

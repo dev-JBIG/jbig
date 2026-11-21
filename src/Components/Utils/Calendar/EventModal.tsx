@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -7,6 +7,7 @@ import { X } from 'lucide-react';
 import './EventModal.css';
 import { CalendarEventCreate } from '../interfaces';
 import { useAlert } from '../AlertContext';
+import { useFocusTrap } from '../useFocusTrap';
 
 interface EventModalProps {
     mode: 'create' | 'edit';
@@ -27,6 +28,7 @@ const getInitialStartTime = () => {
 
 const EventModal: React.FC<EventModalProps> = ({ mode, initial, onClose, onSave }) => {
     const { showAlert } = useAlert();
+    const dialogRef = useRef<HTMLDivElement>(null);
     const [title, setTitle] = useState(initial?.title ?? '');
     const [start, setStart] = useState<Date | null>(initial?.start ?? getInitialStartTime());
     const [endManuallySet, setEndManuallySet] = useState(Boolean(initial?.end));
@@ -35,6 +37,8 @@ const EventModal: React.FC<EventModalProps> = ({ mode, initial, onClose, onSave 
     const [allDay, setAllDay] = useState(initial?.allDay ?? false);
     const [color, setColor] = useState(initial?.color ?? colorOptions[0]);
 
+    useFocusTrap(dialogRef, true, { onClose });
+
     useEffect(() => {
         if (start instanceof Date && !endManuallySet) {
             if (!end || (end instanceof Date && end <= start)) {
@@ -42,14 +46,6 @@ const EventModal: React.FC<EventModalProps> = ({ mode, initial, onClose, onSave 
             }
         }
     }, [start, end, endManuallySet]);
-
-    useEffect(() => {
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        document.addEventListener('keydown', onKeyDown);
-        return () => document.removeEventListener('keydown', onKeyDown);
-    }, [onClose]);
 
     const handleAllDayChange = (isChecked: boolean) => {
         setAllDay(isChecked);
@@ -76,6 +72,10 @@ const EventModal: React.FC<EventModalProps> = ({ mode, initial, onClose, onSave 
             showAlert({ message: "종료 시각을 입력해주세요.", type: 'warning' });
             return;
         }
+        if (!allDay && end && end <= start) {
+            showAlert({ message: "종료 시각은 시작 시각보다 이후여야 합니다.", type: 'warning' });
+            return;
+        }
         if (description.trim().length < 1) {
             showAlert({ message: "설명란이 비어있습니다.", type: 'warning' });
             return;
@@ -87,7 +87,7 @@ const EventModal: React.FC<EventModalProps> = ({ mode, initial, onClose, onSave 
 
     return ReactDOM.createPortal(
         <div className="event-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="event-modal-heading">
-            <div className="event-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div ref={dialogRef} className="event-modal-card" onClick={(e) => e.stopPropagation()} tabIndex={-1}>
                 <div className="event-modal-header">
                     <h2 id="event-modal-heading">{mode === 'edit' ? '일정 수정' : '새 일정 추가'}</h2>
                     <button type="button" className="event-modal-close" onClick={onClose} aria-label="닫기">

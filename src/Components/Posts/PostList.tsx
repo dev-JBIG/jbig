@@ -369,13 +369,12 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                         </div>
                         
 
-                        {/* 태그 필터 탭 */}
+                        {/* 태그 필터 버튼 그룹 */}
                         {!isHome && activeBoard?.name !== BRAG_BOARD_NAME && activeBoard?.available_tags && activeBoard.available_tags.length > 0 && (
-                            <div className="postlist-tag-tabs" role="tablist" aria-label="태그 필터">
+                            <div className="postlist-tag-tabs" role="group" aria-label="태그 필터">
                                 <button
                                     type="button"
-                                    role="tab"
-                                    aria-selected={selectedTag === ''}
+                                    aria-pressed={selectedTag === ''}
                                     className={`postlist-tag-tab ${selectedTag === '' ? 'active' : ''}`}
                                     onClick={() => { setSelectedTag(''); handlePageChange(1); }}
                                 >전체</button>
@@ -383,8 +382,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     <button
                                         key={tag}
                                         type="button"
-                                        role="tab"
-                                        aria-selected={selectedTag === tag}
+                                        aria-pressed={selectedTag === tag}
                                         className={`postlist-tag-tab ${selectedTag === tag ? 'active' : ''}`}
                                         onClick={() => { setSelectedTag(tag); handlePageChange(1); }}
                                     >{tag}</button>

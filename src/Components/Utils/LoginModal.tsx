@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState } from "react";
 import { Button } from "@primer/react";
 import "./LoginModal.css";
 import { signin } from "../../API/req";
 import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 import { useJbnuEmail } from "./useJbnuEmail";
+import { useFocusTrap } from "./useFocusTrap";
 
 interface LoginModalProps {
     onClose: () => void;
@@ -16,6 +17,7 @@ const isValidPassword = (pwd: string) =>
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) => {
+    const dialogRef = useRef<HTMLDivElement>(null);
     const { email: userId, inputRef: userIdRef, onChange: onUserIdChange, onFocus: onUserIdFocus, onClick: onUserIdClick } = useJbnuEmail();
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -26,13 +28,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
     const navigate = useNavigate();
     const { setAuth } = useUser();
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") onClose();
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onClose]);
+    useFocusTrap(dialogRef, true, { onClose, initialFocusRef: userIdRef });
 
     const validateEmail = (value: string) => {
         if (!value.trim()) return "이메일을 입력해주세요.";
@@ -120,7 +116,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
             aria-modal="true"
             aria-labelledby="login-modal-heading"
         >
-            <div className="login-modal-container">
+            <div ref={dialogRef} className="login-modal-container" tabIndex={-1}>
                 <button
                     type="button"
                     className="login-modal-close"
