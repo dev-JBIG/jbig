@@ -55,8 +55,13 @@ reviews:
     - path: "frontend/src/Components/**"
       instructions: |
         - React Hooks 규칙(의존성 배열, effect cleanup)과 모달/다이얼로그 콜백 중복 호출 방지(`AlertModal`/`AlertContext` 등)를 점검하세요.
-        - `@primer/react` 및 `@primer/primitives` 디자인 토큰/CSS 변수 일관성을 유지하고 전역 CSS 충돌이 없는지 확인하세요.
-        - 접근성(키보드 조작, 시맨틱 HTML, `aria-*` 속성)과 모바일/데스크톱 반응형 깨짐 여부를 확인하세요.
+        - 루트 `DESIGN.md` 가이드라인을 기준으로 `@primer/react` 및 `@primer/primitives` 디자인 토큰/CSS 변수 일관성을 유지하고 전역 CSS 충돌이 없는지 확인하세요.
+        - 접근성(키보드 조작, 시맨틱 HTML, `aria-*` 속성), `loading="lazy" decoding="async"` 이미지 렌더링, 모바일/데스크톱 반응형 깨짐 여부를 확인하세요.
+    - path: "frontend/src/**/*.css"
+      instructions: |
+        - 루트 `DESIGN.md`의 코너 라운드 규칙을 반드시 확인하세요: 하드코딩 `border-radius` px(`2px`, `3px`, `4px`, `6px`, `8px`, `12px` 등) 사용 금지. 일반 카드·배너·사이드바·버튼·인풋은 `var(--radius-md)`(6px), 작은 칩/배지는 `var(--radius-sm)`(3px), 플로팅 모달·드롭다운 오버레이·팝업만 `var(--radius-lg)`(12px)를 사용해야 합니다.
+        - 원시 hex 색상 하드코딩 대신 Primer 시맨틱 토큰(`--fgColor-*`, `--bgColor-*`, `--borderColor-*`, `--overlay-bgColor`) 또는 `index.css` 브리지 토큰을 사용해 라이트/다크 모드를 모두 지원하는지 확인하세요.
+        - `frontend/src/index.css`의 전역 `img { dynamic-range-limit: standard; }` 규칙이 제거되거나 무효화되지 않았는지 확인하세요.
 
     # === Backend ===
     - path: "backend/boards/**"

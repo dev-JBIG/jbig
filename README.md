@@ -12,7 +12,10 @@
 ├── .github/workflows/
 │   ├── frontend.yml           # frontend/** 변경 시 테스트·빌드·배포
 │   └── backend.yml            # backend/** 변경 시 테스트·배포
-└── .coderabbit.yaml           # 통합 CodeRabbit v2 리뷰 설정
+├── .coderabbit.yaml           # 통합 CodeRabbit v2 리뷰 설정 (DESIGN.md 규칙 연동)
+├── DESIGN.md                  # UI/UX 디자인 가이드라인 (GitHub Primer 표준)
+├── AGENTS.md                  # AI 에이전트 공통 작업·보안 지침 (Codex/Antigravity 등)
+└── CLAUDE.md                  # Claude Code 엔트리포인트 (@AGENTS.md, @DESIGN.md 참조)
 ```
 
 ## 로컬 개발 실행
