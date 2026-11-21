@@ -90,7 +90,7 @@ const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
         const safeThumbUrl = sanitizeMediaUrl(block.data.imageUrl);
         return safeThumbUrl ? (
           <div className="block-image-preview-wrap">
-            <img src={safeThumbUrl} alt="" className="block-image-preview block-image-preview-sm" referrerPolicy="no-referrer" />
+            <img src={safeThumbUrl} alt="" className="block-image-preview block-image-preview-sm" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
             <button
               type="button"
               className="block-image-remove"

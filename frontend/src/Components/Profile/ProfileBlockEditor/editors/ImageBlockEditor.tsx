@@ -54,7 +54,7 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
     <div className="block-editor block-image-editor">
       {safePreviewUrl ? (
         <div className="block-image-preview-wrap">
-          <img src={safePreviewUrl} alt={block.data.alt} className="block-image-preview" referrerPolicy="no-referrer" />
+          <img src={safePreviewUrl} alt={block.data.alt} className="block-image-preview" referrerPolicy="no-referrer" loading="lazy" decoding="async" />
           <button type="button" className="block-image-remove" aria-label="이미지 제거" onClick={handleRemove}>
             <X size={16} aria-hidden="true" />
           </button>

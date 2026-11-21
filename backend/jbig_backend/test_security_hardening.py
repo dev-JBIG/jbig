@@ -556,4 +556,42 @@ class SecurityHardeningTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertTrue(BlacklistedToken.objects.filter(token__jti=jti).exists())
 
+    # ── [CR-8] 비문자열 attachment path 400 검증 & 정화 후 재조립 IDOR 차단 ─
+    def test_non_string_attachment_path_returns_400_and_sanitization_idor_is_blocked(self):
+        self.client.force_authenticate(user=self.alice)
+
+        # 비문자열 path는 AttributeError(500)가 아니라 400을 반환해야 한다.
+        res_non_str_post = self.client.post(
+            reverse('post-list-create', kwargs={'board_id': self.public_board.id}),
+            {'title': '타입테스트', 'content_md': '본문', 'attachment_paths': [{'path': 12345}]},
+            format='json',
+        )
+        self.assertEqual(res_non_str_post.status_code, status.HTTP_400_BAD_REQUEST)
+
+        res_non_str_draft = self.client.post(
+            reverse('draft-retrieve-create'),
+            {'title': '초안타입', 'content_md': '본문', 'uploaded_paths': [{'path': ['bad']}]},
+            format='json',
+        )
+        self.assertEqual(res_non_str_draft.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # 허용되지 않은 HTML 태그가 bleach.clean으로 제거되며 타인 키로 재조립되는 IDOR 우회 차단
+        tricky_payload = (
+            f'![x](media-key://uploads/2026/11/21<zz/{self.alice.id}/>/{self.bob.id}/secret.png)'
+        )
+        res_idor_post = self.client.post(
+            reverse('post-list-create', kwargs={'board_id': self.public_board.id}),
+            {'title': '재조립IDOR', 'content_md': tricky_payload},
+            format='json',
+        )
+        self.assertEqual(res_idor_post.status_code, status.HTTP_400_BAD_REQUEST)
+
+        res_idor_draft = self.client.post(
+            reverse('draft-retrieve-create'),
+            {'title': '초안재조립IDOR', 'content_md': tricky_payload},
+            format='json',
+        )
+        self.assertEqual(res_idor_draft.status_code, status.HTTP_400_BAD_REQUEST)
+
+
 

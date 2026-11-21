@@ -620,8 +620,10 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         for item in value:
             if not isinstance(item, dict):
                 raise serializers.ValidationError('각 첨부 항목은 객체여야 합니다.')
-            raw_path = (item.get('path') or '').strip()
-            path = raw_path.replace('\\', '/')
+            raw_path = item.get('path')
+            if not isinstance(raw_path, str):
+                raise serializers.ValidationError('첨부 파일 경로는 문자열이어야 합니다.')
+            path = raw_path.strip().replace('\\', '/')
             if not _validate_owned_upload_key(path, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 첨부할 수 있습니다.')
             item['path'] = path
@@ -632,7 +634,9 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'본문은 {MAX_POST_CONTENT_LENGTH}자 이하로 작성해주세요.'
             )
-        normalized = normalize_media_urls(value)
+        # 정화(bleach.clean) 과정에서 태그가 제거되며 타인 키로 재조립되는 IDOR 우회를 막기 위해
+        # 반드시 최종 저장 문자열과 동일한 정화 결과에 대해 소유권을 검증한다.
+        sanitized = normalize_media_urls(sanitize_markdown(normalize_media_urls(value or '')))
         request = self.context.get('request')
         user_id = getattr(getattr(request, 'user', None), 'id', None)
         if user_id is None:
@@ -646,8 +650,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('본인이 업로드한 파일만 본문에 사용할 수 있습니다.')
             return f'media-key://{norm_key}'
 
-        normalized = re.sub(r'media-key://(uploads[\\/][^\s\)]+)', _check_and_normalize_key, normalized)
-        return normalized
+        return re.sub(r'media-key://(uploads[\\/][^\s\)]+)', _check_and_normalize_key, sanitized)
 
 
     def _resolve_board(self, validated_data):
@@ -705,7 +708,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         recruitment_data = validated_data.pop('recruitment', None)
 
         post = Post(**validated_data)
-        post.content_md = sanitize_markdown(normalize_media_urls(content_md))
+        post.content_md = content_md
         post.attachment_paths = attachment_paths
         post.save()
         post.update_search_vector()
@@ -739,7 +742,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
                 pass
 
         if content_md is not None:
-            instance.content_md = sanitize_markdown(normalize_media_urls(content_md))
+            instance.content_md = content_md
 
         if attachment_paths is not None:
             instance.attachment_paths = attachment_paths
@@ -1051,7 +1054,10 @@ class DraftSerializer(serializers.ModelSerializer):
         for item in value:
             if not isinstance(item, dict):
                 raise serializers.ValidationError('각 첨부 항목은 객체여야 합니다.')
-            path = (item.get('path') or '').strip().replace('\\', '/')
+            raw_path = item.get('path')
+            if not isinstance(raw_path, str):
+                raise serializers.ValidationError('첨부 파일 경로는 문자열이어야 합니다.')
+            path = raw_path.strip().replace('\\', '/')
             if not _validate_owned_upload_key(path, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 임시저장할 수 있습니다.')
             normalized_items.append({**item, 'path': path})
@@ -1062,7 +1068,7 @@ class DraftSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f'본문은 {MAX_POST_CONTENT_LENGTH}자 이하로 작성해주세요.'
             )
-        normalized = normalize_media_urls(value or '')
+        sanitized = normalize_media_urls(sanitize_markdown(normalize_media_urls(value or '')))
         request = self.context.get('request')
         user_id = getattr(getattr(request, 'user', None), 'id', None)
         if user_id is None:
@@ -1074,7 +1080,7 @@ class DraftSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('본인이 업로드한 파일만 본문에 사용할 수 있습니다.')
             return f'media-key://{norm_key}'
 
-        return re.sub(r'media-key://(uploads[\\/][^\s\)]+)', _check_and_normalize_key, normalized)
+        return re.sub(r'media-key://(uploads[\\/][^\s\)]+)', _check_and_normalize_key, sanitized)
 
     def to_representation(self, instance):
         """조회 시 media-key:// URL을 퍼블릭 URL로 변환"""
@@ -1107,7 +1113,7 @@ class DraftSerializer(serializers.ModelSerializer):
             defaults={
                 'board': board,
                 'title': validated_data.get('title', ''),
-                'content_md': sanitize_markdown(normalize_media_urls(validated_data.get('content_md', ''))),
+                'content_md': validated_data.get('content_md', ''),
                 'uploaded_paths': validated_data.get('uploaded_paths', [])
             }
         )
@@ -1119,8 +1125,8 @@ class DraftSerializer(serializers.ModelSerializer):
             instance.board = Board.objects.filter(id=board_id).first() if board_id else None
         
         instance.title = validated_data.get('title', instance.title)
-        content_md = validated_data.get('content_md', instance.content_md)
-        instance.content_md = sanitize_markdown(normalize_media_urls(content_md))
+        if 'content_md' in validated_data:
+            instance.content_md = validated_data['content_md']
         instance.uploaded_paths = validated_data.get('uploaded_paths', instance.uploaded_paths)
         instance.save()
         return instance
