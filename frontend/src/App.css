@@ -61,7 +61,7 @@
 
 .auth-header-signin {
     padding: 5px 12px;
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-default, #d1d9e0);
     background-color: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);

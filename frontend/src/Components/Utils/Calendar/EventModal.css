@@ -13,7 +13,7 @@
     background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
     color: var(--fgColor-default, #1f2328);
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.2));
     width: 100%;
     max-width: 440px;
@@ -43,7 +43,7 @@
     width: 28px;
     height: 28px;
     border: none;
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     background: transparent;
     color: var(--fgColor-muted, #59636e);
     cursor: pointer;
@@ -100,7 +100,7 @@
     width: 100%;
     padding: 7px 12px;
     font-size: 14px;
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-default, #d1d9e0);
     background-color: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);

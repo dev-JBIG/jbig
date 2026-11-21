@@ -8,7 +8,7 @@
 .calendar-page-card {
     background-color: var(--bgColor-default, #ffffff);
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
 }

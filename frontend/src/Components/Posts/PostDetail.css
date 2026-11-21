@@ -2,7 +2,7 @@
 
 .postdetail-container {
     background-color: var(--bgColor-default, var(--color-bg-primary));
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     padding: var(--space-lg);
     max-width: 100%;
     border: 1px solid var(--borderColor-default, var(--color-border-light));

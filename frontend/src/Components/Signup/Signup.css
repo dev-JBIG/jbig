@@ -16,7 +16,7 @@
     padding: 28px 24px;
     background-color: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
 }
 

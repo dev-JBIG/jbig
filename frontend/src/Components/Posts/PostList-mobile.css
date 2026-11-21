@@ -6,7 +6,7 @@
     }
 
     .postlist-home-card {
-        border-radius: var(--borderRadius-large, 12px);
+        border-radius: var(--radius-md);
     }
 
     .postlist-home-card .postlist-table tbody tr {
@@ -77,7 +77,7 @@
         padding: 14px 16px;
         background-color: var(--bgColor-default, var(--color-bg-primary));
         border: 1px solid var(--borderColor-default, var(--color-border-light));
-        border-radius: var(--borderRadius-large, 12px);
+        border-radius: var(--radius-md);
         box-shadow: var(--shadow-sm);
         cursor: pointer;
         transition: border-color var(--transition-fast), background-color var(--transition-fast);

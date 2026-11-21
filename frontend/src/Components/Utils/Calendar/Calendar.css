@@ -2,7 +2,7 @@
     width: 100%;
     background-color: var(--bgColor-default, #ffffff);
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     overflow: hidden;
     color: var(--fgColor-default, #1f2328);
 }
@@ -35,7 +35,7 @@
     padding: 3px 9px;
     font-size: 12px;
     font-weight: 500;
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-default, #d1d9e0);
     background-color: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);
@@ -50,7 +50,7 @@
 .primer-calendar-arrows {
     display: inline-flex;
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     overflow: hidden;
     background-color: var(--bgColor-default, #ffffff);
 }
@@ -185,7 +185,7 @@
     padding: 2px 4px;
     border: 1px solid transparent;
     border-left: 2.5px solid var(--event-color, #0969da);
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     background-color: var(--bgColor-muted, #f6f8fa);
     color: var(--fgColor-default, #1f2328);
     font-size: 11px;
@@ -230,7 +230,7 @@
     color: var(--fgColor-accent, #0969da);
     text-align: left;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
 }
 
 .primer-calendar-more-btn:hover {
@@ -255,7 +255,7 @@
     background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
     color: var(--fgColor-default, #1f2328);
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-large, 12px);
+    border-radius: var(--radius-lg);
     box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.2));
     overflow: hidden;
 }
@@ -301,7 +301,7 @@
     width: 28px;
     height: 28px;
     border: none;
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     background: transparent;
     color: var(--fgColor-muted, #59636e);
     cursor: pointer;
@@ -380,7 +380,7 @@
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--borderRadius-medium, 6px);
+    border-radius: var(--radius-md);
     background-color: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);
     text-align: left;
