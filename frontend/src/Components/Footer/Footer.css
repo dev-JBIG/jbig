@@ -54,6 +54,7 @@
     gap: 8px;
 }
 
+a.footer-social-link,
 .footer-social-link {
     display: inline-flex;
     align-items: center;
@@ -66,9 +67,11 @@
     transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
+a.footer-social-link:hover,
 .footer-social-link:hover {
     background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
     color: var(--fgColor-default, #1f2328);
+    text-decoration: none;
 }
 
 .footer-social-icon {
