@@ -1,6 +1,7 @@
 import React from 'react';
 import { Github, Linkedin, Mail, Globe, Twitter, Instagram, Youtube, ExternalLink } from 'lucide-react';
 import { LinksBlock } from '../../types';
+import { sanitizeHttpUrl } from '../../../Utils/safeUrl';
 
 const ICON_MAP: Record<string, React.FC<{ size?: number }>> = {
   github: Github,
@@ -25,10 +26,19 @@ const LinksBlockView: React.FC<Props> = ({ block }) => {
     <div className="block-view block-links-view">
       {items.map((item, i) => {
         const IconComp = ICON_MAP[item.icon] || Globe;
+        const safeHref = sanitizeHttpUrl(item.url);
+        if (!safeHref) {
+          return (
+            <span key={i} className="block-link-item">
+              <IconComp size={18} />
+              <span>{item.label}</span>
+            </span>
+          );
+        }
         return (
           <a
             key={i}
-            href={item.url}
+            href={safeHref}
             target="_blank"
             rel="noopener noreferrer"
             className="block-link-item"

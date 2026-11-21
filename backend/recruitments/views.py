@@ -1,4 +1,4 @@
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import F
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -50,7 +50,10 @@ class RecruitmentListAPIView(generics.ListAPIView):
         if rtype:
             qs = qs.filter(recruitment_type=rtype)
         if board_id:
-            qs = qs.filter(post__board_id=board_id)
+            try:
+                qs = qs.filter(post__board_id=int(board_id))
+            except (TypeError, ValueError):
+                return Recruitment.objects.none()
 
         # 게시판 조회 권한(read_permission)이 없는 글의 모집 정보는 목록에서 제외한다.
         qs = qs.filter(post__in=Post.objects.readable_for_user(self.request.user))
@@ -60,7 +63,11 @@ class RecruitmentListAPIView(generics.ListAPIView):
 
 class RecruitmentDetailAPIView(APIView):
     """모집 상세 조회"""
-    permission_classes = [AllowAny]
+
+    def get_permissions(self):
+        if self.request.method == 'PATCH':
+            return [IsAuthenticated()]
+        return [AllowAny()]
 
     def get(self, request, post_id):
         # 글을 읽을 수 없는 사용자에게는 모집 정보도 숨긴다(존재 확인 차단 포함).
@@ -90,11 +97,16 @@ class RecruitmentDetailAPIView(APIView):
 
         # max_members 변경 시 accepted_count 검증
         new_max = request.data.get('max_members')
-        if new_max is not None and int(new_max) > 0 and int(new_max) < recruitment.accepted_count:
-            return Response(
-                {'error': f'이미 수락된 인원({recruitment.accepted_count}명)보다 적은 수로 변경할 수 없습니다.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        if new_max is not None:
+            try:
+                new_max_int = int(new_max)
+            except (TypeError, ValueError):
+                return Response({'error': '모집 인원은 유효한 정수여야 합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            if new_max_int > 0 and new_max_int < recruitment.accepted_count:
+                return Response(
+                    {'error': f'이미 수락된 인원({recruitment.accepted_count}명)보다 적은 수로 변경할 수 없습니다.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         serializer = RecruitmentCreateSerializer(recruitment, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -173,35 +185,39 @@ class ApplyAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, post_id):
-        # 글을 읽을 수 없는 게시판의 모집에는 지원할 수 없다(존재 확인 차단 포함).
-        recruitment = get_object_or_404(
-            Recruitment.objects.select_related('post', 'post__author').filter(
-                post__in=Post.objects.readable_for_user(request.user)
-            ),
-            post_id=post_id
-        )
-        recruitment.check_and_close_if_expired()
-
-        if recruitment.post.author == request.user:
-            return Response({'error': '자신의 모집에는 지원할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if recruitment.status != Recruitment.Status.OPEN:
-            return Response({'error': '모집이 마감되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if recruitment.max_members > 0 and recruitment.accepted_count >= recruitment.max_members:
-            return Response({'error': '모집 인원이 가득 찼습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if Application.objects.filter(recruitment=recruitment, applicant=request.user).exists():
-            return Response({'error': '이미 지원한 모집입니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
         serializer = ApplicationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        app = Application.objects.create(
-            recruitment=recruitment,
-            applicant=request.user,
-            message=serializer.validated_data.get('message', '')
-        )
+        with transaction.atomic():
+            # 글을 읽을 수 없는 게시판의 모집에는 지원할 수 없다(존재 확인 차단 포함).
+            recruitment = get_object_or_404(
+                Recruitment.objects.select_for_update(of=('self',)).select_related('post', 'post__author').filter(
+                    post__in=Post.objects.readable_for_user(request.user)
+                ),
+                post_id=post_id
+            )
+            recruitment.check_and_close_if_expired()
+
+            if recruitment.post.author == request.user:
+                return Response({'error': '자신의 모집에는 지원할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if recruitment.status != Recruitment.Status.OPEN:
+                return Response({'error': '모집이 마감되었습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if recruitment.max_members > 0 and recruitment.accepted_count >= recruitment.max_members:
+                return Response({'error': '모집 인원이 가득 찼습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            if Application.objects.filter(recruitment=recruitment, applicant=request.user).exists():
+                return Response({'error': '이미 지원한 모집입니다.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                app = Application.objects.create(
+                    recruitment=recruitment,
+                    applicant=request.user,
+                    message=serializer.validated_data.get('message', '')
+                )
+            except IntegrityError:
+                return Response({'error': '이미 지원한 모집입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # 모집자에게 알림
         create_notification(
@@ -219,7 +235,10 @@ class MyApplicationAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, post_id):
-        recruitment = get_object_or_404(Recruitment, post_id=post_id)
+        recruitment = get_object_or_404(
+            Recruitment.objects.filter(post__in=Post.objects.readable_for_user(request.user)),
+            post_id=post_id,
+        )
         app = Application.objects.filter(recruitment=recruitment, applicant=request.user).first()
         if not app:
             return Response({'detail': '지원 내역이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
@@ -227,13 +246,19 @@ class MyApplicationAPIView(APIView):
 
     def delete(self, request, post_id):
         """지원 철회 (대기중인 지원만 철회 가능)"""
-        recruitment = get_object_or_404(Recruitment, post_id=post_id)
-        app = Application.objects.filter(recruitment=recruitment, applicant=request.user).first()
-        if not app:
-            return Response({'detail': '지원 내역이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
-        if app.status != Application.Status.PENDING:
-            return Response({'error': '대기중인 지원만 철회할 수 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
-        app.delete()  # signal이 accepted_count 조정
+        with transaction.atomic():
+            recruitment = get_object_or_404(
+                Recruitment.objects.filter(post__in=Post.objects.readable_for_user(request.user)),
+                post_id=post_id,
+            )
+            app = Application.objects.select_for_update().filter(
+                recruitment=recruitment, applicant=request.user
+            ).first()
+            if not app:
+                return Response({'detail': '지원 내역이 없습니다.'}, status=status.HTTP_404_NOT_FOUND)
+            if app.status != Application.Status.PENDING:
+                return Response({'error': '대기중인 지원만 철회할 수 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)
+            app.delete()  # signal이 accepted_count 조정
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -244,7 +269,9 @@ class ApplicationListAPIView(generics.ListAPIView):
     def _get_recruitment(self):
         if not hasattr(self, '_recruitment'):
             self._recruitment = get_object_or_404(
-                Recruitment.objects.select_related('post', 'post__author'),
+                Recruitment.objects.select_related('post', 'post__author').filter(
+                    post__in=Post.objects.readable_for_user(self.request.user)
+                ),
                 post_id=self.kwargs['post_id']
             )
         return self._recruitment
@@ -282,8 +309,9 @@ class AcceptRejectApplicationAPIView(APIView):
 
     def post(self, request, post_id, app_id, action):
         with transaction.atomic():
+            # post__author는 nullable FK이므로 PostgreSQL에서 OUTER JOIN FOR UPDATE 오류를 피하기 위해 of=('self',) 명시
             recruitment = get_object_or_404(
-                Recruitment.objects.select_for_update().select_related('post', 'post__author'),
+                Recruitment.objects.select_for_update(of=('self',)).select_related('post', 'post__author'),
                 post_id=post_id
             )
             if recruitment.post.author != request.user and not request.user.is_staff:
@@ -294,7 +322,11 @@ class AcceptRejectApplicationAPIView(APIView):
             if recruitment.status not in (Recruitment.Status.OPEN, Recruitment.Status.CLOSED):
                 return Response({'error': '종료된 모집에서는 수락/거절할 수 없습니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
-            app = get_object_or_404(Application, id=app_id, recruitment=recruitment)
+            app = get_object_or_404(
+                Application.objects.select_for_update(),
+                id=app_id,
+                recruitment=recruitment,
+            )
 
             if app.status != Application.Status.PENDING:
                 return Response({'error': '대기중인 지원만 수락/거절할 수 있습니다.'}, status=status.HTTP_400_BAD_REQUEST)

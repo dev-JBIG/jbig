@@ -5,6 +5,7 @@ import { useUser } from "../Utils/UserContext";
 import { useStaffAuth } from "../Utils/StaffAuthContext";
 import { useAlert } from "../Utils/AlertContext";
 import { useColorMode } from "../Utils/ThemeContext";
+import { sanitizeHttpUrl } from "../Utils/safeUrl";
 import {
     fetchSiteSettings,
     updateSiteSettings,
@@ -57,7 +58,7 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
     useEffect(() => {
         const load = async () => {
             try {
-                const settings = await fetchSiteSettings();
+                const settings = await fetchSiteSettings(accessToken);
                 setNotionPageId(settings.notion_page_id || "");
                 setQuizUrl(settings.quiz_url || "");
                 setJbigDescription(settings.jbig_description || "");
@@ -75,15 +76,20 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
             }
         };
         load();
-    }, []);
+    }, [accessToken]);
 
     const handleSave = async () => {
+        const trimmedQuiz = quizUrl.trim();
+        if (trimmedQuiz && !sanitizeHttpUrl(trimmedQuiz)) {
+            setMessage({ type: 'error', text: '퀴즈 URL은 http:// 또는 https:// 주소여야 합니다.' });
+            return;
+        }
         setSaving(true);
         setMessage(null);
         try {
             await updateSiteSettings(accessToken, {
                 notion_page_id: notionPageId,
-                quiz_url: quizUrl,
+                quiz_url: trimmedQuiz ? sanitizeHttpUrl(trimmedQuiz) || "" : "",
                 jbig_description: jbigDescription,
                 jbig_president: jbigPresident,
                 jbig_president_dept: jbigPresidentDept,

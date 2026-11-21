@@ -17,7 +17,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/srv/jbig-arena/submissions
+ReadOnlyPaths=/srv/jbig-arena/submissions
 
 [Install]
 WantedBy=multi-user.target

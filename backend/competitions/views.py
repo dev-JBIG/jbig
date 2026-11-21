@@ -74,6 +74,8 @@ class OverviewView(ArenaView):
 
 
 class DownloadView(ArenaView):
+    throttle_scope = 'arena_download'
+
     def get(self, request, kind):
         competition = get_competition()
         if competition.phase() == Competition.State.PREPARING or not competition.dataset_id:
@@ -87,6 +89,13 @@ class DownloadView(ArenaView):
 
 
 class SubmissionsView(ArenaView):
+    def get_throttles(self):
+        if self.request.method == 'POST':
+            self.throttle_scope = 'arena_submit'
+        else:
+            self.throttle_scope = None
+        return super().get_throttles()
+
     def get(self, request):
         competition = get_competition()
         participant = participant_for(request.user, competition)

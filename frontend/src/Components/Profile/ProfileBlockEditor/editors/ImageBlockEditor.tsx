@@ -9,6 +9,9 @@ interface Props {
   onChange: (block: ImageBlock) => void;
 }
 
+const ALLOWED_IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp)$/i;
+const MAX_BLOCK_IMAGE_BYTES = 10 * 1024 * 1024;
+
 const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -16,7 +19,16 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file || !accessToken) return;
+    if (!ALLOWED_IMAGE_EXT_RE.test(file.name)) {
+      alert('PNG, JPG, GIF, WebP, BMP 이미지만 업로드할 수 있습니다.');
+      return;
+    }
+    if (file.size > MAX_BLOCK_IMAGE_BYTES) {
+      alert('이미지는 최대 10MB까지 업로드할 수 있습니다.');
+      return;
+    }
     setUploading(true);
     try {
       const result = await uploadAttachment(file, accessToken);
@@ -39,7 +51,7 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
     <div className="block-editor block-image-editor">
       {block.data.url ? (
         <div className="block-image-preview-wrap">
-          <img src={block.data.url} alt={block.data.alt} className="block-image-preview" />
+          <img src={block.data.url} alt={block.data.alt} className="block-image-preview" referrerPolicy="no-referrer" />
           <button type="button" className="block-image-remove" aria-label="이미지 제거" onClick={handleRemove}>
             <X size={16} aria-hidden="true" />
           </button>
@@ -50,7 +62,7 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
           <span>{uploading ? '업로드 중...' : '이미지를 선택하세요'}</span>
         </button>
       )}
-      <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleUpload} />
+      <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.bmp" hidden onChange={handleUpload} />
       <div className="block-image-fields">
         <input
           type="text"

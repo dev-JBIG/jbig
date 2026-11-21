@@ -7,6 +7,7 @@ react-notion-x가 그대로 소비할 수 있는 ExtendedRecordMap 포맷을 반
 
 결과는 메모리 캐시에 저장하여 반복 요청 시 빠르게 반환한다.
 """
+from collections import OrderedDict
 import re
 import time as _time
 import threading
@@ -22,15 +23,24 @@ HEADERS = {
 }
 REQUEST_TIMEOUT = 15
 
-# 메모리 캐시
-_cache = {}
+# 메모리 캐시 (무제한 증가 OOM 방지를 위해 LRU 상한 적용)
+MAX_CACHE_ENTRIES = 128
+_cache: OrderedDict[str, dict] = OrderedDict()
 _cache_lock = threading.Lock()
-_build_locks = {}  # page_id별 빌드 락 (동시 빌드 방지)
+_in_flight_refreshes: set[str] = set()
+_build_locks: OrderedDict[str, threading.Lock] = OrderedDict()  # page_id별 빌드 락 (동시 빌드 방지)
 _build_locks_lock = threading.Lock()
 CACHE_TTL = 300  # 5분
 INCOMPLETE_CACHE_TTL = 30
 MAX_MISSING_ROUNDS = 10
 MAX_INCOMPLETE_BUILD_RETRIES = 0
+
+
+def _cache_set(key: str, entry: dict) -> None:
+    _cache[key] = entry
+    _cache.move_to_end(key)
+    while len(_cache) > MAX_CACHE_ENTRIES:
+        _cache.popitem(last=False)
 
 
 def _new_diagnostics(page_id: str, source: str) -> dict:
@@ -149,7 +159,13 @@ def _notion_post(endpoint: str, body: dict, retries: int = 1, diagnostics: dict 
     for attempt in range(retries + 1):
         started_at = _time.monotonic()
         try:
-            resp = requests.post(url, json=body, headers=HEADERS, timeout=REQUEST_TIMEOUT)
+            resp = requests.post(
+                url,
+                json=body,
+                headers=HEADERS,
+                timeout=REQUEST_TIMEOUT,
+                allow_redirects=False,
+            )
             elapsed_ms = int((_time.monotonic() - started_at) * 1000)
             _record_endpoint_attempt(
                 diagnostics,
@@ -410,11 +426,11 @@ def _refresh_cache(page_id: str):
                     )
                     return
             ttl = CACHE_TTL if new_missing_count == 0 else INCOMPLETE_CACHE_TTL
-            _cache[key] = {
+            _cache_set(key, {
                 'data': data,
                 'expires': _time.time() + ttl,
                 'missing_count': new_missing_count,
-            }
+            })
         logger.info(
             'Notion cache refreshed: %s (%s blocks, %s missing)',
             key,
@@ -434,13 +450,27 @@ def _refresh_cache(page_id: str):
                 cached['expires'] = max(cached['expires'], _time.time() + INCOMPLETE_CACHE_TTL)
         _finish_diagnostics(diagnostics, 'refresh_error')
         logger.error(f'Notion cache refresh failed: {key}: {e}')
+    finally:
+        with _cache_lock:
+            _in_flight_refreshes.discard(key)
 
 
 def _get_build_lock(page_id: str) -> threading.Lock:
     with _build_locks_lock:
-        if page_id not in _build_locks:
-            _build_locks[page_id] = threading.Lock()
-        return _build_locks[page_id]
+        lock = _build_locks.get(page_id)
+        if lock is None:
+            lock = threading.Lock()
+            _build_locks[page_id] = lock
+        else:
+            _build_locks.move_to_end(page_id)
+        # 사용 중이지 않은 오래된 락만 정리해 메모리 누수를 방지한다.
+        if len(_build_locks) > MAX_CACHE_ENTRIES:
+            for old_key in list(_build_locks.keys()):
+                if len(_build_locks) <= MAX_CACHE_ENTRIES:
+                    break
+                if old_key != page_id and not _build_locks[old_key].locked():
+                    _build_locks.pop(old_key, None)
+        return lock
 
 
 def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
@@ -449,6 +479,8 @@ def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
         diagnostics = new_request_diagnostics(key)
     with _cache_lock:
         cached = _cache.get(key)
+        if cached is not None:
+            _cache.move_to_end(key)
 
     if cached:
         if _time.time() < cached['expires']:
@@ -460,8 +492,14 @@ def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
                 missing_count=missing_count,
             )
             return cached['data']
-        # 만료 → stale 반환 + 백그라운드 갱신
-        threading.Thread(target=_refresh_cache, args=(key,), daemon=True).start()
+        # 만료 → stale 반환 + 백그라운드 갱신 (페이지당 1개 스레드만 실행)
+        should_refresh = False
+        with _cache_lock:
+            if key not in _in_flight_refreshes:
+                _in_flight_refreshes.add(key)
+                should_refresh = True
+        if should_refresh:
+            threading.Thread(target=_refresh_cache, args=(key,), daemon=True).start()
         block_count, missing_count = _record_map_stats(cached['data'], key)
         _finish_diagnostics(
             diagnostics,
@@ -477,6 +515,8 @@ def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
         # lock 획득 후 다시 캐시 확인 (다른 worker가 이미 빌드했을 수 있음)
         with _cache_lock:
             cached = _cache.get(key)
+            if cached is not None:
+                _cache.move_to_end(key)
         if cached:
             block_count, missing_count = _record_map_stats(cached['data'], key)
             _finish_diagnostics(
@@ -495,11 +535,11 @@ def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
             raise
         ttl = CACHE_TTL if missing_count == 0 else INCOMPLETE_CACHE_TTL
         with _cache_lock:
-            _cache[key] = {
+            _cache_set(key, {
                 'data': data,
                 'expires': _time.time() + ttl,
                 'missing_count': missing_count,
-            }
+            })
         _finish_diagnostics(
             diagnostics,
             'cache_miss_complete',

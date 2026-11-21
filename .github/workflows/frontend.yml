@@ -25,10 +25,10 @@ jobs:
         working-directory: frontend
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: "frontend/.nvmrc"
           cache: "npm"
@@ -48,55 +48,64 @@ jobs:
           REACT_APP_DEFAULT_NOTION_PAGE_ID: ${{ secrets.REACT_APP_DEFAULT_NOTION_PAGE_ID }}
           REACT_APP_SERVER_HOST: ${{ secrets.REACT_APP_SERVER_HOST }}
           REACT_APP_SERVER_PORT: ${{ secrets.REACT_APP_SERVER_PORT }}
-          REACT_APP_USERID_SECRET: ${{ secrets.REACT_APP_USERID_SECRET }}
           REACT_APP_TURNSTILE_SITE_KEY: ${{ secrets.REACT_APP_TURNSTILE_SITE_KEY }}
           REACT_APP_MEDIA_BASE_URL: https://cdn.jbig.co.kr
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: frontend-build
           path: frontend/build
+          retention-days: 1
 
   deploy:
     name: Deploy Frontend to Server
     needs: ci
+    concurrency:
+      group: deploy-frontend
+      cancel-in-progress: false
     # PR 이벤트에서는 빌드·테스트 검증(ci)만 수행하고, 실제 서버 배포는 main 푸시 또는 main 수동 실행에서만 진행한다.
     if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: frontend-build
           path: build
 
       - name: Create build archive
+        env:
+          RUN_ID: ${{ github.run_id }}
         run: |
-          tar czf /tmp/frontend-build.tar.gz -C build .
-          mv /tmp/frontend-build.tar.gz frontend-build.tar.gz
+          tar czf "frontend-build-${RUN_ID}.tar.gz" -C build .
 
       - name: Upload build to server
-        uses: appleboy/scp-action@v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "frontend-build.tar.gz"
+          source: "frontend-build-${{ github.run_id }}.tar.gz"
           target: "$HOME/releases/"
 
       - name: Deploy new release on server
-        uses: appleboy/ssh-action@v1.2.5
+        uses: appleboy/ssh-action@0ff4204d59e8e51228ff73bce53f80d53301dee2 # v1.2.5
         env:
           FRONTEND_DEPLOY_PATH: ${{ secrets.FRONTEND_DEPLOY_PATH }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          RUN_ID: ${{ github.run_id }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          envs: FRONTEND_DEPLOY_PATH,DEPLOY_PATH
+          envs: FRONTEND_DEPLOY_PATH,DEPLOY_PATH,RUN_ID
           script: |
             set -euo pipefail
+
+            ARCHIVE_PATH="$HOME/releases/frontend-build-${RUN_ID}.tar.gz"
+            trap 'rm -f -- "$ARCHIVE_PATH"' EXIT
 
             RESOLVED_DEPLOY_PATH="${FRONTEND_DEPLOY_PATH:-${DEPLOY_PATH:-}}"
             if [ -z "$RESOLVED_DEPLOY_PATH" ]; then
@@ -104,21 +113,33 @@ jobs:
               exit 1
             fi
 
-            APP_BASE="$HOME/${RESOLVED_DEPLOY_PATH}"
+            HOME_REAL=$(realpath -m -- "$HOME")
+            APP_BASE=$(realpath -m -- "$HOME_REAL/${RESOLVED_DEPLOY_PATH}")
+            case "$APP_BASE" in
+              "$HOME_REAL"/*) ;;
+              *)
+                echo "Error: Resolved frontend deploy path escapes HOME." >&2
+                exit 1
+                ;;
+            esac
+
             APP_CURRENT="$APP_BASE/current"
-            RELEASES_DIR="$HOME/releases"
             TIMESTAMP=$(date +%Y%m%d%H%M%S)
             NEW_RELEASE="$APP_BASE/$TIMESTAMP"
 
-            mkdir -p "$NEW_RELEASE"
-            tar xzf "$RELEASES_DIR/frontend-build.tar.gz" -C "$NEW_RELEASE"
-            rm -f "$RELEASES_DIR/frontend-build.tar.gz"
+            mkdir -p -- "$NEW_RELEASE"
+            tar xzf "$ARCHIVE_PATH" -C "$NEW_RELEASE"
+            rm -f -- "$ARCHIVE_PATH"
 
-            ln -sfn "$NEW_RELEASE" "$APP_CURRENT"
+            ln -sfn -- "$NEW_RELEASE" "$APP_CURRENT"
 
-            # 오래된 릴리즈 정리 (최근 5개만 유지)
-            cd "$APP_BASE"
-            ls -dt -- */ 2>/dev/null | grep -v '^current/$' | tail -n +6 | xargs -r rm -rf
+            # 오래된 릴리즈 정리 (14자리 타임스탬프 디렉토리만 대상으로 최근 5개 유지)
+            find "$APP_BASE" -mindepth 1 -maxdepth 1 -type d -regextype posix-extended -regex '.*/[0-9]{14}$' -printf '%f\0' \
+              | sort -z -rn \
+              | tail -z -n +6 \
+              | while IFS= read -r -d '' old_rel; do
+                  rm -rf -- "$APP_BASE/$old_rel"
+                done
 
             sudo systemctl reload nginx
             echo "Deployed new frontend version: $TIMESTAMP"

@@ -1,16 +1,17 @@
 import React from 'react';
 import { Mail, Phone, MapPin, Globe } from 'lucide-react';
 import { ContactBlock } from '../../types';
+import { sanitizeHttpUrl, sanitizeMailto, sanitizeTel } from '../../../Utils/safeUrl';
 
 interface Props { block: ContactBlock; }
 
 const ContactBlockView: React.FC<Props> = ({ block }) => {
   const { email, phone, location, website } = block.data;
   const items = [
-    { icon: Mail, value: email, href: email ? `mailto:${email}` : undefined },
-    { icon: Phone, value: phone, href: phone ? `tel:${phone}` : undefined },
+    { icon: Mail, value: email, href: sanitizeMailto(email) ?? undefined },
+    { icon: Phone, value: phone, href: sanitizeTel(phone) ?? undefined },
     { icon: MapPin, value: location, href: undefined },
-    { icon: Globe, value: website, href: website || undefined },
+    { icon: Globe, value: website, href: sanitizeHttpUrl(website) ?? undefined },
   ].filter(item => item.value);
 
   if (items.length === 0) return null;

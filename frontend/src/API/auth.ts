@@ -99,10 +99,31 @@ export function setAuth(user: User | null, accessToken?: string | null, refreshT
     save({ session, expired: false });
 }
 
-export const signOutLocal = () => save(emptyRecord);
+function clearSessionCaches() {
+    try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && /^jbig[_-]/.test(key)) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(key => sessionStorage.removeItem(key));
+    } catch {
+        // sessionStorage 접근 불가 환경(프라이빗 모드 등)은 무시
+    }
+}
+
+export const signOutLocal = () => {
+    clearSessionCaches();
+    save(emptyRecord);
+};
 
 export function expireSession(sessionId: string) {
-    if (readAuth().session?.id === sessionId) save({ session: null, expired: true });
+    if (readAuth().session?.id === sessionId) {
+        clearSessionCaches();
+        save({ session: null, expired: true });
+    }
 }
 
 // 만료 시각은 갱신 시점에만 사용한다. 권한 판단은 서버가 담당한다.
@@ -178,12 +199,33 @@ export async function signout() {
     const session = readAuth().session;
     signOutLocal();
     if (!session) return { success: true };
+
+    let accessToken = session.accessToken;
+    let refreshToken = session.refreshToken;
     try {
-        await authTransport.post("/api/users/logout/", { refresh: session.refreshToken }, {
-            headers: { Authorization: `Bearer ${session.accessToken}` },
+        await authTransport.post("/api/users/logout/", { refresh: refreshToken }, {
+            headers: { Authorization: `Bearer ${accessToken}` },
         });
         return { success: true };
-    } catch {
+    } catch (error) {
+        // Access Token이 이미 만료되어 401이 반환된 경우 Refresh 후 새 Refresh Token까지 서버에서 블랙리스트한다.
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+            try {
+                const { data } = await authTransport.post("/api/users/token/refresh/", {
+                    refresh: refreshToken,
+                });
+                if (data?.access && data?.refresh) {
+                    accessToken = data.access;
+                    refreshToken = data.refresh;
+                    await authTransport.post("/api/users/logout/", { refresh: refreshToken }, {
+                        headers: { Authorization: `Bearer ${accessToken}` },
+                    });
+                    return { success: true };
+                }
+            } catch {
+                // 이미 만료/블랙리스트된 리프레시 토큰이면 서버 측에서도 재사용 불가
+            }
+        }
         return { success: false };
     }
 }

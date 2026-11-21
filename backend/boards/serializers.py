@@ -11,11 +11,16 @@ from django.urls import reverse
 from rest_framework import serializers
 
 from .models import Category, Board, Post, Comment, CommentLike, Notification, Draft, generate_anonymous_nickname
-from jbig_backend.storage import get_s3_client, public_media_url
+from jbig_backend.storage import get_s3_client, is_safe_upload_key, public_media_url
 
 logger = logging.getLogger(__name__)
 
 from bleach.css_sanitizer import CSSSanitizer
+
+MAX_POST_CONTENT_LENGTH = 100_000
+MAX_COMMENT_CONTENT_LENGTH = 10_000
+SAFE_INLINE_IMAGE_EXTENSIONS = frozenset({'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'})
+MEDIA_KEY_IMAGE_PATTERN = r'(!\[[^\]\n]*\])\(media-key://(uploads[\\/][^\s\)]+)\)'
 
 # content_md / 마크다운 본문에 허용할 HTML 태그와 속성 화이트리스트.
 # 프론트엔드가 rehype-raw로 raw HTML을 렌더하므로, 저장 전 서버에서도 한 번 더 필터링한다.
@@ -32,7 +37,7 @@ ALLOWED_MD_ATTRIBUTES = {
     'div': ['style'],
     'span': ['style'],
 }
-ALLOWED_MD_PROTOCOLS = ['http', 'https', 'mailto', 'data']
+ALLOWED_MD_PROTOCOLS = ['http', 'https', 'mailto']
 _MD_CSS_SANITIZER = CSSSanitizer(
     allowed_css_properties=['text-align', 'color', 'background-color'],
 )
@@ -51,10 +56,25 @@ def sanitize_markdown(value: str) -> str:
     )
 
 
+def _validate_owned_upload_key(file_key: str, user_id: int | None) -> bool:
+    if user_id is None or not isinstance(file_key, str):
+        return False
+    normalized = file_key.strip().replace('\\', '/')
+    if not is_safe_upload_key(normalized):
+        return False
+    parts = normalized.split('/')
+    if len(parts) < 6:
+        return False
+    try:
+        return int(parts[4]) == user_id
+    except (TypeError, ValueError):
+        return False
+
+
 def is_post_media_gated(post) -> bool:
     """해당 게시글의 미디어(첨부/본문 이미지)를 권한 게이트해야 하는지 판정한다.
 
-    - 게시판 공개범위가 'member'/'staff'이거나,
+    - 게시판 공개범위가 'all'이 아니거나('member'/'author'/'staff' 등),
     - 글 자체가 비공개 유형(스태프전용/사유서)이면 게이트한다.
     첨부 URL 변환과 본문 이미지 토큰화가 같은 기준을 쓰도록 한 곳에서 판정해,
     둘 사이의 판정이 어긋나 한쪽만 노출되는 일을 막는다. post=None 이면 False.
@@ -66,7 +86,7 @@ def is_post_media_gated(post) -> bool:
     private_post_type = getattr(post, 'post_type', None) in (
         Post.PostType.STAFF_ONLY, Post.PostType.JUSTIFICATION_LETTER,
     )
-    return read_perm in ('member', 'staff') or private_post_type
+    return read_perm != 'all' or private_post_type
 
 
 def get_presigned_attachments(attachments_list, include_size=True, post=None, request=None):
@@ -374,10 +394,31 @@ class CommentSerializer(serializers.ModelSerializer):
         return False
 
     def validate_content(self, value):
+        if value and len(value) > MAX_COMMENT_CONTENT_LENGTH:
+            raise serializers.ValidationError(
+                f"댓글은 {MAX_COMMENT_CONTENT_LENGTH}자 이하로 작성해주세요."
+            )
         sanitized_content = bleach.clean(value, tags=[], strip=True).strip()
         if not sanitized_content:
             raise serializers.ValidationError("Content cannot be empty.")
         return sanitized_content
+
+    def validate(self, attrs):
+        if self.instance is not None:
+            if self.instance.is_deleted:
+                raise serializers.ValidationError("삭제된 댓글은 수정할 수 없습니다.")
+            # 댓글 수정 시 parent 변경(자기 순환/다른 글 이동) 금지
+            if 'parent' in attrs and attrs['parent'] != self.instance.parent:
+                raise serializers.ValidationError({"parent": "상위 댓글은 변경할 수 없습니다."})
+            attrs.pop('parent', None)
+        else:
+            parent = attrs.get('parent')
+            if parent is not None:
+                view = self.context.get('view')
+                post_id = view.kwargs.get('post_id') if view and hasattr(view, 'kwargs') else None
+                if post_id is not None and str(parent.post_id) != str(post_id):
+                    raise serializers.ValidationError({"parent": "같은 게시글의 댓글에만 답글을 달 수 있습니다."})
+        return attrs
     
 
     def to_representation(self, instance):
@@ -596,6 +637,10 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         return value
 
     def validate_content_md(self, value):
+        if value and len(value) > MAX_POST_CONTENT_LENGTH:
+            raise serializers.ValidationError(
+                f'본문은 {MAX_POST_CONTENT_LENGTH}자 이하로 작성해주세요.'
+            )
         normalized = normalize_media_urls(value)
         request = self.context.get('request')
         user_id = getattr(getattr(request, 'user', None), 'id', None)
@@ -604,14 +649,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
 
         media_keys = re.findall(r'media-key://(uploads/[^\s\)]+)', normalized)
         for file_key in media_keys:
-            parts = file_key.split('/')
-            if '..' in parts or len(parts) < 6:
-                raise serializers.ValidationError('잘못된 본문 미디어 경로입니다.')
-            try:
-                owner_id = int(parts[4])
-            except (TypeError, ValueError):
-                raise serializers.ValidationError('잘못된 본문 미디어 경로입니다.')
-            if owner_id != user_id:
+            if not _validate_owned_upload_key(file_key, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 본문에 사용할 수 있습니다.')
         return normalized
 
@@ -635,7 +673,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         return board.board_type == Board.BoardType.PHOTO_ALBUM or board.name == "사진첩"
 
     def _is_image_name(self, name: str) -> bool:
-        return bool(re.search(r'\.(png|jpe?g|gif|webp|bmp|svg)$', name, re.IGNORECASE))
+        return bool(re.search(r'\.(png|jpe?g|gif|webp|bmp)$', name, re.IGNORECASE))
 
     def validate(self, attrs):
         board = self._resolve_board(attrs)
@@ -716,6 +754,12 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
                 # 게시판이 실제로 변경되는 경우, board_post_id를 초기화하여 새로 할당되도록 함
                 instance.board = new_board
                 instance.board_post_id = None
+                # 비공개(사유서/author) 게시판으로 이동 시 글 단위 잠금을 부여한다.
+                if (
+                    new_board.board_type == Board.BoardType.JUSTIFICATION_LETTER
+                    or new_board.read_permission == 'author'
+                ):
+                    instance.post_type = Post.PostType.JUSTIFICATION_LETTER
 
         instance = super().update(instance, validated_data)
         instance.update_search_vector()
@@ -869,7 +913,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
         if not raw_md:
             return ""
 
-        pattern = r'(!\[.*?\])\(media-key://(uploads[\\/][^\s\)]+)\)'
+        pattern = MEDIA_KEY_IMAGE_PATTERN
 
         # 비공개(회원전용/스태프/사유서·스태프전용 글)면 본문 인라인 이미지를 영구 공개 URL이
         # 아니라 서명된 단기 토큰 스트림 URL로 바꾼다. <img src>는 Authorization 헤더를
@@ -886,11 +930,14 @@ class PostDetailSerializer(serializers.ModelSerializer):
                 if not file_key:
                     return match.group(0)
                 file_key = file_key.replace('\\', '/')  # 레거시 역슬래시 key 정규화
+                ext = file_key.rsplit('.', 1)[-1].lower() if '.' in file_key else ''
+                if not is_safe_upload_key(file_key) or ext not in SAFE_INLINE_IMAGE_EXTENSIONS:
+                    return match.group(0)
                 path = make_media_stream_url(file_key)
                 url = request.build_absolute_uri(path) if request is not None else path
                 return f"{alt_text}({url})"
 
-            return re.sub(pattern, replace_with_stream_url, raw_md, flags=re.DOTALL)
+            return re.sub(pattern, replace_with_stream_url, raw_md)
 
         # 공개 글은 기존대로 고정 공개 URL(public_media_url) → CDN 캐시가 동작한다.
         def replace_with_public_url(match):
@@ -898,9 +945,12 @@ class PostDetailSerializer(serializers.ModelSerializer):
             file_key = match.group(2)
             if not file_key:
                 return match.group(0)
+            file_key = file_key.replace('\\', '/')
+            if not is_safe_upload_key(file_key):
+                return match.group(0)
             return f"{alt_text}({public_media_url(file_key)})"
 
-        return re.sub(pattern, replace_with_public_url, raw_md, flags=re.DOTALL)
+        return re.sub(pattern, replace_with_public_url, raw_md)
 
     def get_attachment_paths(self, obj):
         return get_presigned_attachments(
@@ -986,6 +1036,40 @@ class DraftSerializer(serializers.ModelSerializer):
         fields = ['board_id', 'board_name', 'title', 'content_md', 'uploaded_paths', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at', 'board_name']
 
+    def validate_uploaded_paths(self, value):
+        if value is None:
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError('uploaded_paths는 리스트여야 합니다.')
+        if len(value) > 50:
+            raise serializers.ValidationError('임시저장 첨부파일은 최대 50개까지 가능합니다.')
+        request = self.context.get('request')
+        user_id = getattr(getattr(request, 'user', None), 'id', None)
+        if user_id is None:
+            raise serializers.ValidationError('인증이 필요합니다.')
+        for item in value:
+            if not isinstance(item, dict):
+                raise serializers.ValidationError('각 첨부 항목은 객체여야 합니다.')
+            path = (item.get('path') or '').strip()
+            if not _validate_owned_upload_key(path, user_id):
+                raise serializers.ValidationError('본인이 업로드한 파일만 임시저장할 수 있습니다.')
+        return value
+
+    def validate_content_md(self, value):
+        if value and len(value) > MAX_POST_CONTENT_LENGTH:
+            raise serializers.ValidationError(
+                f'본문은 {MAX_POST_CONTENT_LENGTH}자 이하로 작성해주세요.'
+            )
+        normalized = normalize_media_urls(value or '')
+        request = self.context.get('request')
+        user_id = getattr(getattr(request, 'user', None), 'id', None)
+        if user_id is None:
+            raise serializers.ValidationError('인증이 필요합니다.')
+        for file_key in re.findall(r'media-key://(uploads/[^\s\)]+)', normalized):
+            if not _validate_owned_upload_key(file_key, user_id):
+                raise serializers.ValidationError('본인이 업로드한 파일만 본문에 사용할 수 있습니다.')
+        return normalized
+
     def to_representation(self, instance):
         """조회 시 media-key:// URL을 퍼블릭 URL로 변환"""
         data = super().to_representation(instance)
@@ -998,10 +1082,12 @@ class DraftSerializer(serializers.ModelSerializer):
             file_key = match.group(2)
             if not file_key:
                 return match.group(0)
+            file_key = file_key.replace('\\', '/')
+            if not is_safe_upload_key(file_key):
+                return match.group(0)
             return f"{alt_text}({public_media_url(file_key)})"
 
-        pattern = r'(!\[.*?\])\(media-key://(uploads[\\/][^\s\)]+)\)'
-        data['content_md'] = re.sub(pattern, replace_with_public_url, raw_md, flags=re.DOTALL)
+        data['content_md'] = re.sub(MEDIA_KEY_IMAGE_PATTERN, replace_with_public_url, raw_md)
         return data
 
     def create(self, validated_data):

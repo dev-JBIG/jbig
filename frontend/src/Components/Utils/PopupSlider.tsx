@@ -5,9 +5,10 @@ import ReactMarkdown from "react-markdown";
 import { useUser } from "./UserContext";
 import "./PopupSlider.css";
 import scheduleIdleTask from "./scheduleIdleTask";
+import { sanitizeMediaUrl } from "./safeUrl";
 
 const AUTO_CONGRATS_IMAGE_PATH = "/JBIG-Congratulation.png";
-const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|svg|bmp)$/i;
+const IMAGE_EXTENSIONS = /\.(jpe?g|png|gif|webp|bmp)$/i;
 
 const extractCongratsPostTitle = (popup: PopupItem): string => {
     const rawContent = popup.content || "";
@@ -194,9 +195,12 @@ const PopupSlider: React.FC = () => {
     const currentPopup = popups[currentIndex];
     const requiresCongrats = Boolean(currentPopup.auto_generated || currentPopup.source_post_id);
     const postTitle = requiresCongrats ? extractCongratsPostTitle(currentPopup) : null;
-    const displayImageSrc = requiresCongrats
+    const rawImageSrc = requiresCongrats
         ? (postImageUrl || AUTO_CONGRATS_IMAGE_PATH)
         : currentPopup.image_url;
+    const displayImageSrc = rawImageSrc === AUTO_CONGRATS_IMAGE_PATH
+        ? AUTO_CONGRATS_IMAGE_PATH
+        : sanitizeMediaUrl(rawImageSrc);
 
     return (
         <div className="popup-container">
@@ -218,6 +222,7 @@ const PopupSlider: React.FC = () => {
                         <img
                             src={displayImageSrc}
                             alt={currentPopup.title}
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                                 const parent = (e.target as HTMLImageElement).parentElement;
                                 if (parent) parent.style.display = 'none';
@@ -231,7 +236,17 @@ const PopupSlider: React.FC = () => {
                         {contentLoading && <p className="popup-content-loading">불러오는 중...</p>}
                         {postContent !== null && (
                             <div className="popup-post-body">
-                                <ReactMarkdown>{postContent}</ReactMarkdown>
+                                <ReactMarkdown
+                                    components={{
+                                        a: ({ node, ...props }) => (
+                                            <a {...props} target="_blank" rel="noopener noreferrer">
+                                                {props.children}
+                                            </a>
+                                        ),
+                                    }}
+                                >
+                                    {postContent}
+                                </ReactMarkdown>
                             </div>
                         )}
                     </div>

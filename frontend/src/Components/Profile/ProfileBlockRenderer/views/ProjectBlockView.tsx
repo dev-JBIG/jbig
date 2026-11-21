@@ -1,6 +1,7 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 import { ProjectBlock } from '../../types';
+import { sanitizeHttpUrl, sanitizeMediaUrl } from '../../../Utils/safeUrl';
 
 interface Props {
   block: ProjectBlock;
@@ -9,19 +10,21 @@ interface Props {
 const ProjectBlockView: React.FC<Props> = ({ block }) => {
   const { title, description, tags, url, imageUrl } = block.data;
   if (!title) return null;
+  const safeHref = sanitizeHttpUrl(url);
+  const safeImg = sanitizeMediaUrl(imageUrl);
 
   return (
     <div className="block-view block-project-view">
-      {imageUrl && (
+      {safeImg && (
         <div className="block-project-image">
-          <img src={imageUrl} alt={title} />
+          <img src={safeImg} alt={title} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
         </div>
       )}
       <div className="block-project-content">
         <h3 className="block-project-title">
           {title}
-          {url && (
-            <a href={url} target="_blank" rel="noopener noreferrer" className="block-project-link">
+          {safeHref && (
+            <a href={safeHref} target="_blank" rel="noopener noreferrer" className="block-project-link">
               <ExternalLink size={16} />
             </a>
           )}

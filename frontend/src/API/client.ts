@@ -5,13 +5,22 @@ type AuthRequest = InternalAxiosRequestConfig & { sessionId?: string; retried?: 
 const client = axios.create();
 const apiRoot = `${BASE_URL.replace(/\/$/, "")}/api/`;
 
-function isAuthenticatedRequest(config: InternalAxiosRequestConfig) {
-    return new URL(config.url || "", BASE_URL).href.startsWith(apiRoot)
-        && !!config.headers.Authorization;
+function isApiRequest(config: InternalAxiosRequestConfig) {
+    try {
+        return new URL(config.url || "", BASE_URL).href.startsWith(apiRoot);
+    } catch {
+        return false;
+    }
 }
 
 client.interceptors.request.use(config => {
-    if (!isAuthenticatedRequest(config)) return config;
+    if (!isApiRequest(config)) {
+        if (config.headers && "Authorization" in config.headers) {
+            delete config.headers.Authorization;
+        }
+        return config;
+    }
+    if (!config.headers.Authorization) return config;
     const request = config as AuthRequest;
     const session = readAuth().session;
     if (!session || (request.sessionId && request.sessionId !== session.id)) throw new SessionChangedError();

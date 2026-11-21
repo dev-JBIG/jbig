@@ -9,7 +9,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
-import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import rehypeSanitize from 'rehype-sanitize';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
 import { Button, Label } from '@primer/react';
@@ -30,22 +30,7 @@ import {useAlert} from "../Utils/AlertContext";
 import { useColorMode } from "../Utils/ThemeContext";
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
 import RecruitmentDetailSection from './RecruitmentDetail';
-
-// Sanitize 스키마: style 속성 허용 (text-align, color만)
-const sanitizeSchema = {
-    ...defaultSchema,
-    attributes: {
-        ...defaultSchema.attributes,
-        div: [
-            ...(defaultSchema.attributes?.div || []),
-            ['style', /^text-align:\s*(left|center|right);?$/i]
-        ],
-        span: [
-            ...(defaultSchema.attributes?.span || []),
-            ['style', /^color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|[a-zA-Z]+);?$/i]
-        ]
-    }
-};
+import { safeSanitizeSchema as sanitizeSchema } from '../Utils/safeMarkdown';
 
 // HeartBurst 애니메이션 컴포넌트 (분리하여 리렌더링 최적화)
 const HeartBurst = memo(({ triggerKey }: { triggerKey: number }) => {

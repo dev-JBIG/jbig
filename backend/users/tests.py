@@ -148,7 +148,7 @@ class EmailRecoveryTest(TestCase):
         self.assert_no_tokens(wrong)
         user.is_verified = True
         user.save()
-        self.assertEqual(self.verify('123456').status_code, 200)
+        self.assertEqual(self.verify('123456').status_code, 400)
         user.refresh_from_db()
         self.assertFalse(user.is_active)
         response = self.post('signin', self.data)
@@ -169,7 +169,7 @@ class EmailRecoveryTest(TestCase):
             send.assert_not_called()
             self.assertTrue(EmailVerificationCode.objects.filter(pk=obj.pk).exists())
             self.assertFalse(OutstandingToken.objects.exists())
-            with patch('users.views.random.choices', return_value=list('654321')):
+            with patch('users.views.secrets.randbelow', return_value=654321):
                 self.assertEqual(self.resend().status_code, 200)
         self.assertEqual(self.verify('123456').status_code, 400)
         self.assertEqual(self.verify('654321').status_code, 200)

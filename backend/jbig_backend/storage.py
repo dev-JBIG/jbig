@@ -4,8 +4,10 @@
 USE_LOCAL_STORAGE=False 이면 R2(STORAGE_* 환경변수), True 이면 로컬 media/ 디렉토리를 사용한다.
 """
 import os
+import re
 import logging
 import threading
+from pathlib import Path
 
 import boto3
 from botocore.client import Config
@@ -13,6 +15,37 @@ from botocore.exceptions import ClientError
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+def is_safe_upload_key(file_key: str) -> bool:
+    """업로드 스토리지 키가 안전한 'uploads/...' 상대 경로인지 검증한다."""
+    if not isinstance(file_key, str) or not file_key:
+        return False
+    if '\x00' in file_key or '\\' in file_key or file_key.startswith('/'):
+        return False
+    if not file_key.startswith('uploads/'):
+        return False
+    parts = file_key.split('/')
+    if any(part in ('', '.', '..') for part in parts):
+        return False
+    return True
+
+
+def _safe_local_path(file_key: str) -> Path | None:
+    """MEDIA_ROOT 바깥으로 탈출하는 경로를 차단하고 정규화된 Path를 반환한다."""
+    if not isinstance(file_key, str) or not file_key or '\x00' in file_key:
+        return None
+    normalized = file_key.replace('\\', '/')
+    if normalized.startswith('/'):
+        return None
+    parts = normalized.split('/')
+    if any(part in ('', '.', '..') for part in parts):
+        return None
+    media_root = Path(settings.MEDIA_ROOT).resolve()
+    candidate = (media_root / normalized).resolve()
+    if candidate == media_root or not candidate.is_relative_to(media_root):
+        return None
+    return candidate
 
 # ── S3 호환 스토리지 클라이언트 (thread-local) ──────────────────────────────
 _thread_local = threading.local()
@@ -126,45 +159,53 @@ def get_file_stream(file_key: str):
     """
     if not file_key:
         return None
+    normalized_key = file_key.replace('\\', '/')
+    if not is_safe_upload_key(normalized_key):
+        return None
 
     if settings.USE_LOCAL_STORAGE:
-        path = os.path.join(settings.MEDIA_ROOT, file_key)
-        if not os.path.exists(path):
+        path = _safe_local_path(normalized_key)
+        if path is None or not path.is_file():
             return None
-        return open(path, 'rb'), None, os.path.getsize(path)
+        return open(path, 'rb'), None, path.stat().st_size
 
     try:
         s3_client = get_s3_client()
-        obj = s3_client.get_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=file_key)
+        obj = s3_client.get_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=normalized_key)
         return obj['Body'], obj.get('ContentType'), obj.get('ContentLength')
     except ClientError as e:
-        logger.error(f"파일 스트림 조회 실패 (Key: {file_key}): {e}")
+        logger.error(f"파일 스트림 조회 실패 (Key: {normalized_key}): {e}")
         return None
 
 
 def delete_file(file_key: str) -> bool:
     """파일 하나를 삭제한다."""
-    if not file_key or not file_key.startswith('uploads/'):
+    if not file_key:
+        return False
+    normalized_key = file_key.replace('\\', '/')
+    if not is_safe_upload_key(normalized_key):
         return False
 
     if settings.USE_LOCAL_STORAGE:
-        path = os.path.join(settings.MEDIA_ROOT, file_key)
+        path = _safe_local_path(normalized_key)
+        if path is None:
+            return False
         try:
-            if os.path.exists(path):
-                os.remove(path)
-                logger.info(f"로컬 파일 삭제 완료: {file_key}")
+            if path.is_file():
+                path.unlink()
+                logger.info(f"로컬 파일 삭제 완료: {normalized_key}")
             return True
         except OSError as e:
-            logger.error(f"로컬 파일 삭제 실패 ({file_key}): {e}")
+            logger.error(f"로컬 파일 삭제 실패 ({normalized_key}): {e}")
             return False
 
     try:
         s3_client = get_s3_client()
-        s3_client.delete_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=file_key)
-        logger.info(f"스토리지 파일 삭제 완료: {file_key}")
+        s3_client.delete_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=normalized_key)
+        logger.info(f"스토리지 파일 삭제 완료: {normalized_key}")
         return True
     except ClientError as e:
-        logger.error(f"스토리지 파일 삭제 실패 (Key: {file_key}): {e}")
+        logger.error(f"스토리지 파일 삭제 실패 (Key: {normalized_key}): {e}")
         return False
 
 
@@ -176,6 +217,8 @@ def delete_files(file_keys: set[str]) -> None:
 
 def set_public_acl(file_key: str) -> bool:
     """파일에 public-read ACL을 설정한다. 로컬/ACL 미지원 스토리지에서는 no-op."""
+    if not file_key or not is_safe_upload_key(file_key.replace('\\', '/')):
+        return False
     if settings.USE_LOCAL_STORAGE:
         return True
 
@@ -196,12 +239,19 @@ def set_public_acl(file_key: str) -> bool:
 
 def file_exists(file_key: str) -> bool:
     """파일 존재 여부 확인."""
+    if not file_key:
+        return False
+    normalized_key = file_key.replace('\\', '/')
+    if not is_safe_upload_key(normalized_key):
+        return False
+
     if settings.USE_LOCAL_STORAGE:
-        return os.path.exists(os.path.join(settings.MEDIA_ROOT, file_key))
+        path = _safe_local_path(normalized_key)
+        return path is not None and path.is_file()
 
     try:
         s3_client = get_s3_client()
-        s3_client.head_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=file_key)
+        s3_client.head_object(Bucket=settings.STORAGE_BUCKET_NAME, Key=normalized_key)
         return True
     except ClientError:
         return False
@@ -209,8 +259,12 @@ def file_exists(file_key: str) -> bool:
 
 def save_local_file(file_key: str, body: bytes) -> str:
     """로컬 media/ 디렉토리에 파일을 저장한다."""
-    path = os.path.join(settings.MEDIA_ROOT, file_key)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if not is_safe_upload_key(file_key):
+        raise ValueError("Invalid file key")
+    path = _safe_local_path(file_key)
+    if path is None:
+        raise ValueError("Path escapes MEDIA_ROOT")
+    path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, 'wb') as f:
         f.write(body)
-    return path
+    return str(path)

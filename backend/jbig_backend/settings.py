@@ -45,7 +45,23 @@ def get_env_list(key: str, default: list[str] | None = None) -> list[str]:
 
 
 # ── 로컬/서버 분기 설정 (한곳에 모아서 관리) ───────────────────────
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-local-dev-key-do-not-use-in-production')
+from django.core.exceptions import ImproperlyConfigured
+
+_DEFAULT_LOCAL_SECRET_KEY = 'django-insecure-local-dev-key-do-not-use-in-production'
+_env_secret_key = os.getenv('SECRET_KEY', '').strip()
+if IS_LOCAL:
+    SECRET_KEY = _env_secret_key or _DEFAULT_LOCAL_SECRET_KEY
+else:
+    if (
+        not _env_secret_key
+        or _env_secret_key.startswith('django-insecure-')
+        or len(_env_secret_key) < 32
+    ):
+        raise ImproperlyConfigured(
+            'Production mode requires a strong SECRET_KEY (>=32 chars, non-default).'
+        )
+    SECRET_KEY = _env_secret_key
+
 DEBUG = get_env_bool('DEBUG', IS_LOCAL)
 USE_LOCAL_STORAGE = IS_LOCAL
 
@@ -98,17 +114,27 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', [
-    'jbig.co.kr',
-    'www.jbig.co.kr',
-    'localhost',
-    '127.0.0.1',
-])
+_DEFAULT_ALLOWED_HOSTS = (
+    ['jbig.co.kr', 'www.jbig.co.kr', 'localhost', '127.0.0.1']
+    if IS_LOCAL
+    else ['jbig.co.kr', 'www.jbig.co.kr']
+)
+ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', _DEFAULT_ALLOWED_HOSTS)
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_HOST = get_env_bool('USE_X_FORWARDED_HOST', not IS_LOCAL)
 
-# 프로덕션(비-로컬) 환경에서만 강제되는 보안 헤더/쿠키 설정.
+# 환경과 무관하게 항상 적용하는 기본 보안 헤더/쿠키 설정
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+
+# 프로덕션(비-로컬) 환경에서만 강제되는 HTTPS 전용 보안 설정.
 # IS_LOCAL = True 인 개발 환경에서는 HTTPS가 아닐 수 있어 끄고 간다.
 if not IS_LOCAL:
     SECURE_SSL_REDIRECT = get_env_bool('SECURE_SSL_REDIRECT', True)
@@ -117,9 +143,6 @@ if not IS_LOCAL:
     SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_REFERRER_POLICY = 'same-origin'
-    X_FRAME_OPTIONS = 'DENY'
 
 # Application definition
 
@@ -150,6 +173,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware', # Add corsheaders middleware
     'django.middleware.security.SecurityMiddleware',
+    'jbig_backend.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -233,11 +257,12 @@ AUTH_USER_MODEL = 'users.User'
 # CORS settings
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = get_env_list('CORS_ALLOWED_ORIGINS', [
-    'https://jbig.co.kr',
-    'https://www.jbig.co.kr',
-    'http://localhost:3000',
-])
+_DEFAULT_CORS_ORIGINS = (
+    ['https://jbig.co.kr', 'https://www.jbig.co.kr', 'http://localhost:3000']
+    if IS_LOCAL
+    else ['https://jbig.co.kr', 'https://www.jbig.co.kr']
+)
+CORS_ALLOWED_ORIGINS = get_env_list('CORS_ALLOWED_ORIGINS', _DEFAULT_CORS_ORIGINS)
 
 CORS_ALLOW_HEADERS = [
     'Accept',
@@ -256,14 +281,20 @@ ARENA_SUBMISSION_ROOT = os.getenv('ARENA_SUBMISSION_ROOT', str(_arena_local_root
 ARENA_GRADING_ROOT = os.getenv('ARENA_GRADING_ROOT', str(_arena_local_root / 'grading') if IS_LOCAL else '')
 
 # CSRF trusted origins (comma-separated, e.g., https://example.com,https://www.example.com)
-CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', [])
+_DEFAULT_CSRF_ORIGINS = (
+    ['http://localhost:3000', 'http://localhost:8000']
+    if IS_LOCAL
+    else ['https://jbig.co.kr', 'https://www.jbig.co.kr']
+)
+CSRF_TRUSTED_ORIGINS = get_env_list('CSRF_TRUSTED_ORIGINS', _DEFAULT_CSRF_ORIGINS)
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.PasswordAwareJWTAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema', # Add this line
     'DEFAULT_PAGINATION_CLASS': 'jbig_backend.pagination.CustomPagination',
+    'NUM_PROXIES': get_env_int('DRF_NUM_PROXIES', 0 if IS_LOCAL else 1),
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
@@ -275,8 +306,17 @@ REST_FRAMEWORK = {
         'signin': '10/min',
         'password_reset_request': '5/hour',
         'password_reset_verify': '20/hour',
+        'password_reset': '10/hour',
+        'password_change': '10/hour',
+        'delete_account': '5/hour',
+        'token_refresh': '30/min',
         'email_verify': '20/hour',
         'signup': '10/hour',
+        'file_upload': '60/hour',
+        'search': '60/min',
+        'arena_download': '30/hour',
+        'arena_submit': '30/hour',
+        'notion': '60/min',
     },
 }
 

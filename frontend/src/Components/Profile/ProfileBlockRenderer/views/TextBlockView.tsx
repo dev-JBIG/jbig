@@ -2,23 +2,8 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import { TextBlock } from '../../types';
-
-const sanitizeSchema = {
-  ...defaultSchema,
-  attributes: {
-    ...defaultSchema.attributes,
-    div: [
-      ...(defaultSchema.attributes?.div || []),
-      ['style', /^text-align:\s*(left|center|right);?$/i],
-    ],
-    span: [
-      ...(defaultSchema.attributes?.span || []),
-      ['style', /^color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|[a-zA-Z]+);?$/i],
-    ],
-  },
-};
+import { safeSanitizePlugin } from '../../../Utils/safeMarkdown';
 
 interface Props {
   block: TextBlock;
@@ -30,7 +15,14 @@ const TextBlockView: React.FC<Props> = ({ block }) => {
     <div className="block-view block-text-view">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeRaw, [rehypeSanitize, sanitizeSchema]]}
+        rehypePlugins={[rehypeRaw, safeSanitizePlugin]}
+        components={{
+          a: ({ node, ...props }) => (
+            <a {...props} target="_blank" rel="noopener noreferrer">
+              {props.children}
+            </a>
+          ),
+        }}
       >
         {block.data.markdown}
       </ReactMarkdown>
