@@ -73,16 +73,21 @@ const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
       </div>
       {block.data.imageUrl ? (
         <div className="block-image-preview-wrap">
-          <img src={block.data.imageUrl} alt="" className="block-image-preview" style={{ maxHeight: 120 }} />
-          <button className="block-image-remove" onClick={() => { update('imagePath', ''); update('imageUrl', ''); }}>
-            <X size={16} />
+          <img src={block.data.imageUrl} alt="" className="block-image-preview block-image-preview-sm" />
+          <button
+            type="button"
+            className="block-image-remove"
+            aria-label="썸네일 제거"
+            onClick={() => { update('imagePath', ''); update('imageUrl', ''); }}
+          >
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
       ) : (
-        <div className="block-image-upload-area block-image-upload-small" onClick={() => fileRef.current?.click()}>
-          <Upload size={18} />
+        <button type="button" className="block-image-upload-area block-image-upload-small" onClick={() => fileRef.current?.click()}>
+          <Upload size={18} aria-hidden="true" />
           <span>{uploading ? '업로드 중...' : '썸네일 (선택)'}</span>
-        </div>
+        </button>
       )}
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleImageUpload} />
     </div>

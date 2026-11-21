@@ -40,13 +40,15 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
       {block.data.url ? (
         <div className="block-image-preview-wrap">
           <img src={block.data.url} alt={block.data.alt} className="block-image-preview" />
-          <button className="block-image-remove" onClick={handleRemove}><X size={16} /></button>
+          <button type="button" className="block-image-remove" aria-label="이미지 제거" onClick={handleRemove}>
+            <X size={16} aria-hidden="true" />
+          </button>
         </div>
       ) : (
-        <div className="block-image-upload-area" onClick={() => fileRef.current?.click()}>
-          <Upload size={24} />
+        <button type="button" className="block-image-upload-area" onClick={() => fileRef.current?.click()}>
+          <Upload size={24} aria-hidden="true" />
           <span>{uploading ? '업로드 중...' : '이미지를 선택하세요'}</span>
-        </div>
+        </button>
       )}
       <input ref={fileRef} type="file" accept="image/*" hidden onChange={handleUpload} />
       <div className="block-image-fields">
