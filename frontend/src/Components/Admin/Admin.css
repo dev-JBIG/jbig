@@ -1,0 +1,690 @@
+/* GitHub Primer styled Admin Dashboard */
+
+.admin-container {
+    --primary-color: var(--bgColor-accent-emphasis, #0969da);
+    --danger-color: var(--bgColor-danger-emphasis, #cf222e);
+    --success-color: var(--bgColor-success-emphasis, #1f883d);
+    --background-color: var(--bgColor-inset, #f6f8fa);
+    --sidebar-bg: var(--bgColor-default, #ffffff);
+    --header-bg: var(--bgColor-default, #ffffff);
+    --card-bg: var(--bgColor-default, #ffffff);
+    --text-color: var(--fgColor-default, #1f2328);
+    --text-light-color: var(--fgColor-muted, #59636e);
+    --border-color: var(--borderColor-default, #d1d9e0);
+
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+.admin-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    height: 58px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 101;
+}
+
+.admin-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.admin-logo:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+}
+
+.admin-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background-color: var(--fgColor-default, #1f2328);
+    color: var(--bgColor-default, #ffffff);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.admin-user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--text-light-color);
+}
+
+.admin-content {
+    display: flex;
+    flex: 1;
+}
+
+/* 사이드바 */
+.admin-sidebar {
+    width: 232px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border-color);
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.admin-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.admin-menu-btn {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-color);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.admin-menu-btn:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+}
+
+.admin-menu-btn.active {
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+    font-weight: 600;
+}
+
+.admin-menu-btn.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 3px;
+    border-radius: 999px;
+    background-color: var(--bgColor-accent-emphasis, #0969da);
+}
+
+/* 메인 컨텐츠 영역 */
+.admin-main-area {
+    flex: 1;
+    min-width: 0;
+    padding: 24px;
+    max-width: 1100px;
+}
+
+.admin-content-header {
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 18px 0;
+    color: var(--text-color);
+    letter-spacing: -0.015em;
+}
+
+/* 카드 */
+.admin-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-sm);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.admin-card-title-spaced {
+    margin-bottom: 16px;
+}
+
+.admin-section-divider-title {
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+}
+
+.admin-muted-text {
+    color: var(--text-light-color);
+    font-size: 14px;
+    margin: 0;
+}
+
+.admin-card-lead {
+    margin-top: 8px;
+    margin-bottom: 18px;
+}
+
+.admin-empty-text {
+    color: var(--text-light-color);
+    text-align: center;
+    padding: 40px 0;
+    margin: 0;
+    font-size: 14px;
+}
+
+/* 대시보드 바로가기 카드 */
+.admin-shortcut-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.admin-shortcut-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-muted, #f6f8fa);
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.admin-shortcut-card:hover {
+    border-color: var(--borderColor-accent-emphasis, #0969da);
+    background-color: var(--bgColor-default, #ffffff);
+}
+
+.admin-shortcut-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+}
+
+.admin-shortcut-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.admin-shortcut-desc {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-light-color);
+}
+
+/* 게시판 권한 관리 */
+.admin-board-intro {
+    margin-top: 6px;
+    margin-bottom: 16px;
+    line-height: 1.55;
+}
+
+.admin-board-category {
+    margin-bottom: 20px;
+}
+
+.admin-board-category:last-child {
+    margin-bottom: 0;
+}
+
+.admin-board-category-title {
+    margin: 0 0 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-light-color);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.admin-board-list {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.admin-board-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background-color: var(--bgColor-default, #ffffff);
+}
+
+.admin-board-row:last-child {
+    border-bottom: none;
+}
+
+.admin-board-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 140px;
+    flex: 1;
+}
+
+.admin-board-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.admin-board-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--text-light-color);
+}
+
+.admin-board-controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-perm-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 116px;
+}
+
+.admin-perm-field-read {
+    width: 186px;
+}
+
+.admin-perm-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light-color);
+}
+
+.admin-perm-select {
+    min-width: 0;
+    padding: 6px 10px;
+    font-size: 13px;
+}
+
+/* 테이블 */
+.table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    white-space: nowrap;
+}
+
+.admin-table thead tr {
+    background-color: var(--bgColor-muted, #f6f8fa);
+}
+
+.admin-table th {
+    font-weight: 600;
+    font-size: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+    color: var(--text-light-color);
+    background-color: var(--bgColor-muted, #f6f8fa);
+}
+
+.admin-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    font-size: 13.5px;
+    color: var(--text-color);
+    vertical-align: middle;
+}
+
+.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.admin-popup-title {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.admin-popup-snippet {
+    font-size: 12.5px;
+    color: var(--text-light-color);
+    margin-top: 3px;
+}
+
+.admin-popup-date {
+    font-size: 12.5px;
+    color: var(--text-color);
+}
+
+.admin-popup-date-end {
+    font-size: 12px;
+    color: var(--text-light-color);
+}
+
+.table-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* 아이콘 버튼 */
+.admin-icon-button {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    background: var(--bgColor-default, #ffffff);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light-color);
+}
+
+.admin-icon-button:hover {
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-color: var(--borderColor-emphasis, #818b98);
+    color: var(--fgColor-accent, #0969da);
+}
+
+.admin-icon-button-danger {
+    color: var(--fgColor-danger, #cf222e);
+}
+
+.admin-icon-button-danger:hover {
+    background-color: var(--bgColor-danger-muted, #ffebe9);
+    border-color: var(--borderColor-danger-muted, #ff8182);
+    color: var(--fgColor-danger, #cf222e);
+}
+
+.admin-btn-inner {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* 폼 요소 */
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+.admin-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.admin-input,
+.admin-select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-default, #ffffff);
+    color: var(--text-color);
+}
+
+.admin-textarea {
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.admin-file-input {
+    padding: 6px 8px;
+}
+
+.admin-input:focus,
+.admin-select:focus {
+    outline: none;
+    border-color: var(--borderColor-accent-emphasis, #0969da);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+}
+
+.admin-image-preview-wrap {
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.admin-image-preview {
+    max-width: 300px;
+    max-height: 200px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    display: block;
+}
+
+.admin-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    font-size: 14px;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+.admin-checkbox-label input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.admin-form-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+/* 메시지 */
+.admin-message {
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    margin: 12px 0;
+    font-size: 13.5px;
+    border: 1px solid transparent;
+}
+
+.admin-message.success {
+    background-color: var(--bgColor-success-muted, #dafbe1);
+    color: var(--fgColor-success, #1a7f37);
+    border-color: var(--borderColor-success-muted, #4ac26b);
+}
+
+.admin-message.error {
+    background-color: var(--bgColor-danger-muted, #ffebe9);
+    color: var(--fgColor-danger, #cf222e);
+    border-color: var(--borderColor-danger-muted, #ff8182);
+}
+
+.form-hint {
+    font-size: 12px;
+    color: var(--text-light-color);
+    margin: 2px 0 0;
+}
+
+.admin-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 15px;
+    color: var(--text-light-color);
+}
+
+/* 모바일 메뉴 토글 버튼 */
+.admin-menu-toggle {
+    display: none;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.admin-sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--overlay-backdrop-bgColor, rgba(27, 31, 36, 0.5));
+    z-index: 99;
+}
+
+.admin-sidebar-overlay.show {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .admin-header-bar {
+        padding: 0 14px;
+        height: 54px;
+    }
+
+    .admin-logo {
+        font-size: 16px;
+    }
+
+    .admin-user-label {
+        display: none;
+    }
+
+    .admin-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-content {
+        position: relative;
+    }
+
+    .admin-sidebar {
+        position: fixed;
+        top: 54px;
+        left: 0;
+        bottom: 0;
+        width: 256px;
+        z-index: 100;
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 0.22s ease, visibility 0.22s ease;
+        box-shadow: var(--shadow-xl);
+    }
+
+    .admin-sidebar.open {
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .admin-main-area {
+        padding: 16px;
+        width: 100%;
+    }
+
+    .admin-content-header {
+        font-size: 20px;
+        margin-bottom: 14px;
+    }
+
+    .admin-card {
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .admin-perm-field,
+    .admin-perm-field-read {
+        width: 100%;
+        flex: 1 1 130px;
+    }
+
+    .admin-input,
+    .admin-select {
+        font-size: 16px;
+    }
+}

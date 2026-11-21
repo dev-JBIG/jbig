@@ -1,0 +1,837 @@
+/* ============================================================
+   Resume page — GitHub Primer token mapping
+   ============================================================ */
+.resume-page {
+    --resume-fs-name: 28px;
+    --resume-fs-headline: 16px;
+    --resume-fs-section: 15px;
+    --resume-fs-body: 14px;
+    --resume-fs-meta: 12px;
+
+    --resume-gap-section: 28px;
+    --resume-gap-item: 14px;
+
+    --resume-color-text: var(--fgColor-default, #1f2328);
+    --resume-color-muted: var(--fgColor-muted, #656d76);
+    --resume-color-meta: var(--fgColor-muted, #656d76);
+    --resume-color-border: var(--borderColor-default, #d0d7de);
+    --resume-color-bg: var(--bgColor-default, #ffffff);
+    --resume-color-bg-soft: var(--bgColor-muted, #f6f8fa);
+    --resume-color-accent: var(--fgColor-accent, #0969da);
+}
+
+.profile-container {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 36px 24px 80px;
+    min-height: calc(100vh - 200px);
+    color: var(--resume-color-text);
+}
+
+.profile-loading,
+.profile-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--fgColor-muted, #656d76);
+}
+
+.loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--borderColor-default, #d0d7de);
+    border-top: 3px solid var(--fgColor-accent, #0969da);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.profile-error h2 {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.profile-error button {
+    margin-top: 20px;
+    padding: 8px 20px;
+    background: var(--bgColor-accent-emphasis, #0969da);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border: 1px solid rgba(31, 35, 40, 0.15);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--resume-color-border);
+    margin-bottom: 24px;
+}
+
+.profile-avatar {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    background: var(--bgColor-accent-emphasis, #0969da);
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--fgColor-onEmphasis, #ffffff);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.profile-name {
+    font-size: var(--resume-fs-name);
+    font-weight: 600;
+    color: var(--resume-color-text);
+    margin: 0 0 4px 0;
+    letter-spacing: -0.015em;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.profile-username {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--resume-color-meta);
+}
+
+.profile-headline {
+    font-size: var(--resume-fs-headline);
+    font-weight: 500;
+    color: var(--resume-color-muted);
+    margin: 0 0 10px 0;
+    line-height: 1.4;
+}
+
+.profile-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0 0 6px 0;
+}
+
+.profile-semester {
+    background: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+    border: 1px solid var(--borderColor-accent-muted, #54aeff);
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.profile-location {
+    font-size: 13px;
+    color: var(--resume-color-muted);
+}
+
+.profile-location::before {
+    content: '· ';
+    color: var(--resume-color-meta);
+    margin-right: 2px;
+}
+
+.profile-id {
+    color: var(--resume-color-meta);
+    font-size: 13px;
+}
+
+.profile-joined {
+    color: var(--resume-color-meta);
+    font-size: var(--resume-fs-meta);
+    margin: 0;
+}
+
+.profile-last-login {
+    color: var(--fgColor-success, #1a7f37);
+}
+
+.profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-edit,
+.btn-print,
+.btn-save,
+.btn-cancel,
+.btn-password,
+.btn-delete-account {
+    padding: 7px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    white-space: nowrap;
+}
+
+.btn-edit {
+    background: var(--bgColor-accent-emphasis, #0969da);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border-color: rgba(31, 35, 40, 0.15);
+}
+
+.btn-edit:hover {
+    filter: brightness(0.95);
+}
+
+.btn-print,
+.btn-cancel,
+.btn-password {
+    background: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+    border-color: var(--borderColor-default, #d0d7de);
+}
+
+.btn-print:hover,
+.btn-cancel:hover,
+.btn-password:hover {
+    background: var(--bgColor-neutral-muted, #eaeef2);
+}
+
+.btn-save {
+    background: var(--bgColor-success-emphasis, #1f883d);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border-color: rgba(31, 35, 40, 0.15);
+}
+
+.btn-save:hover {
+    filter: brightness(0.95);
+}
+
+.btn-save:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.btn-delete-account {
+    background: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-danger, #cf222e);
+    border-color: var(--borderColor-danger-muted, #ff8182);
+    margin-top: 8px;
+}
+
+.btn-delete-account:hover {
+    background: var(--bgColor-danger-emphasis, #cf222e);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border-color: var(--bgColor-danger-emphasis, #cf222e);
+}
+
+/* ============================================================
+   Tabs
+   ============================================================ */
+.profile-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--resume-color-border);
+    margin-bottom: 28px;
+}
+
+.profile-tab {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--resume-color-meta);
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.profile-tab:hover {
+    color: var(--resume-color-muted);
+}
+
+.profile-tab.is-active {
+    color: var(--resume-color-text);
+    border-bottom-color: var(--resume-color-accent);
+    font-weight: 600;
+}
+
+/* ============================================================
+   Content area
+   ============================================================ */
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--resume-gap-section);
+}
+
+.profile-section {
+    background: var(--resume-color-bg);
+    border-radius: 8px;
+    padding: 20px 22px;
+    border: 1px solid var(--resume-color-border);
+}
+
+.section-title {
+    font-size: var(--resume-fs-section);
+    font-weight: 600;
+    color: var(--resume-color-text);
+    margin: 0 0 14px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--resume-color-border);
+    letter-spacing: -0.01em;
+    position: relative;
+}
+
+.section-title::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 2px;
+    bottom: 12px;
+    width: 3px;
+    background: var(--resume-color-accent);
+    border-radius: 2px;
+}
+
+/* ============================================================
+   Resume editor (legacy)
+   ============================================================ */
+.resume-editor textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 16px;
+    border: 1px solid var(--resume-color-border);
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.resume-editor textarea:focus {
+    outline: none;
+    border-color: var(--resume-color-accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.editor-hint {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--resume-color-meta);
+}
+
+.resume-content {
+    line-height: 1.7;
+    color: var(--resume-color-muted);
+}
+
+.resume-content h1,
+.resume-content h2,
+.resume-content h3 {
+    margin-top: 24px;
+    margin-bottom: 12px;
+    color: var(--resume-color-text);
+}
+
+.resume-content h1 { font-size: 24px; }
+.resume-content h2 { font-size: 20px; }
+.resume-content h3 { font-size: 16px; }
+
+.resume-content p {
+    margin-bottom: 12px;
+}
+
+.resume-content ul,
+.resume-content ol {
+    padding-left: 24px;
+    margin-bottom: 12px;
+}
+
+.resume-content code {
+    background: var(--bgColor-neutral-muted, rgba(175, 184, 193, 0.2));
+    color: var(--fgColor-default, #1f2328);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.resume-content pre {
+    background: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.resume-content blockquote {
+    border-left: 3px solid var(--resume-color-accent);
+    padding-left: 16px;
+    margin: 16px 0;
+    color: var(--resume-color-muted);
+}
+
+.resume-content a {
+    display: inline-block;
+}
+
+.empty-text {
+    color: var(--resume-color-meta);
+    font-size: 14px;
+    text-align: center;
+    padding: 20px;
+}
+
+/* ============================================================
+   Activity tab — post/comment list
+   ============================================================ */
+.profile-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.profile-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.profile-list-item:hover {
+    background: var(--resume-color-bg-soft);
+}
+
+.profile-list-item:not(:last-child) {
+    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+}
+
+.item-title {
+    font-size: 14px;
+    color: var(--resume-color-text);
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 16px;
+}
+
+.item-content {
+    font-size: 14px;
+    color: var(--resume-color-text);
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 16px;
+}
+
+.item-meta {
+    font-size: 12px;
+    color: var(--resume-color-meta);
+    flex-shrink: 0;
+}
+
+.profile-settings {
+    background: var(--resume-color-bg-soft);
+}
+
+.profile-settings button {
+    display: block;
+    width: 100%;
+}
+
+.profile-comment-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+}
+
+.comment-post-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--resume-color-muted);
+    width: 100%;
+}
+
+.comment-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.comment-content {
+    font-size: 14px;
+    color: var(--resume-color-text);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.comment-date {
+    font-size: 12px;
+    color: var(--resume-color-meta);
+    flex-shrink: 0;
+}
+
+.profile-empty-blocks {
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--resume-color-meta);
+    font-size: 14px;
+}
+
+/* ============================================================
+   Modal (회원 탈퇴)
+   ============================================================ */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    max-width: 450px;
+    width: 100%;
+    box-shadow: var(--shadow-xl);
+}
+
+.modal-content h3 {
+    margin: 0 0 14px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--resume-color-text);
+}
+
+.modal-warning {
+    color: var(--fgColor-danger, #cf222e);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--resume-color-border);
+    border-radius: var(--radius-md);
+    background: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-default, #1f2328);
+    font-size: 14px;
+    margin-bottom: 18px;
+    box-sizing: border-box;
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: var(--borderColor-accent-emphasis, #0969da);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-btn {
+    flex: 1;
+    padding: 9px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    border: 1px solid transparent;
+}
+
+.modal-btn-cancel {
+    background: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+    border-color: var(--borderColor-default, #d0d7de);
+}
+
+.modal-btn-cancel:hover {
+    background: var(--bgColor-neutral-muted, #eaeef2);
+}
+
+.modal-btn-delete {
+    background: var(--bgColor-danger-emphasis, #cf222e);
+    color: var(--fgColor-onEmphasis, #ffffff);
+}
+
+.modal-btn-delete:hover {
+    filter: brightness(0.95);
+}
+
+.modal-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 768px) {
+    .profile-container {
+        padding: 24px 16px 64px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 32px;
+    }
+
+    .profile-name {
+        font-size: 24px;
+    }
+
+    .profile-actions {
+        flex-direction: row;
+        width: 100%;
+    }
+
+    .profile-actions button {
+        flex: 1;
+    }
+
+    .section-title::before {
+        left: -22px;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-list-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .item-meta {
+        font-size: 11px;
+    }
+}
+
+/* ===== 편집 모드 토글 (블록 / HTML) ===== */
+.profile-edit-modes {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    margin-bottom: 16px;
+    background: var(--bgColor-muted, #f6f8fa);
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-md);
+}
+
+.profile-edit-mode {
+    border: 0;
+    background: transparent;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--fgColor-muted, #656d76);
+    cursor: pointer;
+}
+
+.profile-edit-mode.is-active {
+    background: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-accent, #0969da);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+.profile-edit-mode:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ===== HTML 모드 공개 프로필 (sandbox iframe) ===== */
+.resume-html {
+    /* .profile-content의 display:flex를 풀어 iframe이 flex 아이템으로 좁아지는 것 방지 */
+    display: block;
+    width: 100%;
+    padding: 0;
+}
+
+.profile-html-frame {
+    display: block;
+    /* 부모 폭을 확실히 채워 iframe 내부 뷰포트(width=device-width)가 데스크톱 폭이 되게 함 */
+    width: 100%;
+    min-height: 90vh;
+    border: 0;
+    background: #fff;
+}
+
+@media print {
+    @page {
+        size: A4;
+        margin: 14mm 12mm;
+    }
+
+    .profile-html-frame {
+        min-height: 100vh;
+        height: auto;
+    }
+
+    body {
+        background: white !important;
+    }
+
+    /* 헤더/푸터/사이드네비 등 페이지 외 UI 제거 */
+    header[role="banner"],
+    nav:not(.profile-tabs),
+    footer,
+    .app-header,
+    .app-footer,
+    .app-sidebar,
+    .navbar,
+    .site-header,
+    .site-footer {
+        display: none !important;
+    }
+
+    .profile-container {
+        max-width: none;
+        padding: 0;
+        margin: 0;
+        min-height: 0;
+    }
+
+    .profile-tabs,
+    .profile-actions,
+    .profile-settings,
+    .modal-overlay {
+        display: none !important;
+    }
+
+    .profile-header {
+        padding-bottom: 12px;
+        margin-bottom: 14px;
+        border-bottom: 2px solid #0f172a;
+    }
+
+    .profile-avatar {
+        width: 72px;
+        height: 72px;
+        font-size: 28px;
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+    }
+
+    .profile-name {
+        font-size: 22pt;
+    }
+
+    .profile-headline {
+        font-size: 11pt;
+    }
+
+    .profile-meta,
+    .profile-joined {
+        font-size: 9pt;
+    }
+
+    .profile-last-login {
+        display: none;
+    }
+
+    /* 인쇄 시 항상 단일 컬럼 */
+    .profile-blocks-renderer.two-column {
+        display: block !important;
+    }
+
+    .resume-sidebar,
+    .resume-main {
+        max-width: none !important;
+        width: 100% !important;
+    }
+
+    .resume-sidebar {
+        margin-bottom: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .profile-section,
+    .profile-block-wrapper {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+
+    .section-title {
+        font-size: 12pt;
+    }
+
+    /* 색상 강제 출력 (브라우저별 차이 보정) */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    a {
+        color: inherit !important;
+        text-decoration: none !important;
+    }
+}

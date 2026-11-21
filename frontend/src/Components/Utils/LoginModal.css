@@ -1,0 +1,188 @@
+/* GitHub Primer styled LoginModal */
+
+.login-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(27, 31, 36, 0.55);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 16px;
+    animation: fadeIn 0.16s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.login-modal-container {
+    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-lg);
+    padding: 28px 28px 24px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    animation: slideUp 0.18s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(12px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.login-modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 22px;
+    color: var(--fgColor-muted, #656d76);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.login-modal-close:hover {
+    background-color: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+}
+
+.login-modal-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.login-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    margin: 0;
+}
+
+.login-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-modal-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    margin-bottom: -4px;
+}
+
+.login-modal-input {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-default, #1f2328);
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.login-modal-input:focus {
+    border-color: var(--borderColor-accent-emphasis, #0969da);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+}
+
+.login-modal-input.input-error {
+    border-color: var(--borderColor-danger-emphasis, #cf222e);
+}
+
+.login-modal-password-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.login-modal-password-row .login-modal-input {
+    padding-right: 58px;
+}
+
+.login-modal-toggle {
+    position: absolute;
+    right: 10px;
+    background: transparent;
+    border: none;
+    padding: 2px 4px;
+    font-size: 12px;
+    color: var(--fgColor-accent, #0969da);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+}
+
+.login-modal-toggle:hover {
+    text-decoration: underline;
+}
+
+.login-modal-field-error {
+    color: var(--fgColor-danger, #cf222e);
+    font-size: 12px;
+    margin-top: -4px;
+}
+
+.login-modal-error {
+    background-color: var(--bgColor-danger-muted, #ffebe9);
+    color: var(--fgColor-danger, #cf222e);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    text-align: center;
+    border: 1px solid var(--borderColor-danger-muted, #ff8182);
+}
+
+.login-modal-button {
+    margin-top: 8px;
+}
+
+.login-modal-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borderColor-muted, #d0d7de);
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.login-modal-link {
+    background: none;
+    border: none;
+    color: var(--fgColor-accent, #0969da);
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    font-weight: 500;
+}
+
+.login-modal-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 500px) {
+    .login-modal-container {
+        padding: 24px 20px;
+    }
+
+    .login-modal-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+    }
+}

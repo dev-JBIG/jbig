@@ -1,0 +1,158 @@
+/* GitHub Primer styled ChangePWD */
+
+.changepwd-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 16px;
+    background-color: var(--bgColor-inset, var(--color-bg-secondary));
+}
+
+.changepwd-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px 24px;
+    background: var(--bgColor-default, var(--color-bg-primary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.changepwd-title-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+}
+
+.changepwd-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--fgColor-default, var(--color-text-primary));
+    text-decoration: none;
+    user-select: none;
+    letter-spacing: -0.03em;
+}
+
+.changepwd-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background-color: var(--fgColor-default, #1f2328);
+    color: var(--bgColor-default, #ffffff);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.changepwd-logo:hover {
+    color: var(--fgColor-accent, var(--color-primary));
+}
+
+.changepwd-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    margin: 0;
+}
+
+.changepwd-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.changepwd-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, var(--color-text-primary));
+    margin-top: 4px;
+}
+
+.changepwd-input {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
+    box-sizing: border-box;
+    outline: none;
+}
+
+.changepwd-input:focus {
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+}
+
+.changepwd-input:disabled {
+    background-color: var(--bgColor-disabled, var(--color-bg-tertiary));
+    cursor: not-allowed;
+}
+
+.changepwd-button {
+    margin-top: 8px;
+}
+
+.changepwd-links {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
+}
+
+.changepwd-link {
+    font-size: 13px;
+    color: var(--fgColor-accent, var(--color-primary));
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.changepwd-link:hover {
+    text-decoration: underline;
+}
+
+.changepwd-code-row {
+    position: relative;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.changepwd-code-row .changepwd-input {
+    padding-right: 58px;
+    margin-bottom: 0;
+}
+
+.changepwd-timer {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    font-variant-numeric: tabular-nums;
+}
+
+.changepwd-timer.is-expiring {
+    color: var(--fgColor-danger, #cf222e);
+}

@@ -1,0 +1,424 @@
+.primer-calendar {
+    width: 100%;
+    background-color: var(--bgColor-default, #ffffff);
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--borderRadius-medium, 6px);
+    overflow: hidden;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.primer-calendar-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+}
+
+.primer-calendar-month {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    letter-spacing: -0.01em;
+}
+
+.primer-calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.primer-calendar-nav-btn {
+    padding: 3px 9px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: var(--borderRadius-medium, 6px);
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-default, #1f2328);
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.primer-calendar-nav-btn:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+}
+
+.primer-calendar-arrows {
+    display: inline-flex;
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--borderRadius-medium, 6px);
+    overflow: hidden;
+    background-color: var(--bgColor-default, #ffffff);
+}
+
+.primer-calendar-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--fgColor-muted, #59636e);
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease;
+}
+
+.primer-calendar-icon-btn + .primer-calendar-icon-btn {
+    border-left: 1px solid var(--borderColor-default, #d1d9e0);
+}
+
+.primer-calendar-icon-btn:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    color: var(--fgColor-default, #1f2328);
+}
+
+.primer-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+}
+
+.primer-calendar-weekday {
+    text-align: center;
+    padding: 6px 2px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fgColor-muted, #59636e);
+}
+
+.primer-calendar-weekday.is-sun {
+    color: var(--fgColor-danger, #d1242f);
+}
+
+.primer-calendar-weekday.is-sat {
+    color: var(--fgColor-accent, #0969da);
+}
+
+.primer-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.primer-calendar-cell {
+    min-height: 78px;
+    padding: 4px;
+    border-right: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background-color: var(--bgColor-default, #ffffff);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.primer-calendar-compact .primer-calendar-cell {
+    min-height: 60px;
+    padding: 3px;
+}
+
+.primer-calendar-cell:nth-child(7n) {
+    border-right: none;
+}
+
+.primer-calendar-cell.is-outside {
+    background-color: var(--bgColor-inset, #f6f8fa);
+    opacity: 0.58;
+}
+
+.primer-calendar-cell.is-today {
+    background-color: var(--bgColor-accent-muted, rgba(221, 244, 255, 0.45));
+}
+
+.primer-calendar-day-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 1px;
+}
+
+.primer-calendar-day-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 4px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 999px;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.primer-calendar-day-num.is-sun {
+    color: var(--fgColor-danger, #d1242f);
+}
+
+.primer-calendar-day-num.is-sat {
+    color: var(--fgColor-accent, #0969da);
+}
+
+.primer-calendar-day-num.is-today-badge {
+    background-color: var(--bgColor-accent-emphasis, #0969da);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    font-weight: 700;
+}
+
+.primer-calendar-events {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.primer-calendar-event {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    padding: 2px 4px;
+    border: 1px solid transparent;
+    border-left: 2.5px solid var(--event-color, #0969da);
+    border-radius: 3px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+    font-size: 11px;
+    line-height: 1.3;
+    text-align: left;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.primer-calendar-event:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16));
+    border-color: var(--borderColor-default, #d1d9e0);
+    border-left-color: var(--event-color, #0969da);
+}
+
+.primer-calendar-event-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--event-color, #0969da);
+    flex-shrink: 0;
+}
+
+.primer-calendar-compact .primer-calendar-event-dot {
+    display: none;
+}
+
+.primer-calendar-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.primer-calendar-more-btn {
+    border: none;
+    background: transparent;
+    padding: 1px 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--fgColor-accent, #0969da);
+    text-align: left;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.primer-calendar-more-btn:hover {
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+}
+
+/* 모달 */
+.primer-calendar-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay-backdrop-bgColor, rgba(31, 35, 40, 0.5));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 9999;
+}
+
+.primer-calendar-modal {
+    width: 100%;
+    max-width: 420px;
+    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    color: var(--fgColor-default, #1f2328);
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.2));
+    overflow: hidden;
+}
+
+.primer-calendar-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 14px 16px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+}
+
+.primer-calendar-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.primer-calendar-modal-header h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.primer-calendar-color-swatch {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.primer-calendar-modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--borderRadius-medium, 6px);
+    background: transparent;
+    color: var(--fgColor-muted, #59636e);
+    cursor: pointer;
+}
+
+.primer-calendar-modal-close:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
+    color: var(--fgColor-default, #1f2328);
+}
+
+.primer-calendar-modal-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.primer-calendar-detail-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--fgColor-muted, #59636e);
+}
+
+.primer-calendar-detail-row svg {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.primer-calendar-detail-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fgColor-muted, #59636e);
+    margin-bottom: 2px;
+}
+
+.primer-calendar-detail-row p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--fgColor-default, #1f2328);
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.primer-calendar-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 16px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-top: 1px solid var(--borderColor-default, #d1d9e0);
+}
+
+.primer-calendar-modal-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.primer-calendar-day-list {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 360px;
+    overflow-y: auto;
+}
+
+.primer-calendar-day-list-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--borderRadius-medium, 6px);
+    background-color: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-default, #1f2328);
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.primer-calendar-day-list-item:hover {
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-color: var(--borderColor-emphasis, #818b98);
+}
+
+.primer-calendar-day-list-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.primer-calendar-day-list-text strong {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.primer-calendar-day-list-text span {
+    font-size: 12px;
+    color: var(--fgColor-muted, #59636e);
+}
+
+@media (max-width: 767px) {
+    .primer-calendar-cell {
+        min-height: 54px;
+        padding: 2px;
+    }
+
+    .primer-calendar-event {
+        font-size: 10px;
+        padding: 1px 3px;
+    }
+}

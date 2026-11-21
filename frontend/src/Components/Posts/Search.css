@@ -1,0 +1,78 @@
+/* GitHub Primer styled Search */
+
+.search-container {
+    padding-top: 0;
+}
+
+.search-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-sm);
+}
+
+.search-form select,
+.search-form input {
+    height: 36px;
+    font-size: 14px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
+    outline: none;
+}
+
+.search-form select:focus,
+.search-form input:focus {
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+}
+
+.search-board-select {
+    flex-shrink: 0;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.search-input {
+    flex: 1 1 200px;
+    min-width: 140px;
+}
+
+.search-perpage-select {
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.search-button {
+    height: 36px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+    .search-board-select {
+        flex: 1 1 140px;
+        max-width: none;
+    }
+
+    .search-input {
+        flex: 1 1 100%;
+        order: 3;
+    }
+
+    .search-button {
+        order: 4;
+        width: 100%;
+    }
+}

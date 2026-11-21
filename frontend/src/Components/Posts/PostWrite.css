@@ -1,0 +1,406 @@
+/* GitHub Primer styled PostWrite & RecruitmentForm */
+
+.postwrite-form {
+    width: 100%;
+    background: var(--bgColor-default, var(--color-bg-primary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    padding: 24px;
+    border-radius: var(--borderRadius-large, 12px);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.postwrite-hidden-input {
+    display: none;
+}
+
+.postwrite-preview-img {
+    max-width: 100%;
+}
+
+.postwrite-textarea-sm {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.postwrite-textarea-md {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.postwrite-number-input {
+    max-width: 120px;
+}
+
+.postwrite-skills-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.postwrite-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.postwrite-row label,
+.postwrite-label-bold {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, var(--color-text-primary));
+}
+
+.postwrite-title-input,
+.postwrite-content-input,
+.board-select,
+.category-select {
+    font-size: 14px;
+    padding: 8px 12px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.postwrite-title-input:focus,
+.postwrite-content-input:focus,
+.board-select:focus,
+.category-select:focus {
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+}
+
+.postwrite-content-input {
+    min-height: 180px;
+    resize: vertical;
+}
+
+.board-select,
+.category-select {
+    height: 36px;
+}
+
+/* 공개 범위 안내 */
+.postwrite-visibility-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    font-size: 13px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+}
+
+/* 태그 선택 그룹 */
+.postwrite-tag-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* 실명/체크박스 행 */
+.postwrite-checkbox-label,
+.postwrite-checkbox-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--fgColor-default, var(--color-text-primary));
+    cursor: pointer;
+}
+
+.postwrite-checkbox-hint,
+.postwrite-inline-hint {
+    font-size: 12px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    margin-left: 4px;
+    font-weight: 400;
+}
+
+.postwrite-inline-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.postwrite-inline-group .postwrite-title-input {
+    flex: 1;
+    min-width: 160px;
+}
+
+.postwrite-inline-group .postwrite-number-input {
+    flex: 0 0 120px;
+    min-width: 100px;
+}
+
+/* 기술 스택 칩 */
+.postwrite-skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.postwrite-skill-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+    border: 1px solid var(--borderColor-accent-muted, #54aeff);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.postwrite-skill-chip button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+}
+
+.postwrite-images {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+.postwrite-image-preview {
+    position: relative;
+    width: 90px;
+    height: 90px;
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bgColor-muted, var(--color-bg-secondary));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.postwrite-image-preview img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 2px;
+    user-select: none;
+    pointer-events: none;
+}
+
+.postwrite-image-preview button {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    border: none;
+    background: rgba(27, 31, 36, 0.7);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    padding: 2px 6px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.postwrite-img-hint {
+    font-size: 12px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    margin-top: 4px;
+}
+
+.postwrite-photo-hint {
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    background: var(--bgColor-muted, var(--color-bg-secondary));
+    border: 1px dashed var(--borderColor-default, var(--color-border-medium));
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    font-size: 13.5px;
+    line-height: 1.5;
+}
+
+.photo-upload-panel {
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--radius-md);
+    background: var(--bgColor-muted, var(--color-bg-secondary));
+    padding: 12px;
+}
+
+.photo-upload-button {
+    font-weight: 600;
+}
+
+.photo-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.photo-card {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    background: var(--bgColor-default, var(--color-bg-primary));
+    aspect-ratio: 1 / 1;
+}
+
+.photo-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-card-remove {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: rgba(27, 31, 36, 0.78);
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.postwrite-file-input {
+    font-size: 13px;
+    color: var(--fgColor-default, var(--color-text-primary));
+}
+
+.postwrite-files {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.postwrite-file-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--radius-md);
+    background: var(--bgColor-muted, var(--color-bg-secondary));
+    padding: 8px 12px;
+}
+
+.postwrite-file-thumb {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+}
+
+.postwrite-file-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.file-name {
+    font-size: 13.5px;
+    color: var(--fgColor-default, var(--color-text-primary));
+    margin-right: auto;
+    word-break: break-all;
+}
+
+.file-size {
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.attachments-top {
+    padding-top: 8px;
+}
+
+.postwrite-submit-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.postwrite-submit {
+    min-width: 120px;
+}
+
+/* MDEditor 입력 레이어/표시 레이어 정렬 안정화 */
+.content-body .w-md-editor {
+    --md-editor-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border-radius: var(--radius-md);
+    box-shadow: none;
+}
+
+.content-body .w-md-editor-text {
+    font-feature-settings: normal !important;
+    font-variant-ligatures: none !important;
+    letter-spacing: normal !important;
+    text-size-adjust: 100%;
+    -webkit-text-size-adjust: 100%;
+}
+
+.content-body .w-md-editor-text-input,
+.content-body .w-md-editor-text-pre,
+.content-body .w-md-editor-text-pre > code {
+    font-family: var(--md-editor-font-family) !important;
+    font-feature-settings: normal !important;
+    font-variant-ligatures: none !important;
+    letter-spacing: normal !important;
+    line-height: 18px !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+.w-md-editor .w-md-editor-text-input {
+    font-size: 14px !important;
+    line-height: 18px !important;
+    letter-spacing: 0 !important;
+}
+
+/* 사유서 폼 안내 문구 스타일 */
+.absence-form-notice {
+    font-size: 13px;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    line-height: 1.55;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 767px) {
+    .postwrite-form {
+        padding: 16px;
+    }
+
+    .postwrite-submit-row {
+        flex-direction: column-reverse;
+    }
+
+    .postwrite-submit {
+        width: 100%;
+    }
+}

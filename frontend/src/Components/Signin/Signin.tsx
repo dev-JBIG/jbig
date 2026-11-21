@@ -1,0 +1,180 @@
+import React, { useState } from "react";
+import { Button } from "@primer/react";
+import "./Signin.css";
+import EmailVerification from "../Signup/EmailVerification";
+import {Link, useNavigate} from "react-router-dom";
+import {signin} from "../../API/req";
+import {useUser} from "../Utils/UserContext";
+import {useJbnuEmail} from "../Utils/useJbnuEmail";
+
+const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
+const isValidPassword = (pwd: string) =>
+    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
+
+const Signin: React.FC = () => {
+    const { email: userId, inputRef: userIdRef, onChange: onUserIdChange, onFocus: onUserIdFocus, onClick: onUserIdClick } = useJbnuEmail();
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+    const [loading, setLoading] = useState(false);
+    const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
+    const [notice, setNotice] = useState("");
+
+    const navigate = useNavigate();
+    const { setAuth } = useUser();
+
+    const validateEmail = (value: string) => {
+        if (!value.trim()) return "이메일을 입력해주세요.";
+        if (!isValidEmailDomain(value)) return "전북대 이메일(@jbnu.ac.kr)만 사용할 수 있습니다.";
+        return undefined;
+    };
+
+    const validatePassword = (value: string) => {
+        if (!value) return "비밀번호를 입력해주세요.";
+        if (!isValidPassword(value)) return "8~16자, 영문/숫자 각 1개 이상, 특수문자(!,@) 포함";
+        return undefined;
+    };
+
+    const handleEmailBlur = () => {
+        const err = validateEmail(userId);
+        setFieldErrors(prev => ({ ...prev, email: err }));
+    };
+
+    const handlePasswordBlur = () => {
+        const err = validatePassword(password);
+        setFieldErrors(prev => ({ ...prev, password: err }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (loading) return;
+        setError(null);
+        setNotice("");
+
+        const emailErr = validateEmail(userId);
+        const pwdErr = validatePassword(password);
+
+        if (emailErr || pwdErr) {
+            setFieldErrors({ email: emailErr, password: pwdErr });
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const result = await signin(userId, password);
+            if (result.access && result.username && result.semester) {
+                setAuth(
+                    {
+                        username: result.username,
+                        semester: result.semester,
+                        email: userId,
+                        is_staff: !!result.is_staff,
+                    },
+                    result.access,
+                    result.refresh
+                );
+                navigate("/");
+            } else if (result.status === 401 && result.errorCode === "ACCOUNT_NOT_VERIFIED") {
+                setPassword("");
+                setShowPassword(false);
+                setFieldErrors({});
+                setVerificationEmail(userId.trim());
+            } else {
+                setError(result.message || "로그인에 실패했습니다.");
+            }
+        } catch {
+            setError("로그인 요청 중 오류가 발생했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="signin-wrapper">
+            <div className="signin-container">
+                <div className="signin-title-row">
+                    <Link to="/" className="signin-logo">
+                        <span className="signin-logo-mark" aria-hidden="true">J</span>
+                        <span>JBIG</span>
+                    </Link>
+                    <h2 className="signin-title">로그인</h2>
+                </div>
+                {verificationEmail !== null ? (
+                    <>
+                        <p className="signin-verify-lead">이메일 인증을 마저 완료해주세요</p>
+                        <EmailVerification
+                            email={verificationEmail}
+                            onVerified={() => {
+                                setVerificationEmail(null);
+                                setNotice("이메일 인증이 완료되었습니다. 비밀번호를 입력하여 로그인해주세요.");
+                            }}
+                            onBack={() => setVerificationEmail(null)}
+                        />
+                    </>
+                ) : (
+                    <>
+                        {notice && <p className="auth-status-banner" role="status">{notice}</p>}
+                        <form className="signin-form" onSubmit={handleSubmit}>
+                            <label className="signin-label" htmlFor="userid">
+                                아이디 (이메일)
+                            </label>
+                            <input
+                                ref={userIdRef}
+                                className={`signin-input ${fieldErrors.email ? "input-error" : ""}`}
+                                id="userid"
+                                type="text"
+                                value={userId}
+                                onChange={(e) => {
+                                    onUserIdChange(e);
+                                    if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
+                                }}
+                                onFocus={onUserIdFocus}
+                                onClick={onUserIdClick}
+                                onBlur={handleEmailBlur}
+                            />
+                            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
+
+                            <label className="signin-label" htmlFor="password">
+                                비밀번호
+                            </label>
+                            <div className="signin-password-row">
+                                <input
+                                    className={`signin-input ${fieldErrors.password ? "input-error" : ""}`}
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => {
+                                        setPassword(e.target.value);
+                                        if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
+                                    }}
+                                    onBlur={handlePasswordBlur}
+                                />
+                                <button
+                                    type="button"
+                                    className="signin-toggle"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                >
+                                    {showPassword ? "숨기기" : "보이기"}
+                                </button>
+                            </div>
+                            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+
+                            {error && <div className="form-error" role="alert">{error}</div>}
+
+                            <Button variant="primary" block className="signin-submit-btn" type="submit" disabled={loading}>
+                                {loading ? "로그인 중..." : "로그인"}
+                            </Button>
+                        </form>
+                        <div className="signin-links">
+                            <Link to="/signup" className="signin-link">가입하기</Link>
+                            <Link to="/changepwd" className="signin-link">비밀번호를 잊어버리셨나요?</Link>
+                        </div>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default Signin;

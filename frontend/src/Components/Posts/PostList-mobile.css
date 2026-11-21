@@ -1,0 +1,195 @@
+/* 모바일 전용 PostList - GitHub Primer 스타일 */
+
+@media (max-width: 767px) {
+    .postlist-container {
+        padding: 0;
+    }
+
+    .postlist-home-card {
+        border-radius: var(--borderRadius-large, 12px);
+    }
+
+    .postlist-home-card .postlist-table tbody tr {
+        margin-bottom: 0;
+        border: none;
+        border-radius: 0;
+        border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+        box-shadow: none;
+    }
+
+    .postlist-home-card .postlist-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .postlist-header {
+        margin-bottom: var(--space-md);
+        align-items: stretch;
+    }
+
+    .postlist-header-home .postlist-header-top {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .postlist-header-actions {
+        width: 100%;
+    }
+
+    .postlist-header-home .postlist-header-actions {
+        width: auto;
+    }
+
+    .list-search-form {
+        flex: 1 1 100%;
+        min-width: 0;
+    }
+
+    .list-search-input {
+        height: 36px;
+        font-size: 14px;
+    }
+
+    .write-button {
+        width: 100%;
+    }
+
+    /* 카드 레이아웃 */
+    .postlist-table {
+        width: 100%;
+        display: block !important;
+        border: none;
+        box-shadow: none;
+    }
+
+    .postlist-table thead {
+        display: none !important;
+    }
+
+    .postlist-table tbody {
+        display: block !important;
+    }
+
+    .postlist-table tbody tr {
+        display: block !important;
+        position: relative;
+        margin-bottom: 10px;
+        padding: 14px 16px;
+        background-color: var(--bgColor-default, var(--color-bg-primary));
+        border: 1px solid var(--borderColor-default, var(--color-border-light));
+        border-radius: var(--borderRadius-large, 12px);
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        transition: border-color var(--transition-fast), background-color var(--transition-fast);
+    }
+
+    .postlist-table tbody tr:hover {
+        border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+        background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    }
+
+    .postlist-table tbody tr.announcement-row {
+        background-color: var(--bgColor-attention-muted, #fff8c5) !important;
+        border: 1px solid var(--borderColor-attention-muted, #d4a72c) !important;
+    }
+
+    .announcement-badge.mobile-only {
+        display: inline-flex !important;
+        margin-right: var(--space-sm);
+    }
+
+    .announcement-title {
+        font-weight: 600;
+        color: var(--fgColor-default, var(--color-text-primary));
+    }
+
+    .postlist-table td.th-category {
+        display: block !important;
+        width: auto;
+        max-width: none;
+        margin-bottom: 6px;
+    }
+
+    .postlist-table td {
+        display: block !important;
+        padding: 0 !important;
+        border: none !important;
+        text-align: left !important;
+    }
+
+    .postlist-table td.th-id {
+        display: none !important;
+    }
+
+    .postlist-table tbody .title-cell {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--fgColor-default, var(--color-text-primary));
+        line-height: 1.45;
+        margin-bottom: 8px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .postlist-table tbody .author-cell {
+        display: inline-block !important;
+        font-size: 12.5px;
+        color: var(--fgColor-accent, var(--color-primary));
+        font-weight: 500;
+        margin-right: 12px;
+        margin-bottom: 2px;
+    }
+
+    .postlist-table td.th-date {
+        display: inline-block !important;
+        font-size: 12px;
+        color: var(--fgColor-muted, var(--color-text-secondary));
+        margin-right: 12px;
+    }
+
+    .postlist-table td.th-views,
+    .postlist-table td.th-likes {
+        display: inline-block !important;
+        font-size: 12px;
+        color: var(--fgColor-muted, var(--color-text-secondary));
+        margin-right: 10px;
+        font-weight: 400;
+    }
+
+    .postlist-table td.th-views::before {
+        content: "조회 ";
+        color: var(--fgColor-muted, var(--color-text-tertiary));
+    }
+
+    .postlist-table td.th-likes::before {
+        content: "좋아요 ";
+        color: var(--fgColor-muted, var(--color-text-tertiary));
+    }
+
+    .postlist-table td.th-likes {
+        margin-right: 0;
+    }
+
+    .pagination-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        margin-top: var(--space-lg);
+        padding-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .pagination-btn {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .board-description {
+        font-size: 12.5px;
+    }
+}

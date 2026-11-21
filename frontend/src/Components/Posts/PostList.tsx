@@ -1,0 +1,747 @@
+// PostList.tsx
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Button, Label } from "@primer/react";
+import { MessageSquare, PenSquare, Search as SearchIcon, Inbox, Lock } from "lucide-react";
+import "./PostList.css";
+import "./PostList-mobile.css";
+import { PostItem, Section } from "../Utils/interfaces"
+import {fetchBoardPosts, fetchSearchPosts, fetchUserPosts, fetchBoardSearchPosts } from "../../API/req";
+import {useUser} from "../Utils/UserContext";
+import {useStaffAuth} from "../Utils/StaffAuthContext";
+import {useAlert} from "../Utils/AlertContext";
+import RecruitmentBadge from "./RecruitmentBadge";
+
+const BOARD_DESCRIPTIONS: Record<string, string> = {
+    "전체 글 보기": "JBIG의 모든 소식을 한눈에 확인하세요!",
+    "공지사항": "동아리의 주요 일정과 공지사항을 확인하세요!",
+    "자유게시판": "자유롭게 이야기를 나누고 소통하는 공간입니다.",
+    "자랑게시판": "수상, 합격, 성과를 함께 축하해요!",
+    "자료공유": "유용한 학습 자료와 정보를 공유해요!",
+    "논문리뷰": "최신 AI/BigData 논문을 리뷰하고 토론합니다.",
+    "공모전게시판": "공모전 일정부터 팀원 모집, 수상 후기까지!",
+    "정보게시판": "관련 행사, 꿀팁 등 다양한 정보를 확인해보세요!",
+    "스터디/소모임 홍보": "함께 공부할 스터디원과 소모임을 모집해보세요!",
+    "사유서제출": "부득이한 사정으로 활동에 불참할 경우 작성해주세요.",
+    "에러/피드백 제보": "서비스 이용 중 불편한 점이나 에러를 제보해주세요.",
+};
+
+const BRAG_BOARD_NAME = "자랑게시판";
+
+/**
+ * 게시판 이름을 간단하게 표시하기 위한 포맷터
+ */
+const getDisplayBoardName = (boardName: string): string => {
+    const name = boardName.trim();
+
+    // 개별 게시판 매핑 (우선 순위가 높은 것부터)
+    const boardNameMap: Record<string, string> = {
+        "스터디/소모임 홍보": "스터디",
+        "에러/피드백 제보": "피드백",
+        "자유게시판": "자유",
+        "질문게시판": "질문",
+        "사유서제출": "사유서",
+        "공지사항": "공지",
+        "정보게시판": "정보",
+        "논문리뷰": "논문",
+        "공모전게시판": "공모전",
+    };
+
+    // 매핑에 정확히 일치하는 이름이 있으면 반환
+    if (boardNameMap[name]) {
+        return boardNameMap[name];
+    }
+
+    // 매핑에 없는 경우, "게시판"과 "제출" 단어 제거
+    let displayName = name
+        .replace(/게시판/g, '')
+        .replace(/제출/g, '')
+        .trim();
+
+    return displayName || name; // 빈 문자열이면 원래 이름 반환
+};
+
+/**
+ * 게시물 리스트 컴포넌트로, 일반적인 게시판의 게시물을 나열합니다
+ * 외에도 검색 시 리스트에도 활용됩니다.
+ * url에 따라 기능을 구분하였습니다.
+ * */
+function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boolean, userId?: string })  {
+    const [posts, setPosts] = useState<PostItem[] | null>(null);
+    const [announcementPosts, setAnnouncementPosts] = useState<PostItem[]>([]);
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const page = parseInt(searchParams.get('page') || '1', 10);
+
+    const handlePageChange = useCallback((newPage: number) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('page', String(newPage));
+            return next;
+        });
+    }, [setSearchParams]);
+
+    const [searchKeyword, setSearchKeyword] = useState("");
+    const [postPermission, setPostPermission] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [selectedTag, setSelectedTag] = useState("");
+    // 게시글 ID별 post_type 저장 (사유서 게시글 식별용)
+    const [postTypes, setPostTypes] = useState<Map<number, number>>(new Map());
+
+    const { accessToken, signOutLocal } = useUser();
+    const { staffAuth } = useStaffAuth();
+    const { showAlert } = useAlert();
+
+    const { boardId: boardIdRaw } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const isUserPage = location.pathname.startsWith("/user");
+    const isSearchPage = location.pathname.startsWith("/search");
+
+    // 검색어 & perPage(URL 동기화)
+    const sp = useMemo(() => new URLSearchParams(location.search), [location.search]);
+    const q = sp.get("q") ?? "";
+
+    // 검색 페이지 전용, perpage
+    const perPageFromUrl = useMemo(() => {
+        const v = Number(new URLSearchParams(location.search).get("page_size") || 10);
+        return Number.isFinite(v) ? v : 10;
+    }, [location.search]);
+
+    // 페이지당 항목 수 10개로 고정
+    const perPage = 10;
+
+    // 검색 페이지와의 공통 per page 관리
+    const effectivePerPage = isSearchPage ? perPageFromUrl : perPage;
+
+    const prevPerPageUrlRef = useRef(perPageFromUrl);
+    useEffect(() => {
+        if (isSearchPage && prevPerPageUrlRef.current !== perPageFromUrl) {
+            prevPerPageUrlRef.current = perPageFromUrl;
+            handlePageChange(1);
+        }
+    }, [isSearchPage, perPageFromUrl, handlePageChange]);
+
+
+    // boards 전개해서 id→존재 여부 판단
+    const allBoardIds = useMemo(
+        () => new Set((boards ?? []).flatMap(s => s.boards.map(b => b.id))),
+        [boards]
+    );
+
+    const searchScopeBoardId = useMemo(() => {
+        if (!isSearchPage || !boardIdRaw || boardIdRaw === "all") return null;
+        const scopeId = Number(boardIdRaw);
+        return Number.isFinite(scopeId) && allBoardIds.has(scopeId) ? scopeId : null;
+    }, [isSearchPage, boardIdRaw, allBoardIds]);
+
+    const activeBoardID = !isSearchPage
+        ? (boardIdRaw ? Number(boardIdRaw) : 0)
+        : 0; // 일반 게시판 페이지에서만 사용
+
+    const activeBoard = activeBoardID === 0
+        ? null
+        : boards
+            ?.flatMap(section => section.boards)
+            .find(board => board.id === Number(activeBoardID));
+
+    const reqSeqRef = useRef(0);
+
+    // [수정] 공지사항 가져오기 useEffect (여기에도 캐싱 기능 추가!)
+    useEffect(() => {
+        // 전체 글 보기가 아니거나, 검색/유저 페이지면 공지사항 안 띄움
+        if (activeBoardID !== 0 || isSearchPage || isUserPage) {
+            setAnnouncementPosts([]);
+            return;
+        }
+
+        // 1. 공지사항용 캐시 키 생성 & 확인
+        const annoCacheKey = `jbig_anno_cache_${location.pathname}`;
+        const cachedAnno = sessionStorage.getItem(annoCacheKey);
+
+        // 2. 캐시 있으면 딜레이 없이 즉시 보여주기!
+        if (cachedAnno) {
+            try {
+                setAnnouncementPosts(JSON.parse(cachedAnno));
+            } catch (err) {
+                console.error("Announcement cache error", err);
+            }
+        }
+
+        let cancelled = false;
+        const getAnnouncements = async () => {
+            try {
+                const announcementBoard = boards
+                    ?.flatMap(section => section.boards)
+                    .find(board => board.name === "공지사항");
+
+                if (!announcementBoard) {
+                    // [중요] 보드 정보가 아직 안 왔더라도, 캐시된 게 있으면 지우지 않고 버팀
+                    if (!cachedAnno && !cancelled) setAnnouncementPosts([]);
+                    return;
+                }
+
+                const response = await fetchBoardPosts(
+                    String(announcementBoard.id),
+                    3,
+                    1,
+                    false,
+                    accessToken ?? undefined
+                );
+
+                if (cancelled) return;
+                // 3. 최신 데이터 받아오면 상태 업데이트 & 저장
+                setAnnouncementPosts(response.posts);
+                sessionStorage.setItem(annoCacheKey, JSON.stringify(response.posts));
+            } catch {
+                // 에러 나도 캐시가 있으면 그거라도 계속 보여줌
+                if (!cachedAnno && !cancelled) setAnnouncementPosts([]);
+            }
+        };
+
+        getAnnouncements();
+        return () => {
+            cancelled = true;
+        };
+        
+    }, [boards, activeBoardID, isSearchPage, isUserPage, accessToken, location.pathname]);
+
+    // [수정] 데이터 가져오기 useEffect (캐싱 기능 추가됨)
+    useEffect(() => {
+        const seq = ++reqSeqRef.current;
+        
+        // 1. 현재 페이지 주소(URL)를 열쇠(Key)로 사용
+        // 예: "jbig_cache_/board/1_?page=2"
+        const cacheKey = `jbig_cache_${location.pathname}_${location.search}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+
+        // 2. [핵심] 캐시가 있으면 로딩 없이 즉시 보여줌!
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                setPosts(parsed.posts);
+                setTotalPages(parsed.totalPages);
+                setPostPermission(parsed.postPermission);
+                
+                // Map 객체는 JSON으로 저장하면 깨지므로 복구 과정 필요
+                if (parsed.postTypes) {
+                    setPostTypes(new Map(parsed.postTypes));
+                }
+                setLoading(false); // 로딩 화면 끄기
+            } catch (err) {
+                console.error("Cache parsing error", err);
+                setLoading(true); // 에러나면 로딩 켜고 서버 요청 대기
+            }
+        } else {
+            // 캐시가 없으면 로딩 화면 켜기
+            setLoading(true);
+        }
+
+        const getPosts = async () => {
+            try {
+                let response: { posts: PostItem[]; totalPages: number; postPermission?: boolean; postTypes?: Map<number, number> };
+
+                if (isSearchPage) { 
+                    if (!q.trim()) {
+                        if (seq !== reqSeqRef.current) return;
+                        setPosts([]); setTotalPages(1); setLoading(false);
+                        return;
+                    }
+                    const scope = boardIdRaw ?? "all";
+                    if (scope === "all") {
+                        response = await fetchSearchPosts(q.trim(), effectivePerPage, page);
+                    } else {
+                        if (searchScopeBoardId !== null) {
+                            response = await fetchBoardSearchPosts(searchScopeBoardId, q.trim(), effectivePerPage, page);
+                        } else {
+                            response = await fetchSearchPosts(q.trim(), effectivePerPage, page);
+                        }
+                    }
+                } else if (isUserPage && userId) { 
+                    if(!accessToken){
+                        signOutLocal();
+                        showAlert({
+                            message: "로그인이 필요합니다.",
+                            type: 'warning',
+                            onClose: () => navigate("/signin")
+                        })
+                        return;
+                    }
+                    response = await fetchUserPosts(userId, 10, page, accessToken);
+                } else { 
+                    response = await fetchBoardPosts(
+                        isHome ? undefined : (activeBoardID !== 0 ? String(activeBoardID) : undefined),
+                        isHome ? 10 : effectivePerPage,
+                        isHome ? 1 : page,
+                        isHome,
+                        accessToken ?? undefined
+                    );
+                }
+
+                if (seq !== reqSeqRef.current) return;
+
+                // 3. 서버에서 받아온 최신 데이터로 화면 업데이트 (혹시 새 글이 올라왔을 수 있으니)
+                setPosts(response.posts);
+                setPostPermission(response.postPermission ?? false);
+                setTotalPages(response.totalPages);
+                if (response.postTypes) {
+                    setPostTypes(response.postTypes);
+                }
+
+                // 4. [핵심] 받아온 데이터를 다음번을 위해 저장 (SessionStorage)
+                // Map 객체는 JSON 저장이 안 되어서 배열로 변환해서 저장해야 함
+                const dataToSave = {
+                    posts: response.posts,
+                    totalPages: response.totalPages,
+                    postPermission: response.postPermission,
+                    postTypes: response.postTypes ? Array.from(response.postTypes.entries()) : []
+                };
+                sessionStorage.setItem(cacheKey, JSON.stringify(dataToSave));
+
+            } catch (e) {
+                if (seq !== reqSeqRef.current) return;
+                // 에러 발생 시, 캐시 데이터가 없다면 0페이지 처리
+                if (!cachedData) setTotalPages(0); 
+            } finally {
+                if (seq === reqSeqRef.current) setLoading(false);
+            }
+        };
+
+        getPosts();
+
+    }, [
+        boardIdRaw, activeBoardID, location.pathname, location.search,
+        isHome, isUserPage, isSearchPage, q, page, effectivePerPage, searchScopeBoardId,
+        accessToken, navigate, showAlert, signOutLocal, userId
+    ]);
+
+    const displayPosts = posts ?? [];
+
+    // 공지사항이 있는 경우, 전체 글 보기에서는 공지사항을 제외한 일반 게시글 필터링
+    // (공지사항은 별도로 상단에 표시하므로 중복 방지)
+    let filteredPosts = (activeBoardID === 0 && !isSearchPage && !isUserPage && announcementPosts.length > 0)
+        ? displayPosts.filter(post => !announcementPosts.some(ann => ann.id === post.id))
+        : displayPosts;
+
+    // 태그 필터 적용
+    if (selectedTag) {
+        filteredPosts = filteredPosts.filter(post => post.tag === selectedTag);
+    }
+
+    const handleWrite = () => {
+        navigate(`/board/${boardIdRaw ?? 0}/write`);
+    };
+
+    const fallbackRouteBoardId = useMemo(() => {
+        const parsedBoardId = Number(boardIdRaw);
+        return Number.isFinite(parsedBoardId) && parsedBoardId > 0
+            ? parsedBoardId
+            : activeBoardID;
+    }, [boardIdRaw, activeBoardID]);
+
+    const getPostRouteBoardId = (post: PostItem) => post.board_id ?? fallbackRouteBoardId;
+
+    const canWritePost = Boolean(
+        !isSearchPage &&
+        !isUserPage &&
+        !isHome &&
+        activeBoardID !== 0 &&
+        !(activeBoard?.name === "공지사항" && !staffAuth) &&
+        postPermission
+    );
+
+    const renderCommentCount = (count: number) =>
+        count > 0 ? (
+            <span className="comment-count" title={`댓글 ${count}개`}>
+                <MessageSquare size={12} aria-hidden="true" />
+                <span>{count}</span>
+            </span>
+        ) : null;
+
+    const renderPrivateBadge = (postId: number) =>
+        postTypes.get(postId) === 3 ? (
+            <span
+                className="private-post-badge"
+                title="해당 게시물은 작성자와 관리자만 열람할 수 있습니다"
+            >
+                <Lock size={11} aria-hidden="true" />
+                <span>비공개</span>
+            </span>
+        ) : null;
+
+    return (
+        <div className={`postlist-container${isHome ? " postlist-home-card" : ""}`}>
+            {!isUserPage && !isSearchPage && (
+                <div className={`postlist-header${isHome ? " postlist-header-home" : ""}`}>
+                    <div className="postlist-header-top">
+                        <div className="title-wrapper">
+                            <h2
+                                className={`postlist-title ${isHome ? "home" : ""} ${isSearchPage ? "search" : ""}`}
+                            >
+                                {(activeBoardID === 0 || isHome)
+                                    ? "전체 글 보기"
+                                    : (activeBoard?.name || "")
+                                }
+                            </h2>
+
+                            <p className="board-description">
+                                {(isHome || activeBoardID === 0)
+                                    ? BOARD_DESCRIPTIONS["전체 글 보기"]
+                                    : activeBoard
+                                        ? BOARD_DESCRIPTIONS[activeBoard.name]
+                                        : "\u00A0" /* 공백 문자(줄 높이 유지용) */
+                                }
+                            </p>
+                        </div>
+
+                        <div className="postlist-header-actions">
+                            {/* 검색란: 검색페이지가 아니고, 홈도 아니고, 유저페이지도 아니고, 게시글이 '있는' 경우에만 표시 */}
+                            {!isHome && !isSearchPage && !isUserPage && displayPosts.length > 0 && (
+                                <form
+                                    className="list-search-form"
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        if (searchKeyword.trim()) {
+                                            navigate(
+                                                `/search/${activeBoardID || "all"}?q=${encodeURIComponent(searchKeyword)}&page_size=10`
+                                            );
+                                        }
+                                    }}
+                                >
+                                    <div className="list-search-input-wrap">
+                                        <SearchIcon size={14} className="list-search-icon" aria-hidden="true" />
+                                        <input
+                                            className="list-search-input"
+                                            type="text"
+                                            placeholder="게시판 내 검색"
+                                            aria-label="게시판 내 검색"
+                                            value={searchKeyword}
+                                            onChange={(e) => setSearchKeyword(e.target.value)}
+                                        />
+                                    </div>
+                                    <Button type="submit" variant="default" size="small" className="list-search-button">검색</Button>
+                                </form>
+                            )}
+
+                            {canWritePost && (
+                                <Button variant="primary" size="small" className="write-button" onClick={handleWrite}>
+                                    <span className="write-button-inner">
+                                        <PenSquare size={14} aria-hidden="true" />
+                                        <span>글쓰기</span>
+                                    </span>
+                                </Button>
+                            )}
+
+                            {isHome && (
+                                <button
+                                    type="button"
+                                    className="more-link"
+                                    onClick={() => navigate("/board/0")}
+                                >
+                                    더보기 &gt;
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 태그 필터 버튼 그룹 */}
+                    {!isHome && activeBoard?.name !== BRAG_BOARD_NAME && activeBoard?.available_tags && activeBoard.available_tags.length > 0 && (
+                        <div className="postlist-tag-tabs" role="group" aria-label="태그 필터">
+                            <button
+                                type="button"
+                                aria-pressed={selectedTag === ''}
+                                className={`postlist-tag-tab ${selectedTag === '' ? 'active' : ''}`}
+                                onClick={() => { setSelectedTag(''); handlePageChange(1); }}
+                            >전체</button>
+                            {activeBoard.available_tags.map((tag: string) => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    aria-pressed={selectedTag === tag}
+                                    className={`postlist-tag-tab ${selectedTag === tag ? 'active' : ''}`}
+                                    onClick={() => { setSelectedTag(tag); handlePageChange(1); }}
+                                >{tag}</button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* 로딩 스켈레톤 */}
+            {loading && (
+                <>
+                    <span className="sr-only" role="status">게시글 목록을 불러오는 중입니다.</span>
+                    <div className="skeleton-container" aria-hidden="true">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="skeleton-row">
+                                <div className="skeleton skeleton-id" />
+                                <div className="skeleton skeleton-title" />
+                                <div className="skeleton skeleton-author" />
+                                <div className="skeleton skeleton-date" />
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+
+            {/* 리스트 영역 */}
+            {!loading && isSearchPage ? (
+                // 검색 페이지
+                (!q.trim() || displayPosts.length === 0) ? (
+                    <div className="no-search-results">
+                        <Inbox size={28} className="empty-posts-icon" aria-hidden="true" />
+                        <div className="empty-posts-title">해당 게시물이 없습니다.</div>
+                    </div>
+                ) : (
+                    <table className="postlist-table">
+                        <thead>
+                        <tr>
+                            {boardIdRaw === "all" && <th className="th-category">구분</th>}
+                            <th className="th-title">제목</th>
+                            <th className="th-author">작성자</th>
+                            <th className="th-date">작성일</th>
+                            <th className="th-views">조회수</th>
+                            {!isUserPage && <th className="th-likes">좋아요</th>}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {displayPosts.map((p) => {
+                            const displayName = p.board_name ? getDisplayBoardName(p.board_name) : '';
+                            return (
+                            <tr
+                                key={p.id}
+                                onClick={() => {
+                                    navigate(`/board/${getPostRouteBoardId(p)}/${p.id}`);
+                                }}
+                            >
+                                {boardIdRaw === "all" && (
+                                    <td className="th-category">
+                                        {p.board_name && (
+                                            p.board_name === "공지사항" ? (
+                                                <Label variant="danger" size="small" className="announcement-badge">
+                                                    공지
+                                                </Label>
+                                            ) : (
+                                                <Label variant="accent" size="small" className="category-badge">
+                                                    {displayName}
+                                                </Label>
+                                            )
+                                        )}
+                                    </td>
+                                )}
+                                <td className="title-cell th-title">
+                                    <span className="postlist-title-text">{p.title}</span>
+                                    {renderCommentCount(p.comment_count)}
+                                    {renderPrivateBadge(p.id)}
+                                </td>
+                                <td className="author-cell th-author">
+                                    <Link
+                                        to={`/@${p.user_id}`}
+                                        className="author-text author-link"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
+                                    >
+                                        {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
+                                    </Link>
+                                </td>
+                                <td className="th-date">{p.date}</td>
+                                <td className="th-views">{p.views.toLocaleString()}</td>
+                                {!isUserPage && <td className="th-likes">{p.likes}</td>}
+                            </tr>
+                            );
+                        })}
+                        </tbody>
+                    </table>
+                )
+            ) : !loading ? (
+                // 검색 페이지가 아닐 때
+                displayPosts.length === 0 && !isHome ? (
+                    <div className="empty-posts-message">
+                        <Inbox size={28} className="empty-posts-icon" aria-hidden="true" />
+                        <div className="empty-posts-title">게시글이 없습니다</div>
+                        {canWritePost && (
+                            <div className="empty-posts-message-with-link">
+                                <Button variant="primary" size="small" onClick={handleWrite}>
+                                    게시글 작성하러가기
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <table className="postlist-table">
+                        <thead>
+                        <tr>
+                            {(activeBoardID === 0 || isHome) && <th className="th-category">구분</th>}
+                            <th className="th-title">제목</th>
+                            <th className="th-author">작성자</th>
+                            <th className="th-date">작성일</th>
+                            <th className="th-views">조회수</th>
+                            {!isUserPage && <th className="th-likes">좋아요</th>}
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {/* 공지사항 표시 (전체 글 보기일 때만) */}
+                        {activeBoardID === 0 && !isSearchPage && !isUserPage && announcementPosts.map((p) => (
+                            <tr
+                                key={`announcement-${p.id}`}
+                                className="announcement-row"
+                                onClick={() => {
+                                    navigate(`/board/${getPostRouteBoardId(p)}/${p.id}`);
+                                }}
+                            >
+                                <td className="th-category">
+                                    <Label variant="danger" size="small" className="announcement-badge">공지</Label>
+                                </td>
+                                <td className="title-cell th-title">
+                                    <span className="announcement-title">{p.title}</span>
+                                    {renderCommentCount(p.comment_count)}
+                                </td>
+                                <td className="author-cell th-author">
+                                    <Link
+                                        to={`/@${p.user_id}`}
+                                        className="author-text author-link"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
+                                    >
+                                        {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
+                                    </Link>
+                                </td>
+                                <td className="th-date">{p.date}</td>
+                                <td className="th-views">{p.views.toLocaleString()}</td>
+                                {!isUserPage && <td className="th-likes">{p.likes}</td>}
+                            </tr>
+                        ))}
+                        {/* 일반 게시글 표시 */}
+                        {filteredPosts.map((p) => {
+                            const displayName = p.board_name ? getDisplayBoardName(p.board_name) : '';
+                            return (
+                            <tr
+                                key={p.id}
+                                onClick={() => {
+                                    navigate(`/board/${getPostRouteBoardId(p)}/${p.id}`);
+                                }}
+                            >
+                                {(activeBoardID === 0 || isHome) && (
+                                    <td className="th-category">
+                                        {p.board_name && (
+                                            p.board_name === "공지사항" ? (
+                                                <Label variant="danger" size="small" className="announcement-badge">
+                                                    공지
+                                                </Label>
+                                            ) : (
+                                                <Label variant="accent" size="small" className="category-badge">
+                                                    {displayName}
+                                                </Label>
+                                            )
+                                        )}
+                                    </td>
+                                )}
+                                <td className="title-cell th-title">
+                                    {p.tag && (
+                                        <Label variant="secondary" size="small" className="postlist-tag-badge">
+                                            {p.tag}
+                                        </Label>
+                                    )}
+                                    <span className="postlist-title-text">{p.title}</span>
+                                    {p.recruitment_info && (
+                                        <RecruitmentBadge info={p.recruitment_info} />
+                                    )}
+                                    {renderCommentCount(p.comment_count)}
+                                    {renderPrivateBadge(p.id)}
+                                </td>
+                                <td className="author-cell th-author">
+                                    <Link
+                                        to={`/@${p.user_id}`}
+                                        className="author-text author-link"
+                                        onClick={(e) => e.stopPropagation()}
+                                        title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
+                                    >
+                                        {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
+                                    </Link>
+                                </td>
+                                <td className="th-date">{p.date}</td>
+                                <td className="th-views">{p.views.toLocaleString()}</td>
+                                {!isUserPage && <td className="th-likes">{p.likes}</td>}
+                            </tr>
+                            );
+                        })}
+                        </tbody>
+                    </table>
+                )
+            ) : null}
+
+            {/* Pagination (5개 단위 그룹) */}
+            {!isHome && totalPages >= 1 && (
+                <nav className="pagination-row" aria-label="페이지 이동">
+                    {(() => {
+                        const GROUP_SIZE = 5;
+                        const currentGroup = Math.floor((page - 1) / GROUP_SIZE);
+                        const start = currentGroup * GROUP_SIZE + 1;
+                        const end = Math.min(start + GROUP_SIZE - 1, totalPages);
+                        const hasPrevGroup = start > 1;
+                        const hasNextGroup = end < totalPages;
+
+                        return (
+                            <>
+                                {totalPages > GROUP_SIZE && (
+                                    <button
+                                        type="button"
+                                        className="pagination-btn"
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={page === 1}
+                                    >
+                                        처음으로
+                                    </button>
+                                )}
+
+                                <button
+                                    type="button"
+                                    className="pagination-btn"
+                                    onClick={() => handlePageChange(hasPrevGroup ? start - 1 : 1)}
+                                    disabled={!hasPrevGroup}
+                                >
+                                    이전
+                                </button>
+
+                                {Array.from({ length: end - start + 1 }, (_, i) => start + i).map((n) => (
+                                    <button
+                                        type="button"
+                                        key={n}
+                                        aria-current={n === page ? "page" : undefined}
+                                        className={`pagination-btn ${n === page ? "active" : ""}`}
+                                        onClick={() => handlePageChange(n)}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
+
+                                <button
+                                    type="button"
+                                    className="pagination-btn"
+                                    onClick={() => handlePageChange(hasNextGroup ? end + 1 : totalPages)}
+                                    disabled={!hasNextGroup}
+                                >
+                                    다음
+                                </button>
+
+                                {totalPages > GROUP_SIZE && (
+                                    <button
+                                        type="button"
+                                        className="pagination-btn"
+                                        onClick={() => handlePageChange(totalPages)}
+                                        disabled={page === totalPages}
+                                    >
+                                        끝으로
+                                    </button>
+                                )}
+                            </>
+                        );
+                    })()}
+                </nav>
+            )}
+        </div>
+    );
+}
+
+export default PostList;

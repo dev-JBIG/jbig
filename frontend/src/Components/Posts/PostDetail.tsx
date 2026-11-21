@@ -1,0 +1,1497 @@
+import React, {useEffect, useMemo, useRef, useState, useCallback, memo} from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { PostDetailData, FormType } from "../Utils/interfaces";
+import {createComment, deleteComment, deletePost, fetchPostDetail, togglePostLike, toggleCommentLike, updateComment, downloadGatedAttachment} from "../../API/req";
+import "./PostDetail.css";
+import "./PostDetail-mobile.css";
+import "./PostDetail-comments.css";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
+import rehypeKatex from 'rehype-katex';
+import 'katex/dist/katex.min.css';
+import { Button, Label } from '@primer/react';
+import {useUser} from "../Utils/UserContext";
+import {
+    Heart,
+    Paperclip,
+    FileText,
+    Download,
+    Eye,
+    Clock,
+    ArrowLeft,
+    MessageSquare,
+    MoreHorizontal,
+} from "lucide-react";
+import {useStaffAuth} from "../Utils/StaffAuthContext";
+import {useAlert} from "../Utils/AlertContext";
+import { useColorMode } from "../Utils/ThemeContext";
+import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
+import RecruitmentDetailSection from './RecruitmentDetail';
+
+// Sanitize 스키마: style 속성 허용 (text-align, color만)
+const sanitizeSchema = {
+    ...defaultSchema,
+    attributes: {
+        ...defaultSchema.attributes,
+        div: [
+            ...(defaultSchema.attributes?.div || []),
+            ['style', /^text-align:\s*(left|center|right);?$/i]
+        ],
+        span: [
+            ...(defaultSchema.attributes?.span || []),
+            ['style', /^color:\s*(#[0-9a-fA-F]{3,6}|rgba?\([^)]+\)|[a-zA-Z]+);?$/i]
+        ]
+    }
+};
+
+// HeartBurst 애니메이션 컴포넌트 (분리하여 리렌더링 최적화)
+const HeartBurst = memo(({ triggerKey }: { triggerKey: number }) => {
+    const [active, setActive] = useState(false);
+    const timeoutRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (triggerKey === 0) return;
+        setActive(true);
+        if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = window.setTimeout(() => setActive(false), 700);
+        return () => { if (timeoutRef.current) window.clearTimeout(timeoutRef.current); };
+    }, [triggerKey]);
+
+    return (
+        <div className={`postdetail-heart-burst${active ? " is-active" : ""}`}>
+            {[0, 1, 2, 3, 4].map(slot => <span key={slot} />)}
+        </div>
+    );
+});
+
+// +1/-1 애니메이션 컴포넌트
+const LikePlusOne = memo(({ triggerKey, count, isLiked }: { triggerKey: number; count: number; isLiked: boolean }) => {
+    const [active, setActive] = useState(false);
+    const [displayCount, setDisplayCount] = useState(count);
+    const [displayLiked, setDisplayLiked] = useState(isLiked);
+    const timeoutRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (triggerKey === 0) return;
+        setDisplayCount(count);
+        setDisplayLiked(isLiked);
+        setActive(true);
+        if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = window.setTimeout(() => setActive(false), 800);
+        return () => { if (timeoutRef.current) window.clearTimeout(timeoutRef.current); };
+    }, [triggerKey, count, isLiked]);
+
+    return (
+        <div className={`postdetail-like-plusone${active ? " is-active" : ""}${!displayLiked ? " minus" : ""}`}>
+            {displayLiked ? "+1" : "-1"} ({displayCount})
+        </div>
+    );
+});
+
+// 댓글 작성 위치에 표시할 공개범위 안내 문구
+// post_type(1=DEFAULT, 2=STAFF_ONLY, 3=JUSTIFICATION_LETTER)이 글 단위 접근 제한을
+// 결정하므로 board.read_scope보다 먼저 분기한다.
+const getCommentVisibilityHint = (
+    scope?: 'all' | 'member' | 'author' | 'staff',
+    postType?: number
+): string | null => {
+    if (postType === 3) {
+        return "이 글과 댓글은 본인과 스태프만 볼 수 있습니다";
+    }
+    if (postType === 2) {
+        return "스태프만 볼 수 있는 글입니다";
+    }
+    switch (scope) {
+        case 'all':
+            return "이 게시판의 댓글은 비회원에게도 공개됩니다";
+        case 'member':
+            return "회원전용 게시판 — 댓글은 로그인한 회원에게만 보입니다";
+        case 'author':
+            return "이 글과 댓글은 본인과 스태프만 볼 수 있습니다";
+        case 'staff':
+            return "스태프전용 게시판입니다";
+        default:
+            return null;
+    }
+};
+
+const PostDetail: React.FC = () => {
+    const { boardId, id: postId } = useParams();
+    const navigate = useNavigate();
+
+    const [post, setPost] = useState<PostDetailData | null | "not-found">(null);
+    const [commentInput, setCommentInput] = useState("");
+    const [showCommentRealName, setShowCommentRealName] = useState(false);
+    // 답글 입력 대상 댓글 id (하나만)
+    const [replyTargetId, setReplyTargetId] = useState<number | null>(null);
+    // 답글 입력값 (하나만)
+    const [replyInput, setReplyInput] = useState("");
+    const [showReplyRealName, setShowReplyRealName] = useState(false);
+    // Turnstile CAPTCHA (비회원용)
+    const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+    const turnstileRef = useRef<TurnstileInstance | null>(null);
+    // 본문
+
+    const { accessToken, authReady } = useUser();
+    const { staffAuth } = useStaffAuth();
+    const { showAlert, showConfirm } = useAlert();
+    const { resolvedColorMode } = useColorMode();
+
+    // 권한 게이트된 첨부(회원전용/스태프 게시판)는 공개 URL이 아니라 인증이 필요한
+    // 백엔드 엔드포인트로만 받을 수 있어, Authorization 헤더를 실은 요청으로 다운로드한다.
+    const handleGatedDownload = useCallback(async (e: React.MouseEvent, fileUrl: string, fileName: string) => {
+        e.preventDefault();
+        if (!accessToken) {
+            showAlert({ message: "로그인이 필요합니다.", type: 'warning' });
+            return;
+        }
+        const res = await downloadGatedAttachment(fileUrl, fileName, accessToken);
+        if (!res.success) {
+            showAlert({ message: res.message || "파일 다운로드에 실패했습니다.", type: 'error' });
+        }
+    }, [accessToken, showAlert]);
+
+    
+
+    type OpenMenu =
+        | { type: "comment"; id: number }
+        | { type: "reply"; cId: number; rId: number }
+        | null;
+
+    const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+    const [editingCommentId, setEditingCommentId] = useState<number|null>(null);
+    const [editingReplyKey, setEditingReplyKey] = useState<{cId:number; rId:number} | null>(null);
+    const [editText, setEditText] = useState("");
+    const [editShowRealName, setEditShowRealName] = useState(false);
+    const [heartBurstKey, setHeartBurstKey] = useState(0);
+    const [likePlusOneKey, setLikePlusOneKey] = useState(0);
+    const [isLikePending, setIsLikePending] = useState(false);
+    const [isScrolling, setIsScrolling] = useState(false);
+    const scrollTimeoutRef = useRef<number | null>(null);
+
+    const commentCount = useMemo(() => {
+        if (!post || typeof post === "string") return 0;
+
+        return (post.comments || []).reduce((sum, comment) => {
+            const topLevel = comment.is_deleted ? 0 : 1;
+            const replies = (comment.replies || []).reduce(
+                (replySum, reply) => replySum + (reply.is_deleted ? 0 : 1),
+                0
+            );
+            return sum + topLevel + replies;
+        }, 0);
+    }, [post]);
+
+    const openMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+
+    const toggleCommentMenu = (id: number, triggerEl?: HTMLButtonElement | null) => {
+        if (triggerEl) openMenuTriggerRef.current = triggerEl;
+        setOpenMenu(m => (m && m.type === "comment" && m.id === id ? null : { type: "comment", id }));
+    };
+
+    const toggleReplyMenu = (cId: number, rId: number, triggerEl?: HTMLButtonElement | null) => {
+        if (triggerEl) openMenuTriggerRef.current = triggerEl;
+        setOpenMenu(m =>
+            m && m.type === "reply" && m.cId === cId && m.rId === rId ? null : { type: "reply", cId, rId }
+        );
+    };
+
+    useEffect(() => {
+        if (!openMenu) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== "Escape") return;
+            const trigger = openMenuTriggerRef.current;
+            const activeEl = document.activeElement;
+            const shouldRestore = Boolean(
+                trigger && activeEl && trigger.closest(".more-wrapper")?.contains(activeEl)
+            );
+            setOpenMenu(null);
+            if (shouldRestore) {
+                trigger?.focus();
+            }
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [openMenu]);
+
+
+    // 동일 키로 중복 조회 안되도록
+    const fetchedKeyRef = useRef<string | null>(null);
+
+    // 페이지 진입 시 스크롤 최상단으로 이동
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [postId]);
+
+    // 스크롤 시 좋아요 버튼 표시 (2초 후 숨김)
+    useEffect(() => {
+        const showFloating = () => {
+            setIsScrolling(true);
+            if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = window.setTimeout(() => setIsScrolling(false), 1500);
+        };
+
+        window.addEventListener('scroll', showFloating, { passive: true });
+        window.addEventListener('wheel', showFloating, { passive: true });
+        window.addEventListener('touchmove', showFloating, { passive: true });
+
+        return () => {
+            window.removeEventListener('scroll', showFloating);
+            window.removeEventListener('wheel', showFloating);
+            window.removeEventListener('touchmove', showFloating);
+            if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current);
+        };
+    }, []);
+
+    useEffect(() => {
+        const onPointerDown = (ev: PointerEvent) => {
+            const el = ev.target as Element | null;
+            if (!el || !el.closest(".more-wrapper")) setOpenMenu(null);
+        };
+        document.addEventListener("pointerdown", onPointerDown);
+        return () => document.removeEventListener("pointerdown", onPointerDown);
+    }, []);
+
+    const redirectedRef = useRef(false);
+    const safeAuthRedirect = useCallback(() => {
+        if (redirectedRef.current) return;
+        redirectedRef.current = true;
+
+        showAlert({
+            message: "접근 권한이 없습니다.",
+            type: 'warning',
+            onClose: () => navigate(-1)
+        });
+    }, [navigate, showAlert]);
+
+    useEffect(() => {
+        if (!authReady || !postId) return;
+
+        const key = `${postId}:${accessToken || 'anonymous'}`;
+        if (fetchedKeyRef.current === key) return;
+        fetchedKeyRef.current = key;
+        let cancelled = false;
+
+        const loadPost = async () => {
+            try {
+
+                const raw = await fetchPostDetail(Number(postId), accessToken || null);
+                if (cancelled) return;
+
+                if (raw.loginRequired) {
+                    showAlert({
+                        message: "로그인이 필요합니다. 다시 로그인해주세요.",
+                        type: 'warning',
+                        onClose: () => navigate("/signin"),
+                    });
+                    return;
+                }
+                if (raw.unauthorized === true) {
+                    safeAuthRedirect();
+                    return;
+                }
+                if (raw.notFound) {
+                    setPost("not-found");
+                    return;
+                }
+
+
+                const toDate = (s?: string) => (s ? s.slice(0, 16).replace("T", " ") : "");
+                const ext = (name: string) => name.split(".").pop()?.toLowerCase() || "";
+
+                const src = raw.post_data ?? raw;
+
+                const rawComments = Array.isArray(src.comments) ? src.comments : [];
+                const topLevelComments = rawComments
+                    // parent가 있는 항목(=대댓글)은 상위 댓글 배열에서 제외
+                    .filter((c: any) => !c.parent);
+
+                const mapped: PostDetailData = {
+                    id: src.id,
+                    board_post_id: src.id,
+                    board: src.board?.name || "",
+                    board_id: src.board_id || src.board?.id,
+                    board_type: src.board?.board_type ?? 1,
+                    form_type: src.board?.form_type ?? 0,
+                    board_read_scope: src.board?.read_scope,
+                    author_semester: src.author_semester,
+                    title: src.title || "",
+                    content_html: src.content_html || "",
+                    content_md: src.content_md || "",
+                    author: src.author || "",
+                    date: toDate(src.created_at),
+                    updatedAt: toDate(src.updated_at),
+                    views: src.views ?? 0,
+                    likes: src.likes_count ?? 0,
+                    user_id: src.user_id,
+                    isLiked: src.is_liked ?? false,
+                    is_owner: !!src.is_owner,
+                    post_type: src.post_type,
+                    is_anonymous: src.is_anonymous,
+                    tag: src.tag,
+                    recruitment: src.recruitment ?? null,
+                    attachments: (src.attachment_paths || []).map((item: any, index: number) => {
+                        // 객체 형태인지 문자열 형태인지 확인
+                        if (typeof item === 'string') {
+                            // 기존 문자열 형태인 경우
+                            const filename = item.split('/').pop() || `file_${index}`;
+                            return {
+                                id: index,
+                                fileUrl: item,
+                                fileName: filename,
+                                fileType: ext(filename),
+                            };
+                        } else {
+                            // 새로운 객체 형태인 경우
+                            return {
+                                id: index,
+                                fileUrl: item.url,
+                                fileName: item.name,
+                                fileType: ext(item.name),
+                                gated: !!item.gated,
+                            };
+                        }
+                    }),
+                    comments: topLevelComments.map((c: any) => ({
+                        id: c.id,
+                        user_id: c.user_id,
+                        author_semester: c.author_semester,
+                        author: c.author,
+                        content: c.content,
+                        date: toDate(c.created_at),
+                        is_owner: c.is_owner,
+                        is_deleted: !!c.is_deleted,
+                        likes: c.likes || 0,
+                        isLiked: c.isLiked || false,
+                        is_anonymous: c.is_anonymous ?? true,
+                        can_delete: c.can_delete ?? false,
+                        replies: (c.children || []).map((r: any) => ({
+                            id: r.id,
+                            user_id: r.user_id,
+                            author_semester: r.author_semester,
+                            author: r.author,
+                            content: r.content,
+                            date: toDate(r.created_at),
+                            is_owner: r.is_owner,
+                            is_deleted: !!r.is_deleted,
+                            likes: r.likes || 0,
+                            isLiked: r.isLiked || false,
+                            is_anonymous: r.is_anonymous ?? true,
+                            can_delete: r.can_delete ?? false,
+                        })),
+                    })),
+                };
+
+                // 접근 권한 체크
+                // 어드민 게시글
+                if (mapped.post_type === 2 && !staffAuth) {
+                    showAlert({
+                        message: "접근 권한이 없습니다.",
+                        type: 'warning',
+                        onClose: () => navigate("/", { replace: true })
+                    });
+                    return;
+                }
+                // 사유서 게시글
+                if (mapped.post_type === 3 && !staffAuth && !mapped.is_owner) {
+                    showAlert({
+                        message: "접근 권한이 없습니다.",
+                        type: 'warning',
+                        onClose: () => navigate("/", { replace: true })
+                    });
+                    return;
+                }
+
+                setPost(mapped);
+            } catch {
+                if (cancelled) return;
+                showAlert({ message: "게시글을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", type: 'error' });
+            }
+        };
+
+        loadPost();
+        return () => { cancelled = true; };
+    }, [authReady, accessToken, postId, boardId, navigate, safeAuthRedirect, showAlert, staffAuth]);
+
+   
+
+    // 게시글 삭제
+    const handleDeletePost = async () => {
+        if (!post || typeof post === "string") return;
+        if (!accessToken) { 
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'warning',
+                onClose: () => navigate("/signin")
+            });
+            return; 
+        }
+
+        const confirmed = await showConfirm({
+            message: "게시글을 삭제하시겠습니까?",
+            title: "게시글 삭제",
+            type: 'danger',
+            confirmText: '삭제',
+            cancelText: '취소'
+        });
+        if (!confirmed) return;
+
+        try {
+            const res = await deletePost(post.id, accessToken);
+            if (res?.status === 401) { 
+                showAlert({
+                    message: "로그인이 필요합니다.",
+                    type: 'warning',
+                    onClose: () => navigate("/signin")
+                });
+                return; 
+            }
+            if (res?.notFound) { 
+                showAlert({ message: "게시글을 찾을 수 없습니다.", type: 'error' });
+                return; 
+            }
+            // 성공
+            navigate(`/board/${boardId}`);
+        } catch {
+            showAlert({ message: "게시글 삭제에 실패했습니다.", type: 'error' });
+        }
+    };
+
+    // 게시글 수정
+    const handleEditPost = () => {
+        if (!post || typeof post === "string") return;
+        navigate(`/board/${boardId}/${post.id}/modify`);
+    };
+
+    const triggerHeartBurst = useCallback(() => {
+        setHeartBurstKey(prev => prev + 1);
+    }, []);
+
+    const triggerLikePlusOne = useCallback(() => {
+        setLikePlusOneKey(prev => prev + 1);
+    }, []);
+
+    // 게시글 추천(좋아요) 버튼 공통 핸들러
+    const handleToggleLike = async (extendFloatingVisibility: boolean = false) => {
+        if (!post || typeof post === "string" || isLikePending) return;
+
+        if (!accessToken) {
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'info',
+                onClose: () => navigate("/signin")
+            });
+            return;
+        }
+
+        const previousLiked = !!post.isLiked;
+        const previousLikes = post.likes;
+        const nextLiked = !previousLiked;
+        const nextLikes = Math.max(0, previousLikes + (nextLiked ? 1 : -1));
+        const toggledPostId = post.id;
+
+        setIsLikePending(true);
+        setPost(prev => {
+            if (!prev || typeof prev === "string" || prev.id !== toggledPostId) return prev;
+            return { ...prev, isLiked: nextLiked, likes: nextLikes };
+        });
+
+        // 애니메이션 트리거
+        if (nextLiked) triggerHeartBurst();
+        triggerLikePlusOne();
+
+        // 플로팅 버튼을 직접 클릭했을 때만 기존 노출 타이머를 연장한다.
+        if (extendFloatingVisibility) {
+            setIsScrolling(true);
+            if (scrollTimeoutRef.current) window.clearTimeout(scrollTimeoutRef.current);
+            scrollTimeoutRef.current = window.setTimeout(() => setIsScrolling(false), 1500);
+        }
+
+        try {
+            const response = await togglePostLike(toggledPostId, accessToken);
+            setPost(prev => {
+                if (!prev || typeof prev === "string" || prev.id !== toggledPostId) return prev;
+                return {
+                    ...prev,
+                    isLiked: response.is_liked,
+                    likes: response.likes_count,
+                };
+            });
+        } catch (e) {
+            setPost(prev => {
+                if (!prev || typeof prev === "string" || prev.id !== toggledPostId) return prev;
+                return { ...prev, isLiked: previousLiked, likes: previousLikes };
+            });
+            showAlert({ message: "좋아요 처리 중 오류가 발생했습니다.", type: 'error' });
+        } finally {
+            setIsLikePending(false);
+        }
+    };
+
+    // 댓글 좋아요 토글 핸들러
+    const handleToggleCommentLike = async (commentId: number, isReply: boolean = false) => {
+        if (!post || typeof post === "string" || !post.comments) return;
+
+        if (!accessToken) {
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'info',
+                onClose: () => navigate("/signin")
+            });
+            return;
+        }
+
+        // 낙관적 업데이트
+        const updatedComments = post.comments.map(c => {
+            if (c.id === commentId) {
+                const currentLikes = c.likes || 0;
+                const nextLiked = !c.isLiked;
+                const nextLikes = currentLikes + (nextLiked ? 1 : -1);
+                return { ...c, isLiked: nextLiked, likes: Math.max(0, nextLikes) };
+            }
+            // 답글인 경우
+            if (c.replies) {
+                const updatedReplies = c.replies.map(r => {
+                    if (r.id === commentId) {
+                        const currentLikes = r.likes || 0;
+                        const nextLiked = !r.isLiked;
+                        const nextLikes = currentLikes + (nextLiked ? 1 : -1);
+                        return { ...r, isLiked: nextLiked, likes: Math.max(0, nextLikes) };
+                    }
+                    return r;
+                });
+                return { ...c, replies: updatedReplies };
+            }
+            return c;
+        });
+
+        setPost({ ...post, comments: updatedComments });
+
+        try {
+            const response = await toggleCommentLike(commentId, accessToken);
+            
+            // 서버 응답으로 실제 값 업데이트
+            const finalComments = post.comments.map(c => {
+                if (c.id === commentId) {
+                    return { ...c, isLiked: response.isLiked, likes: response.likes };
+                }
+                if (c.replies) {
+                    const finalReplies = c.replies.map(r => {
+                        if (r.id === commentId) {
+                            return { ...r, isLiked: response.isLiked, likes: response.likes };
+                        }
+                        return r;
+                    });
+                    return { ...c, replies: finalReplies };
+                }
+                return c;
+            });
+            setPost({ ...post, comments: finalComments });
+        } catch (e) {
+            // 실패 시 롤백
+            setPost(post);
+            showAlert({ message: "좋아요 처리 중 오류가 발생했습니다.", type: 'error' });
+        }
+    };
+
+    // 댓글 등록
+    const handleAddComment = async () => {
+        if (!post || typeof post === "string") return;
+        const content = commentInput.trim();
+        if (!content) return;
+
+        // 비회원인 경우 Turnstile 검증 필요
+        if (!accessToken && !turnstileToken) {
+            showAlert({ message: "CAPTCHA 인증을 완료해주세요.", type: 'warning' });
+            return;
+        }
+
+        try {
+            const payload: any = { content, parent: null };
+            if (accessToken) {
+                payload.is_anonymous = !showCommentRealName;
+            } else {
+                payload.turnstile_token = turnstileToken;
+                // 비회원은 항상 익명
+            }
+            const created = await createComment(post.id, payload, accessToken || null);
+            setPost({
+                ...post,
+                comments: [ ...(post.comments || []), created ],
+            });
+            setCommentInput("");
+            setShowCommentRealName(false);
+            // Turnstile 리셋
+            setTurnstileToken(null);
+            turnstileRef.current?.reset();
+        } catch {
+            showAlert({ message: "댓글 등록에 실패했습니다.", type: 'error' });
+            // 실패 시에도 Turnstile 리셋
+            setTurnstileToken(null);
+            turnstileRef.current?.reset();
+        }
+    };
+
+    // 댓글 삭제
+    const handleDeleteComment = async (commentId: number) => {
+        if (!post || typeof post === "string") return;
+        if (!accessToken) { 
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'warning',
+                onClose: () => navigate("/signin")
+            });
+            return; 
+        }
+
+        const prev = post;
+        const optimistic = {
+            ...post,
+            comments: (post.comments || []).map(c =>
+                c.id === commentId ? { ...c, content: "삭제 된 댓글입니다", is_deleted: true } : c
+            ),
+        };
+        setPost(optimistic);
+
+        try {
+            const res: any = await deleteComment(commentId, accessToken);
+            if (res && res.status === 401) { 
+                setPost(prev); 
+                showAlert({
+                    message: "로그인이 필요합니다.",
+                    type: 'warning',
+                    onClose: () => navigate("/signin")
+                });
+                return; 
+            }
+            if (res && res.deleted === false) { throw new Error(res.message || "삭제 실패"); }
+            // 성공 시 그대로 유지
+        } catch {
+            setPost(prev);
+            showAlert({ message: "댓글 삭제에 실패했습니다.", type: 'error' });
+        }
+    };
+
+    // 답글 삭제
+    const handleDeleteReply = async (commentId: number, replyId: number) => {
+        if (!post || typeof post === "string") return;
+        if (!accessToken) { 
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'warning',
+                onClose: () => navigate("/signin")
+            });
+            return; 
+        }
+
+        const prev = post;
+        const optimistic = {
+            ...post,
+            comments: (post.comments || []).map(c =>
+                c.id === commentId
+                    ? {
+                        ...c,
+                        replies: (c.replies || []).map(r =>
+                            r.id === replyId ? { ...r, content: "삭제 된 댓글입니다", is_deleted: true } : r
+                        ),
+                    }
+                    : c
+            ),
+        };
+        setPost(optimistic);
+
+        try {
+            const res: any = await deleteComment(replyId, accessToken); // 답글도 같은 엔드포인트
+            if (res && res.status === 401) { 
+                setPost(prev); 
+                showAlert({
+                    message: "로그인이 필요합니다.",
+                    type: 'warning',
+                    onClose: () => navigate("/signin")
+                });
+                return; 
+            }
+            if (res && res.deleted === false) { throw new Error(res.message || "삭제 실패"); }
+        } catch {
+            setPost(prev);
+            showAlert({ message: "답글 삭제에 실패했습니다.", type: 'error' });
+        }
+    };
+
+    // 답글쓰기 버튼 클릭
+    const handleReplyWriteClick = async (id: number) => {
+        // 이미 다른 답글창이 열려 있고, 입력값이 있다면 confirm
+        if (replyTargetId !== null && replyTargetId !== id && replyInput.trim().length > 0) {
+            await showConfirm({
+                message: "작성 중인 답글을 취소 하시겠습니까?",
+                title: "답글 작성 취소",
+                type: 'warning',
+                confirmText: '취소',
+                cancelText: '계속 작성',
+                onConfirm: () => {
+                    setReplyTargetId(id);
+                    setReplyInput("");
+                }
+            });
+            // 취소시 아무 것도 하지 않음 (기존 답글창/입력값 유지)
+        } else {
+            setReplyTargetId(replyTargetId === id ? null : id);
+            setReplyInput("");
+        }
+    };
+
+    // 답글 등록
+    const handleAddReply = async (commentId: number) => {
+        if (!post || typeof post === "string") return;
+        const content = replyInput.trim();
+        if (!content) return;
+
+        // 비회원인 경우 Turnstile 검증 필요
+        if (!accessToken && !turnstileToken) {
+            showAlert({ message: "CAPTCHA 인증을 완료해주세요.", type: 'warning' });
+            return;
+        }
+
+        try {
+            const payload: any = { content, parent: commentId };
+            if (accessToken) {
+                payload.is_anonymous = !showReplyRealName;
+            } else {
+                payload.turnstile_token = turnstileToken;
+                // 비회원은 항상 익명
+            }
+            const created = await createComment(post.id, payload, accessToken || null);
+            setPost({
+                ...post,
+                comments: (post.comments || []).map(c =>
+                    c.id === commentId
+                        ? { ...c, replies: [ ...(c.replies || []), created ] }
+                        : c
+                ),
+            });
+            setReplyInput("");
+            setShowReplyRealName(false);
+            setReplyTargetId(null);
+            // Turnstile 리셋
+            setTurnstileToken(null);
+            turnstileRef.current?.reset();
+        } catch {
+            showAlert({ message: "답글 등록에 실패했습니다.", type: 'error' });
+            // 실패 시에도 Turnstile 리셋
+            setTurnstileToken(null);
+            turnstileRef.current?.reset();
+        }
+    };
+
+    const cancelEdit = () => {
+        setEditingCommentId(null);
+        setEditingReplyKey(null);
+        setEditText("");
+        setEditShowRealName(false);
+    };
+
+    const saveEditComment = async (commentId: number) => {
+        if (!post || typeof post === "string") return;
+        if (!accessToken) {
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'warning',
+                onClose: () => navigate("/signin")
+            });
+            return;
+        }
+        const content = editText.trim();
+        if (!content) return;
+
+        const is_anonymous = !editShowRealName;
+
+        try {
+            await updateComment(commentId, { content, parent: null, is_anonymous }, accessToken);
+            setPost({
+                ...post,
+                comments: (post.comments || []).map(c => c.id === commentId ? { ...c, content, is_anonymous } : c),
+            });
+            cancelEdit();
+        } catch {
+            showAlert({ message: "댓글 수정에 실패했습니다.", type: 'error' });
+        }
+    };
+
+    const saveEditReply = async (cId: number, rId: number) => {
+        if (!post || typeof post === "string") return;
+        if (!accessToken) {
+            showAlert({
+                message: "로그인이 필요합니다.",
+                type: 'warning',
+                onClose: () => navigate("/signin")
+            });
+            return;
+        }
+        const content = editText.trim();
+        if (!content) return;
+
+        const is_anonymous = !editShowRealName;
+
+        try {
+            await updateComment(rId, { content, parent: cId, is_anonymous }, accessToken);
+            setPost({
+                ...post,
+                comments: (post.comments || []).map(c =>
+                    c.id === cId
+                        ? { ...c, replies: (c.replies || []).map(r => r.id === rId ? { ...r, content, is_anonymous } : r) }
+                        : c
+                ),
+            });
+            cancelEdit();
+        } catch {
+            showAlert({ message: "답글 수정에 실패했습니다.", type: 'error' });
+        }
+    };
+
+    // 댓글 수정 시작
+    const handleEditComment = (commentId: number) => {
+        if (!post || typeof post === "string") return;
+
+        const target = (post.comments || []).find(c => c.id === commentId);
+        if (!target) return;
+
+        setOpenMenu(null);               // 더보기 닫기
+        setEditingReplyKey(null);        // 답글 편집 모드 해제
+        setEditingCommentId(commentId);  // 댓글 편집 모드 진입
+        setEditText(target.content);     // 현재 내용으로 에디터 채우기
+        setEditShowRealName(!target.is_anonymous);  // 현재 실명 표시 여부 로드
+    };
+
+    // 답글 수정 시작
+    const handleEditReply = (commentId: number, replyId: number) => {
+        if (!post || typeof post === "string") return;
+
+        const parent = (post.comments || []).find(c => c.id === commentId);
+        const target = parent?.replies?.find(r => r.id === replyId);
+        if (!parent || !target) return;
+
+        setOpenMenu(null);                     // 더보기 닫기
+        setEditingCommentId(null);             // 댓글 편집 모드 해제
+        setEditingReplyKey({ cId: commentId, rId: replyId }); // 답글 편집 모드 진입
+        setEditText(target.content);           // 현재 내용으로 에디터 채우기
+        setEditShowRealName(!target.is_anonymous);  // 현재 실명 표시 여부 로드
+    };
+
+    if (post === "not-found") {
+        return (
+            <div className="postdetail-container post-not-found">
+                <h2>해당 게시글을 찾을 수 없습니다.</h2>
+                <p>게시글이 삭제되었거나, 주소가 잘못되었습니다.</p>
+                <Button variant="default" className="post-not-found-btn" onClick={() => navigate(-1)}>
+                    이전 페이지로
+                </Button>
+            </div>
+        );
+    }
+
+    if (!post) {
+        return (
+            <div className="postdetail-container">
+                <span className="sr-only" role="status">게시글을 불러오는 중입니다.</span>
+                <div className="postdetail-skeleton" aria-hidden="true">
+                    <div className="postdetail-skeleton-line postdetail-skeleton-crumb" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-title" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-meta" />
+                    <div className="postdetail-divider" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-body" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-body short" />
+                </div>
+            </div>
+        );
+    }
+
+    // 폼 게시판(사유서·에러/피드백 제보)은 본문을 form-style로 렌더한다.
+    const isFormBoard =
+        post.form_type === FormType.ABSENCE || post.form_type === FormType.FEEDBACK;
+
+    return (
+        <div className="postdetail-container has-floating-like">
+            <div className="postdetail-header">
+                <div className="postdetail-header-top">
+                    <div className="postdetail-breadcrumbs">
+                        <button
+                            type="button"
+                            className="postdetail-category postdetail-category-link"
+                            onClick={() => navigate(`/board/${post.board_id}`)}
+                        >
+                            <ArrowLeft size={14} aria-hidden="true" />
+                            <span>{post.board}</span>
+                        </button>
+                        {post.tag && (
+                            <Label variant="accent" size="small" className="postdetail-tag-label">
+                                {post.tag}
+                            </Label>
+                        )}
+                    </div>
+                    {post.is_owner && (
+                        <div className="postdetail-actions">
+                            <Button
+                                size="small"
+                                variant="default"
+                                className="postdetail-edit-link"
+                                aria-label="게시글 수정"
+                                onClick={handleEditPost}
+                            >
+                                수정
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="danger"
+                                className="postdetail-delete-link"
+                                aria-label="게시글 삭제"
+                                onClick={handleDeletePost}
+                            >
+                                삭제
+                            </Button>
+                        </div>
+                    )}
+                </div>
+                <h2 className="postdetail-title">
+                    {post.title}
+                    {post.post_type === 3 && (
+                        <Label
+                            variant="attention"
+                            size="small"
+                            className="postdetail-private-badge"
+                            title="해당 게시물은 작성자와 관리자만 열람할 수 있습니다"
+                        >
+                            (비공개)
+                        </Label>
+                    )}
+                </h2>
+            </div>
+            <div className="postdetail-info-row">
+                <button
+                    type="button"
+                    className="postdetail-author"
+                    onClick={() => navigate(`/@${post.user_id}`)}
+                >
+                    {post.author_semester ? `${post.author_semester}기 ` : ""}{post.author}
+                </button>
+                <span className="postdetail-dot" aria-hidden="true">·</span>
+                <span className="postdetail-meta-item postdetail-date">
+                    <Clock size={13} aria-hidden="true" />
+                    <span>{post.date}</span>
+                    {post.updatedAt && post.updatedAt !== post.date && (
+                        <span className="postdetail-updated-time">
+                            (수정 {post.updatedAt})
+                        </span>
+                    )}
+                </span>
+                <span className="postdetail-dot" aria-hidden="true">·</span>
+                <span className="postdetail-meta-item">
+                    <Eye size={13} aria-hidden="true" />
+                    <span>조회수 {post.views}</span>
+                </span>
+                <span className="postdetail-dot" aria-hidden="true">·</span>
+                <span className="postdetail-meta-item">
+                    <Heart size={13} aria-hidden="true" />
+                    <span>좋아요 {post.likes}</span>
+                </span>
+            </div>
+            <div className="postdetail-divider"/>
+
+            {/* 모집 정보 */}
+            {post.recruitment && (
+                <RecruitmentDetailSection
+                    recruitment={post.recruitment}
+                    postId={post.id}
+                    onUpdate={() => {
+                        // 게시글 다시 로드
+                        fetchPostDetail(post.id, accessToken ?? undefined).then(raw => {
+                            const src = raw.post_data ?? raw;
+                            setPost(prev => {
+                                if (!prev || typeof prev === "string") return prev;
+                                return { ...prev, recruitment: src.recruitment };
+                            });
+                        }).catch(() => {});
+                    }}
+                />
+            )}
+
+            {/* 본문 */}
+            <div className="content-body">
+                <div className={`postdetail-content${isFormBoard ? " form-style" : ""}`}>
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[
+                            rehypeRaw,
+                            [rehypeSanitize, sanitizeSchema],
+                            rehypeKatex
+                        ]}
+                        components={{
+                            a: ({node, children, ...props}) => (
+                                <a {...props} target="_blank" rel="noopener noreferrer">
+                                    {children}
+                                </a>
+                            )
+                        }}
+                    >
+                        {post.content_md}
+                    </ReactMarkdown>
+
+                    {/* 사진첩 게시글: 이미지 첨부파일을 인라인으로 표시 */}
+                    {post.board_type === 4 && post.attachments?.filter(att =>
+                        /^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || "")
+                    ).map(att => (
+                        <img
+                            key={att.id}
+                            src={att.fileUrl}
+                            alt={att.fileName}
+                            className="photo-album-inline-image"
+                            loading="lazy"
+                        />
+                    ))}
+                </div>
+            </div>
+
+            {/* 첨부파일 (사진첩 게시글은 이미지 제외) */}
+            {post.attachments && post.attachments.length > 0 && (() => {
+                const filtered = post.board_type === 4
+                    ? post.attachments.filter(att => !/^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || ""))
+                    : post.attachments;
+                return filtered.length > 0 ? (
+                    <section className="postdetail-attachments" aria-label="첨부파일">
+                        <div className="postdetail-attachments-header">
+                            <Paperclip size={14} aria-hidden="true" />
+                            <span>첨부파일</span>
+                            <span className="postdetail-attachments-count">{filtered.length}</span>
+                        </div>
+                        <ul className="postdetail-attachments-list">
+                            {filtered.map(att => (
+                                <li key={att.id} className="postdetail-attachment-item">
+                                    <a
+                                        href={att.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="postdetail-attachment-link"
+                                        onClick={att.gated ? (e) => handleGatedDownload(e, att.fileUrl, att.fileName) : undefined}
+                                    >
+                                        <FileText size={15} className="postdetail-attachment-icon" aria-hidden="true" />
+                                        <span className="postdetail-attachment-name">{att.fileName}</span>
+                                        {att.fileType && (
+                                            <Label variant="secondary" size="small" className="postdetail-attachment-type">
+                                                {att.fileType.toUpperCase()}
+                                            </Label>
+                                        )}
+                                        <Download size={14} className="postdetail-attachment-download" aria-hidden="true" />
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </section>
+                ) : null;
+            })()}
+
+            <div className="postdetail-inline-like">
+                <button
+                    type="button"
+                    className={`postdetail-inline-like-btn${post.isLiked ? " liked" : ""}`}
+                    onClick={() => handleToggleLike(false)}
+                    aria-label={post.isLiked
+                        ? `게시글 추천 취소, 현재 ${post.likes}개`
+                        : `게시글 추천, 현재 ${post.likes}개`}
+                    aria-pressed={!!post.isLiked}
+                    disabled={isLikePending}
+                >
+                    <Heart
+                        size={18}
+                        aria-hidden="true"
+                        className={`postdetail-heart-icon${post.isLiked ? " is-liked" : ""}`}
+                    />
+                    <span>{post.isLiked ? "추천했어요" : "추천"}</span>
+                    <span className="postdetail-inline-like-count">{post.likes}</span>
+                </button>
+            </div>
+
+            {/* 댓글 영역 */}
+            <section className="postdetail-comment-section" aria-label="댓글">
+                <div className="postdetail-comment-header">
+                    <MessageSquare size={16} aria-hidden="true" />
+                    <span>댓글</span>
+                    <span className="postdetail-comment-count-pill">{commentCount}</span>
+                </div>
+                <ul className="postdetail-comment-list">
+                    {(post.comments || []).map(c => (
+                        <li className="postdetail-comment-item" key={c.id}>
+                            <div className="comment-item">
+                                <div className="comment-meta">
+                                    <button
+                                        type="button"
+                                        className={"comment-author" + (c.is_deleted ? " deleted" : "")}
+                                        disabled={c.is_deleted}
+                                        onClick={() => !c.is_deleted && navigate(`/@${c.user_id}`)}
+                                    >
+                                        {!c.is_deleted && c.author_semester ? `${c.author_semester}기 ` : ""}{c.author}
+                                    </button>
+                                    {!c.is_deleted && c.is_owner && (
+                                        <Label variant="accent" size="small" className="comment-owner-badge">
+                                            나
+                                        </Label>
+                                    )}
+                                    <span className="comment-date">{c.date}</span>
+                                    <div className="comment-meta-actions">
+                                        {!c.is_deleted && (
+                                            <button
+                                                type="button"
+                                                className={`comment-like-btn ${c.isLiked ? "liked" : ""}`}
+                                                onClick={() => handleToggleCommentLike(c.id, false)}
+                                                aria-label={c.isLiked ? "좋아요 취소" : "좋아요"}
+                                            >
+                                                <Heart
+                                                    size={13}
+                                                    aria-hidden="true"
+                                                    className={`postdetail-heart-icon${c.isLiked ? " is-liked" : ""}`}
+                                                />
+                                                <span className="comment-like-count">{c.likes || 0}</span>
+                                            </button>
+                                        )}
+                                        {!c.is_deleted && (
+                                            <button
+                                                type="button"
+                                                className="reply-write-btn"
+                                                onClick={() => handleReplyWriteClick(c.id)}
+                                            >
+                                                답글쓰기
+                                            </button>
+                                        )}
+                                        {!c.is_deleted && (c.is_owner || c.can_delete) && (
+                                            <div className="more-wrapper">
+                                                <button
+                                                    type="button"
+                                                    className="more-btn"
+                                                    aria-expanded={openMenu?.type === "comment" && openMenu.id === c.id}
+                                                    onClick={(e) => toggleCommentMenu(c.id, e.currentTarget)}
+                                                    title="더보기"
+                                                    aria-label="댓글 더보기"
+                                                >
+                                                    <MoreHorizontal size={16} aria-hidden="true" />
+                                                </button>
+                                                {openMenu?.type === "comment" && openMenu.id === c.id && (
+                                                    <div className="more-menu">
+                                                        {c.is_owner && (
+                                                            <button
+                                                                type="button"
+                                                                className="more-menu-item"
+                                                                onClick={() => { setOpenMenu(null); handleEditComment(c.id); }}
+                                                            >
+                                                                수정
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            className="more-menu-item danger"
+                                                            onClick={() => { setOpenMenu(null); handleDeleteComment(c.id); }}
+                                                        >
+                                                            삭제
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {editingCommentId === c.id ? (
+                                    <div className="comment-body-edit">
+                                        <textarea
+                                            className="reply-input"
+                                            rows={2}
+                                            value={editText}
+                                            onChange={e => setEditText(e.target.value)}
+                                            placeholder="내용을 수정하세요"
+                                        />
+                                        <div className="reply-action-row">
+                                            <label className="comment-realname-label">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editShowRealName}
+                                                    onChange={(e) => setEditShowRealName(e.target.checked)}
+                                                />
+                                                <span>비회원에게도 실명이 표시돼요</span>
+                                            </label>
+                                            <Button type="button" variant="default" size="small" onClick={cancelEdit}>
+                                                취소
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="primary"
+                                                size="small"
+                                                disabled={!editText.trim()}
+                                                onClick={() => editText.trim() && saveEditComment(c.id)}
+                                            >
+                                                저장
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className={"comment-content" + (c.is_deleted ? " deleted" : "")}>
+                                        {c.content}
+                                    </div>
+                                )}
+                            </div>
+                            {/* 답글 리스트 */}
+                            {(c.replies && c.replies.length > 0) && (
+                                <ul className="reply-list">
+                                    {c.replies.map(r => (
+                                        <li className="reply-item" key={r.id}>
+                                            <div className="reply-meta">
+                                                <button
+                                                    type="button"
+                                                    className={"reply-author" + (r.is_deleted ? " deleted" : "")}
+                                                    disabled={r.is_deleted}
+                                                    onClick={() => !r.is_deleted && navigate(`/@${r.user_id}`)}
+                                                >
+                                                    {!r.is_deleted && r.author_semester ? `${r.author_semester}기 ` : ""}{r.author}
+                                                </button>
+                                                {!r.is_deleted && r.is_owner && (
+                                                    <Label variant="accent" size="small" className="comment-owner-badge">
+                                                        나
+                                                    </Label>
+                                                )}
+                                                <span className="reply-date">{r.date}</span>
+                                                <div className="comment-meta-actions">
+                                                    {!r.is_deleted && (
+                                                        <button
+                                                            type="button"
+                                                            className={`comment-like-btn ${r.isLiked ? "liked" : ""}`}
+                                                            onClick={() => handleToggleCommentLike(r.id, true)}
+                                                            aria-label={r.isLiked ? "좋아요 취소" : "좋아요"}
+                                                        >
+                                                            <Heart
+                                                                size={13}
+                                                                aria-hidden="true"
+                                                                className={`postdetail-heart-icon${r.isLiked ? " is-liked" : ""}`}
+                                                            />
+                                                            <span className="comment-like-count">{r.likes || 0}</span>
+                                                        </button>
+                                                    )}
+                                                    {!r.is_deleted && (r.is_owner || r.can_delete) && (
+                                                        <div className="more-wrapper">
+                                                            <button
+                                                                type="button"
+                                                                className="more-btn"
+                                                                aria-expanded={openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id}
+                                                                onClick={(e) => toggleReplyMenu(c.id, r.id, e.currentTarget)}
+                                                                title="더보기"
+                                                                aria-label="답글 더보기"
+                                                            >
+                                                                <MoreHorizontal size={16} aria-hidden="true" />
+                                                            </button>
+                                                            {openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id && (
+                                                                <div className="more-menu">
+                                                                    {r.is_owner && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="more-menu-item"
+                                                                            onClick={() => { setOpenMenu(null); handleEditReply(c.id, r.id); }}
+                                                                        >
+                                                                            수정
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        className="more-menu-item danger"
+                                                                        onClick={() => { setOpenMenu(null); handleDeleteReply(c.id, r.id); }}
+                                                                    >
+                                                                        삭제
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {editingReplyKey && editingReplyKey.cId === c.id && editingReplyKey.rId === r.id ? (
+                                                <div className="comment-body-edit">
+                                                    <textarea
+                                                        className="reply-input"
+                                                        rows={2}
+                                                        value={editText}
+                                                        onChange={e => setEditText(e.target.value)}
+                                                        placeholder="내용을 수정하세요"
+                                                    />
+                                                    <div className="reply-action-row">
+                                                        <label className="comment-realname-label">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={editShowRealName}
+                                                                onChange={(e) => setEditShowRealName(e.target.checked)}
+                                                            />
+                                                            <span>비회원에게도 실명이 표시돼요</span>
+                                                        </label>
+                                                        <Button type="button" variant="default" size="small" onClick={cancelEdit}>
+                                                            취소
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="primary"
+                                                            size="small"
+                                                            disabled={!editText.trim()}
+                                                            onClick={() => editText.trim() && saveEditReply(c.id, r.id)}
+                                                        >
+                                                            저장
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className={"reply-content" + (r.is_deleted ? " deleted" : "")}>
+                                                    {r.content}
+                                                </div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                            {/* 답글 입력창: replyTargetId와 id가 같을 때만 노출 */}
+                            {replyTargetId === c.id && (
+                                <div className="reply-input-box">
+                                    <textarea
+                                        className="reply-input"
+                                        rows={2}
+                                        placeholder="답글을 입력하세요"
+                                        value={replyInput}
+                                        onChange={e => setReplyInput(e.target.value)}
+                                    />
+                                    <div className="reply-action-row">
+                                        {accessToken ? (
+                                            <label className="comment-realname-label">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={showReplyRealName}
+                                                    onChange={(e) => setShowReplyRealName(e.target.checked)}
+                                                />
+                                                <span>비회원에게도 실명이 표시돼요</span>
+                                            </label>
+                                        ) : (
+                                            <div className="comment-guest-hint-row">
+                                                <span className="comment-guest-hint">
+                                                    비회원은 익명으로 작성됩니다
+                                                </span>
+                                                {turnstileToken ? (
+                                                    <span className="comment-captcha-status is-ok">CAPTCHA 완료</span>
+                                                ) : (
+                                                    <span className="comment-captcha-status is-needed">아래 댓글창에서 CAPTCHA 인증 필요</span>
+                                                )}
+                                            </div>
+                                        )}
+                                        <Button
+                                            type="button"
+                                            variant="default"
+                                            size="small"
+                                            onClick={() => {
+                                                setReplyInput("");
+                                                setShowReplyRealName(false);
+                                                setReplyTargetId(null);
+                                            }}
+                                        >
+                                            취소
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="primary"
+                                            size="small"
+                                            disabled={!replyInput.trim() || (!accessToken && !turnstileToken)}
+                                            onClick={() => {
+                                                if (replyInput.trim() && (accessToken || turnstileToken)) handleAddReply(c.id);
+                                            }}
+                                        >
+                                            등록
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </li>
+                    ))}
+                </ul>
+
+                <div className="postdetail-comment-input-row">
+                    <div className="comment-composer">
+                        {getCommentVisibilityHint(post.board_read_scope, post.post_type) && (
+                            <span className="comment-visibility-hint">
+                                {getCommentVisibilityHint(post.board_read_scope, post.post_type)}
+                            </span>
+                        )}
+                        <textarea
+                            className="postdetail-comment-input"
+                            rows={2}
+                            placeholder="댓글을 입력하세요"
+                            value={commentInput}
+                            onChange={e => setCommentInput(e.target.value)}
+                        />
+                        <div className="comment-composer-footer">
+                            {accessToken ? (
+                                <label className="comment-realname-label">
+                                    <input
+                                        type="checkbox"
+                                        checked={showCommentRealName}
+                                        onChange={(e) => setShowCommentRealName(e.target.checked)}
+                                    />
+                                    <span>비회원에게도 실명이 표시돼요</span>
+                                </label>
+                            ) : (
+                                <div className="comment-guest-stack">
+                                    <span className="comment-guest-hint">
+                                        비회원은 익명으로 작성됩니다
+                                    </span>
+                                    {process.env.REACT_APP_TURNSTILE_SITE_KEY && (
+                                        <Turnstile
+                                            ref={turnstileRef}
+                                            siteKey={process.env.REACT_APP_TURNSTILE_SITE_KEY}
+                                            onSuccess={(token: string) => setTurnstileToken(token)}
+                                            onExpire={() => setTurnstileToken(null)}
+                                            onError={() => setTurnstileToken(null)}
+                                            options={{ theme: resolvedColorMode, size: 'compact' }}
+                                        />
+                                    )}
+                                </div>
+                            )}
+                            <Button
+                                type="button"
+                                variant="primary"
+                                className="postdetail-comment-btn"
+                                onClick={handleAddComment}
+                                disabled={!commentInput.trim() || (!accessToken && !turnstileToken)}
+                            >
+                                등록
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div className={`postdetail-like-floating${isScrolling ? ' scrolling' : ''}`}>
+                <div className="postdetail-like-btn-wrapper">
+                    <button
+                        type="button"
+                        className="postdetail-like-btn"
+                        onClick={() => handleToggleLike(true)}
+                        aria-label={post.isLiked
+                            ? `게시글 추천 취소, 현재 ${post.likes}개`
+                            : `게시글 추천, 현재 ${post.likes}개`}
+                        aria-pressed={!!post.isLiked}
+                        title={post.isLiked ? "좋아요 취소" : "좋아요"}
+                        disabled={isLikePending}
+                    >
+                        <Heart
+                            size={18}
+                            aria-hidden="true"
+                            className={`postdetail-heart-icon postdetail-floating-heart${post.isLiked ? " is-liked" : ""}`}
+                        />
+                    </button>
+                    <HeartBurst triggerKey={heartBurstKey} />
+                    <LikePlusOne triggerKey={likePlusOneKey} count={post.likes ?? 0} isLiked={post.isLiked ?? false} />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default PostDetail;

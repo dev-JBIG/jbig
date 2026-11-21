@@ -1,0 +1,265 @@
+/* GitHub Primer 디자인 토큰 브리지 및 적응형 기본 스타일 */
+:root {
+  /* Primer 시맨틱 토큰 기반 브리지 (라이트/다크 자동 대응) */
+  --color-primary: var(--fgColor-accent, #0969da);
+  --color-primary-hover: var(--bgColor-accent-emphasis, #0860ca);
+  --color-primary-light: var(--bgColor-accent-muted, #ddf4ff);
+  --color-secondary: var(--fgColor-muted, #59636e);
+  --color-accent: var(--bgColor-success-emphasis, #1f883d);
+  --color-accent-hover: var(--button-primary-bgColor-hover, #1c8139);
+  --color-danger: var(--fgColor-danger, #d1242f);
+  --color-danger-bg: var(--bgColor-danger-muted, #ffebe9);
+  --color-attention: var(--fgColor-attention, #9a6700);
+  --color-attention-bg: var(--bgColor-attention-muted, #fff8c5);
+  --color-success: var(--fgColor-success, #1a7f37);
+  --color-success-bg: var(--bgColor-success-muted, #dafbe1);
+
+  /* 텍스트 색상 */
+  --color-text-primary: var(--fgColor-default, #1f2328);
+  --color-text-secondary: var(--fgColor-muted, #59636e);
+  --color-text-tertiary: var(--fgColor-disabled, #818b98);
+  --color-text-inverse: var(--fgColor-onEmphasis, #ffffff);
+
+  /* 배경 색상 */
+  --color-bg-primary: var(--bgColor-default, #ffffff);
+  --color-bg-secondary: var(--bgColor-muted, #f6f8fa);
+  --color-bg-tertiary: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+  --color-bg-inset: var(--bgColor-inset, #f6f8fa);
+
+  /* 보더 색상 */
+  --color-border-light: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+  --color-border-medium: var(--borderColor-default, #d1d9e0);
+  --color-border-dark: var(--borderColor-emphasis, #818b98);
+
+  /* 간격 시스템 - 모바일 */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-2xl: 2rem;
+  --space-3xl: 3rem;
+
+  /* 타이포그래피 - 모바일 */
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-base: 0.875rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.125rem;
+  --font-size-2xl: 1.25rem;
+  --font-size-3xl: 1.5rem;
+  --font-size-4xl: 1.875rem;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.65;
+
+  /* Primer 보더 반경 */
+  --radius-sm: var(--borderRadius-small, 0.1875rem);
+  --radius-md: var(--borderRadius-medium, 0.375rem);
+  --radius-lg: var(--borderRadius-large, 0.75rem);
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  /* Primer 그림자 */
+  --shadow-sm: var(--shadow-resting-xsmall, 0 1px 0 rgba(31, 35, 40, 0.04));
+  --shadow-md: var(--shadow-floating-small, 0 1px 3px rgba(31, 35, 40, 0.12), 0 8px 24px rgba(66, 74, 83, 0.12));
+  --shadow-lg: var(--shadow-floating-medium, 0 3px 6px rgba(66, 74, 83, 0.15), 0 12px 28px rgba(66, 74, 83, 0.18));
+  --shadow-xl: var(--shadow-floating-large, 0 8px 24px rgba(66, 74, 83, 0.22));
+
+  /* 전환 효과 */
+  --transition-fast: 120ms cubic-bezier(0.3, 0, 0.5, 1);
+  --transition-base: 180ms cubic-bezier(0.3, 0, 0.5, 1);
+  --transition-slow: 260ms cubic-bezier(0.3, 0, 0.5, 1);
+
+  /* 적응형 브레이크포인트 */
+  --breakpoint-mobile: 767px;
+  --breakpoint-desktop: 768px;
+
+  /* 레이아웃 */
+  --header-height: 56px;
+  --sidebar-width: 0;
+  --max-content-width: 1280px;
+}
+
+/* PC 스타일 (768px 이상) */
+@media (min-width: 768px) {
+  :root {
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+    --space-2xl: 2.5rem;
+    --space-3xl: 3.5rem;
+
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 0.9375rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.75rem;
+    --font-size-4xl: 2rem;
+
+    --header-height: 60px;
+    --sidebar-width: 248px;
+    --max-content-width: 1280px;
+  }
+}
+
+/* Primer 컴포넌트의 패딩/마진을 깨뜨리지 않는 안전한 기본 리셋 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bgColor-inset, #f6f8fa);
+  color: var(--fgColor-default, #1f2328);
+}
+
+body {
+  margin: 0;
+  font-family: var(
+    --fontStack-sansSerif,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    'Noto Sans KR',
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--fgColor-default, #1f2328);
+  background-color: var(--bgColor-inset, #f6f8fa);
+  overflow-x: hidden;
+}
+
+/* 스크롤바 스타일링 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bgColor-muted, #f6f8fa);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--borderColor-default, #d1d9e0);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--borderColor-emphasis, #818b98);
+}
+
+/* 링크 기본 스타일 */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 이미지 기본 설정 */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 유틸리티 클래스 */
+.container {
+  width: 100%;
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding-left: var(--space-md);
+  padding-right: var(--space-md);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-sm {
+  gap: var(--space-sm);
+}
+
+.gap-md {
+  gap: var(--space-md);
+}
+
+.gap-lg {
+  gap: var(--space-lg);
+}
+
+/* 반응형 헬퍼 */
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: block;
+  }
+
+  .container {
+    padding-left: var(--space-lg);
+    padding-right: var(--space-lg);
+  }
+}
+
+/* 접근성 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Primer 포커스 링 */
+:focus-visible {
+  outline: 2px solid var(--focus-outlineColor, #0969da);
+  outline-offset: 2px;
+}

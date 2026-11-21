@@ -1,0 +1,11 @@
+@media (max-width: 767px) {
+    .footer {
+        padding: 16px 12px 24px;
+        font-size: 12px;
+        color: var(--fgColor-muted, #59636e);
+    }
+
+    .footer-divider {
+        margin-bottom: 12px;
+    }
+}
