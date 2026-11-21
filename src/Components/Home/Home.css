@@ -876,6 +876,7 @@
     font-weight: 400;
     color: var(--fgColor-default, #1f2328);
     text-align: left;
+    text-decoration: none;
     cursor: pointer;
     transition: background-color var(--transition-fast), color var(--transition-fast);
     min-height: 32px;

@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button, CounterLabel, Label } from "@primer/react";
 import "../Home/Home.css";
 import { SidebarProps, Board } from "./interfaces";
@@ -50,17 +50,17 @@ const Sidebar: React.FC<SidebarProps> = ({
         (requiresLogin(board) && !accessToken) ||
         (board.read_permission === 'staff' && !(user?.is_staff));
 
-    const handleBoardClick = (board: Board) => {
+    const handleBoardClick = (e: React.MouseEvent<HTMLAnchorElement>, board: Board) => {
         if (requiresLogin(board) && !accessToken) {
+            e.preventDefault();
             showAlert({ message: '회원 전용 게시판입니다. 로그인 후 이용해주세요.', type: 'warning' });
             navigate("/signin");
             return;
         }
         if (board.read_permission === 'staff' && !(user?.is_staff)) {
+            e.preventDefault();
             showAlert({ message: '스태프 전용 게시판입니다.', type: 'warning' });
-            return;
         }
-        navigate(`/board/${board.id}`);
     };
 
     return (
@@ -81,31 +81,31 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <MemberQuickLinks isLogin={isLogin} />
                 <ul className="menu">
                     <li>
-                        <button
-                            type="button"
+                        <Link
+                            to="/board/0"
                             className={`sidebar-nav-btn${activeBoardId === 0 ? " is-active" : ""}`}
                             aria-current={activeBoardId === 0 ? "page" : undefined}
-                            onClick={() => navigate("/board/0")}
                         >
                             <span className="board-item-content">
                                 <FileText size={16} className="board-icon" aria-hidden="true" />
                                 <span>전체 글 보기</span>
                             </span>
                             <CounterLabel>{totalCount.toLocaleString()}</CounterLabel>
-                        </button>
+                        </Link>
                     </li>
                     {quizURL && quizURL.trim() !== "" && (
                         <li>
-                            <button
-                                type="button"
+                            <a
+                                href={quizURL}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="sidebar-nav-btn"
-                                onClick={() => window.open(quizURL, "_blank", "noopener,noreferrer")}
                             >
                                 <span className="board-item-content">
                                     <SquareCheckBig size={16} className="board-icon" aria-hidden="true" />
                                     <span>이번 주 퀴즈</span>
                                 </span>
-                            </button>
+                            </a>
                         </li>
                     )}
                 </ul>
@@ -124,11 +124,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                                 const isActive = activeBoardId === board.id;
                                 return (
                                     <li key={board.id}>
-                                        <button
-                                            type="button"
+                                        <Link
+                                            to={`/board/${board.id}`}
                                             className={`sidebar-nav-btn${isActive ? " is-active" : ""}`}
                                             aria-current={isActive ? "page" : undefined}
-                                            onClick={() => handleBoardClick(board)}
+                                            onClick={(e) => handleBoardClick(e, board)}
                                         >
                                             <span className="board-item-content">
                                                 <IconComponent className="board-icon" size={16} aria-hidden="true" />
@@ -140,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                                             {hasNewPost && (
                                                 <Label variant="danger" size="small" className="sidebar-new-badge">N</Label>
                                             )}
-                                        </button>
+                                        </Link>
                                     </li>
                                 );
                             })}

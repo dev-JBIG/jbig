@@ -185,13 +185,37 @@ const PostDetail: React.FC = () => {
         }, 0);
     }, [post]);
 
-    const toggleCommentMenu = (id: number) =>
-        setOpenMenu(m => (m && m.type === "comment" && m.id === id ? null : { type: "comment", id }));
+    const openMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
 
-    const toggleReplyMenu = (cId: number, rId: number) =>
+    const toggleCommentMenu = (id: number, triggerEl?: HTMLButtonElement | null) => {
+        if (triggerEl) openMenuTriggerRef.current = triggerEl;
+        setOpenMenu(m => (m && m.type === "comment" && m.id === id ? null : { type: "comment", id }));
+    };
+
+    const toggleReplyMenu = (cId: number, rId: number, triggerEl?: HTMLButtonElement | null) => {
+        if (triggerEl) openMenuTriggerRef.current = triggerEl;
         setOpenMenu(m =>
             m && m.type === "reply" && m.cId === cId && m.rId === rId ? null : { type: "reply", cId, rId }
         );
+    };
+
+    useEffect(() => {
+        if (!openMenu) return;
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key !== "Escape") return;
+            const trigger = openMenuTriggerRef.current;
+            const activeEl = document.activeElement;
+            const shouldRestore = Boolean(
+                trigger && activeEl && trigger.closest(".more-wrapper")?.contains(activeEl)
+            );
+            setOpenMenu(null);
+            if (shouldRestore) {
+                trigger?.focus();
+            }
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [openMenu]);
 
 
     // 동일 키로 중복 조회 안되도록
@@ -870,13 +894,16 @@ const PostDetail: React.FC = () => {
 
     if (!post) {
         return (
-            <div className="postdetail-container postdetail-skeleton" aria-busy="true" aria-label="게시글 로딩 중">
-                <div className="postdetail-skeleton-line postdetail-skeleton-crumb" />
-                <div className="postdetail-skeleton-line postdetail-skeleton-title" />
-                <div className="postdetail-skeleton-line postdetail-skeleton-meta" />
-                <div className="postdetail-divider" />
-                <div className="postdetail-skeleton-line postdetail-skeleton-body" />
-                <div className="postdetail-skeleton-line postdetail-skeleton-body short" />
+            <div className="postdetail-container">
+                <span className="sr-only" role="status">게시글을 불러오는 중입니다.</span>
+                <div className="postdetail-skeleton" aria-hidden="true">
+                    <div className="postdetail-skeleton-line postdetail-skeleton-crumb" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-title" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-meta" />
+                    <div className="postdetail-divider" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-body" />
+                    <div className="postdetail-skeleton-line postdetail-skeleton-body short" />
+                </div>
             </div>
         );
     }
@@ -1141,21 +1168,19 @@ const PostDetail: React.FC = () => {
                                                 <button
                                                     type="button"
                                                     className="more-btn"
-                                                    aria-haspopup="menu"
                                                     aria-expanded={openMenu?.type === "comment" && openMenu.id === c.id}
-                                                    onClick={() => toggleCommentMenu(c.id)}
+                                                    onClick={(e) => toggleCommentMenu(c.id, e.currentTarget)}
                                                     title="더보기"
                                                     aria-label="댓글 더보기"
                                                 >
                                                     <MoreHorizontal size={16} aria-hidden="true" />
                                                 </button>
                                                 {openMenu?.type === "comment" && openMenu.id === c.id && (
-                                                    <div className="more-menu" role="menu">
+                                                    <div className="more-menu">
                                                         {c.is_owner && (
                                                             <button
                                                                 type="button"
                                                                 className="more-menu-item"
-                                                                role="menuitem"
                                                                 onClick={() => { setOpenMenu(null); handleEditComment(c.id); }}
                                                             >
                                                                 수정
@@ -1164,7 +1189,6 @@ const PostDetail: React.FC = () => {
                                                         <button
                                                             type="button"
                                                             className="more-menu-item danger"
-                                                            role="menuitem"
                                                             onClick={() => { setOpenMenu(null); handleDeleteComment(c.id); }}
                                                         >
                                                             삭제
@@ -1255,21 +1279,19 @@ const PostDetail: React.FC = () => {
                                                             <button
                                                                 type="button"
                                                                 className="more-btn"
-                                                                aria-haspopup="menu"
                                                                 aria-expanded={openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id}
-                                                                onClick={() => toggleReplyMenu(c.id, r.id)}
+                                                                onClick={(e) => toggleReplyMenu(c.id, r.id, e.currentTarget)}
                                                                 title="더보기"
                                                                 aria-label="답글 더보기"
                                                             >
                                                                 <MoreHorizontal size={16} aria-hidden="true" />
                                                             </button>
                                                             {openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id && (
-                                                                <div className="more-menu" role="menu">
+                                                                <div className="more-menu">
                                                                     {r.is_owner && (
                                                                         <button
                                                                             type="button"
                                                                             className="more-menu-item"
-                                                                            role="menuitem"
                                                                             onClick={() => { setOpenMenu(null); handleEditReply(c.id, r.id); }}
                                                                         >
                                                                             수정
@@ -1278,7 +1300,6 @@ const PostDetail: React.FC = () => {
                                                                     <button
                                                                         type="button"
                                                                         className="more-menu-item danger"
-                                                                        role="menuitem"
                                                                         onClick={() => { setOpenMenu(null); handleDeleteReply(c.id, r.id); }}
                                                                     >
                                                                         삭제

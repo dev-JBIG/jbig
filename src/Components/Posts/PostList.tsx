@@ -1,6 +1,6 @@
 // PostList.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Link, useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button, Label } from "@primer/react";
 import { MessageSquare, PenSquare, Search as SearchIcon, Inbox, Lock } from "lucide-react";
 import "./PostList.css";
@@ -470,16 +470,19 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
 
             {/* 로딩 스켈레톤 */}
             {loading && (
-                <div className="skeleton-container" aria-busy="true" aria-label="게시글 목록 로딩 중">
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className="skeleton-row">
-                            <div className="skeleton skeleton-id" />
-                            <div className="skeleton skeleton-title" />
-                            <div className="skeleton skeleton-author" />
-                            <div className="skeleton skeleton-date" />
-                        </div>
-                    ))}
-                </div>
+                <>
+                    <span className="sr-only" role="status">게시글 목록을 불러오는 중입니다.</span>
+                    <div className="skeleton-container" aria-hidden="true">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="skeleton-row">
+                                <div className="skeleton skeleton-id" />
+                                <div className="skeleton skeleton-title" />
+                                <div className="skeleton skeleton-author" />
+                                <div className="skeleton skeleton-date" />
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
 
             {/* 리스트 영역 */}
@@ -533,16 +536,14 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     {renderPrivateBadge(p.id)}
                                 </td>
                                 <td className="author-cell th-author">
-                                    <span
+                                    <Link
+                                        to={`/@${p.user_id}`}
                                         className="author-text author-link"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/@${p.user_id}`);
-                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
                                     >
                                         {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
-                                    </span>
+                                    </Link>
                                 </td>
                                 <td className="th-date">{p.date}</td>
                                 <td className="th-views">{p.views.toLocaleString()}</td>
@@ -597,16 +598,14 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     {renderCommentCount(p.comment_count)}
                                 </td>
                                 <td className="author-cell th-author">
-                                    <span
+                                    <Link
+                                        to={`/@${p.user_id}`}
                                         className="author-text author-link"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/@${p.user_id}`);
-                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
                                     >
                                         {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
-                                    </span>
+                                    </Link>
                                 </td>
                                 <td className="th-date">{p.date}</td>
                                 <td className="th-views">{p.views.toLocaleString()}</td>
@@ -652,16 +651,14 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     {renderPrivateBadge(p.id)}
                                 </td>
                                 <td className="author-cell th-author">
-                                    <span
+                                    <Link
+                                        to={`/@${p.user_id}`}
                                         className="author-text author-link"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/@${p.user_id}`);
-                                        }}
+                                        onClick={(e) => e.stopPropagation()}
                                         title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
                                     >
                                         {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
-                                    </span>
+                                    </Link>
                                 </td>
                                 <td className="th-date">{p.date}</td>
                                 <td className="th-views">{p.views.toLocaleString()}</td>

@@ -108,8 +108,13 @@ test('toggles Primer color mode and closes user dropdown on Escape', async () =>
 
     const userMenuBtn = screen.getByRole('button', { name: /홍길동/ });
     fireEvent.click(userMenuBtn);
-    expect(screen.getByRole('menu')).toBeInTheDocument();
+    const profileItem = screen.getByRole('button', { name: '내 정보' });
+    expect(profileItem).toBeInTheDocument();
+
+    profileItem.focus();
+    expect(profileItem).toHaveFocus();
 
     fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '내 정보' })).not.toBeInTheDocument();
+    expect(userMenuBtn).toHaveFocus();
 });

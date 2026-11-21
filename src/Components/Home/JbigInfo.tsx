@@ -68,7 +68,8 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => 
     if (loading) {
         return (
             <div className="jbig-info-container">
-                <div className="jbig-cover jbig-cover-skeleton" aria-busy="true" aria-label="JBIG 소개 로딩 중">
+                <span className="sr-only" role="status">JBIG 소개를 불러오는 중입니다.</span>
+                <div className="jbig-cover jbig-cover-skeleton" aria-hidden="true">
                     <div className="jbig-skeleton-bar jbig-skeleton-kicker" />
                     <div className="jbig-skeleton-bar jbig-skeleton-title" />
                     <div className="jbig-skeleton-bar jbig-skeleton-desc" />

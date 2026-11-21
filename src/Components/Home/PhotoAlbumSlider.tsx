@@ -160,13 +160,12 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
                             )}
                         </div>
                         {slides.length > 1 && (
-                            <div className="photo-album-dots" role="tablist" aria-label="사진 선택">
+                            <div className="photo-album-dots" role="group" aria-label="사진 선택">
                                 {slides.map((slide, dotIdx) => (
                                     <button
                                         key={`${slide.postId}-${dotIdx}`}
                                         type="button"
-                                        role="tab"
-                                        aria-selected={dotIdx === index}
+                                        aria-pressed={dotIdx === index}
                                         aria-label={`${dotIdx + 1}번째 사진`}
                                         className={`photo-album-dot${dotIdx === index ? " is-active" : ""}`}
                                         onClick={() => setIndex(dotIdx)}

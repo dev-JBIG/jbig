@@ -47,10 +47,11 @@ const Search = lazy(() => import("../Posts/Search"));
 const Profile = lazy(() => import("../Profile/Profile"));
 const Arena = lazy(() => import("../Competitions/Arena"));
 const routeFallback = (
-    <div className="route-loading-fallback" aria-busy="true" aria-label="페이지 로딩 중">
-        <div className="route-loading-bar route-loading-bar-lg" />
-        <div className="route-loading-bar route-loading-bar-md" />
-        <div className="route-loading-bar route-loading-bar-sm" />
+    <div className="route-loading-fallback">
+        <span className="sr-only" role="status">페이지를 불러오는 중입니다.</span>
+        <div aria-hidden="true" className="route-loading-bar route-loading-bar-lg" />
+        <div aria-hidden="true" className="route-loading-bar route-loading-bar-md" />
+        <div aria-hidden="true" className="route-loading-bar route-loading-bar-sm" />
     </div>
 );
 
@@ -129,6 +130,8 @@ const Home: React.FC = () => {
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
+    const userMenuBtnRef = useRef<HTMLButtonElement>(null);
+    const notificationBtnRef = useRef<HTMLButtonElement>(null);
     const headerSearchRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const location = useLocation();
@@ -289,8 +292,21 @@ const Home: React.FC = () => {
         };
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                setMenuOpen(false);
-                setNotificationOpen(false);
+                const activeEl = document.activeElement;
+                const focusInUserMenu = Boolean(activeEl && dropdownRef.current?.contains(activeEl));
+                const focusInNotification = Boolean(activeEl && notificationRef.current?.contains(activeEl));
+                if (menuOpen) {
+                    setMenuOpen(false);
+                    if (focusInUserMenu) {
+                        userMenuBtnRef.current?.focus();
+                    }
+                }
+                if (notificationOpen) {
+                    setNotificationOpen(false);
+                    if (focusInNotification) {
+                        notificationBtnRef.current?.focus();
+                    }
+                }
                 return;
             }
             if (
@@ -326,7 +342,7 @@ const Home: React.FC = () => {
             document.removeEventListener("mousedown", handleClickOutside);
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [isModalOpen, isLoginModalOpen]);
+    }, [isModalOpen, isLoginModalOpen, menuOpen, notificationOpen]);
 
     // 알림 개수 주기적으로 조회 (30초마다)
     useEffect(() => {
@@ -568,6 +584,7 @@ const Home: React.FC = () => {
                         {isLogin && (
                             <div className="notification-wrapper" ref={notificationRef}>
                                 <button
+                                    ref={notificationBtnRef}
                                     type="button"
                                     className="notification-icon-wrapper"
                                     onClick={handleOpenNotifications}
@@ -650,6 +667,7 @@ const Home: React.FC = () => {
                         <div className="user-info-wrapper" ref={dropdownRef}>
                             {userName ? (
                                 <button
+                                    ref={userMenuBtnRef}
                                     type="button"
                                     className="user-info-clickable"
                                     onClick={() => setMenuOpen(prev => !prev)}
@@ -671,7 +689,7 @@ const Home: React.FC = () => {
                             )}
 
                             {menuOpen && (
-                                <div className="user-dropdown" role="menu">
+                                <div className="user-dropdown">
                                     <div className="dropdown-user-header">
                                         <span className="dropdown-user-name">
                                             {typeof userSemester === "number" && userSemester > 0 ? `${userSemester}기 ` : ""}
@@ -680,7 +698,7 @@ const Home: React.FC = () => {
                                         {user?.email && <span className="dropdown-user-email">{user.email}</span>}
                                     </div>
                                     <div className="dropdown-divider" />
-                                    <button type="button" role="menuitem" className="dropdown-item" onClick={() => {
+                                    <button type="button" className="dropdown-item" onClick={() => {
                                         if (user?.email) {
                                             const username = user.email.split("@")[0];
                                             navigate(`/@${username}`);
@@ -691,7 +709,7 @@ const Home: React.FC = () => {
                                         <span>내 정보</span>
                                     </button>
                                     {(staffAuth || user?.is_staff) && (
-                                        <button type="button" role="menuitem" className="dropdown-item" onClick={() => {
+                                        <button type="button" className="dropdown-item" onClick={() => {
                                             navigate('/admin');
                                             setMenuOpen(false);
                                         }}>
@@ -700,7 +718,7 @@ const Home: React.FC = () => {
                                         </button>
                                     )}
                                     <div className="dropdown-divider" />
-                                    <button type="button" role="menuitem" className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
+                                    <button type="button" className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
                                         <LogOut size={15} aria-hidden="true" />
                                         <span>로그아웃</span>
                                     </button>
