@@ -1,10 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/JBIG-logo-512.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('jbig-color-mode') || 'auto';
+          var pref = (stored === 'light' || stored === 'dark' || stored === 'dark_dimmed' || stored === 'auto') ? stored : 'auto';
+          var sysDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var colorMode = pref === 'dark_dimmed' ? 'dark' : pref;
+          var darkTheme = pref === 'dark' ? 'dark' : 'dark_dimmed';
+          var resolvedDark = colorMode === 'dark' || (colorMode === 'auto' && sysDark);
+          var root = document.documentElement;
+          root.setAttribute('data-color-mode', colorMode);
+          root.setAttribute('data-light-theme', 'light');
+          root.setAttribute('data-dark-theme', darkTheme);
+          root.style.colorScheme = resolvedDark ? 'dark' : 'light';
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) {
+            meta.setAttribute('content', resolvedDark ? (darkTheme === 'dark' ? '#0d1117' : '#212830') : '#ffffff');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta
       name="description"
       content="Data are profoundly dumb."

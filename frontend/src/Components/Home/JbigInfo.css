@@ -153,13 +153,14 @@
 
 .jbig-cover-acronym strong {
     display: inline-flex;
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
-    background-color: var(--bgColor-accent-emphasis, #0969da);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    border: 1px solid var(--borderColor-accent-muted, rgba(84, 174, 255, 0.4));
+    color: var(--fgColor-accent, #0969da);
     font-size: 12px;
     font-weight: 700;
 }

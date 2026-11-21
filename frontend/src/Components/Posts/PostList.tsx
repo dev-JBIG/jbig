@@ -425,11 +425,14 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                             )}
 
                             {canWritePost && (
-                                <Button variant="primary" size="small" className="write-button" onClick={handleWrite}>
-                                    <span className="write-button-inner">
-                                        <PenSquare size={14} aria-hidden="true" />
-                                        <span>글쓰기</span>
-                                    </span>
+                                <Button
+                                    variant="primary"
+                                    size="small"
+                                    className="write-button"
+                                    leadingVisual={() => <PenSquare size={14} aria-hidden="true" />}
+                                    onClick={handleWrite}
+                                >
+                                    글쓰기
                                 </Button>
                             )}
 

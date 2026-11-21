@@ -851,12 +851,10 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                         type="button"
                         variant="primary"
                         size="small"
+                        leadingVisual={() => <Plus size={15} aria-hidden="true" />}
                         onClick={() => setShowForm(!showForm)}
                     >
-                        <span className="admin-btn-inner">
-                            <Plus size={15} aria-hidden="true" />
-                            <span>새 팝업</span>
-                        </span>
+                        새 팝업
                     </Button>
                 </div>
 

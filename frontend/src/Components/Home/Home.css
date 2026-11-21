@@ -120,6 +120,89 @@
     border-color: var(--borderColor-emphasis, #818b98);
 }
 
+.theme-menu-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.theme-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 204px;
+    padding: 6px;
+    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 210;
+}
+
+.theme-dropdown-header {
+    padding: 4px 8px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fgColor-muted, #59636e);
+    letter-spacing: 0.02em;
+}
+
+.theme-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--fgColor-default, #1f2328);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.theme-option:hover {
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+}
+
+.theme-option.is-active {
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+    font-weight: 600;
+}
+
+.theme-option-copy {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.theme-option-label {
+    line-height: 1.2;
+}
+
+.theme-option-desc {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--fgColor-muted, #59636e);
+    line-height: 1.25;
+}
+
+.theme-option.is-active .theme-option-desc {
+    color: var(--fgColor-accent, #0969da);
+    opacity: 0.85;
+}
+
+.theme-option-check {
+    flex-shrink: 0;
+    color: var(--fgColor-accent, #0969da);
+}
+
 /* 배너 (홈 전용) */
 .home-banner-wrap {
     width: 100%;

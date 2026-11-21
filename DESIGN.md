@@ -34,13 +34,35 @@
 
 ---
 
-## 3. 색상 및 다크모드 규칙
+## 3. 색상 및 테마 아키텍처 (GitHub Primer · Vercel Geist · Radix 원칙)
+
+### 3.1 지원 테마 (4단계, `jbig-color-mode` 저장)
+| 테마 값 | Primer 매핑 | 용도 및 특징 | 브라우저 `theme-color` |
+|---|---|---|---|
+| `auto` *(기본값)* | `data-color-mode="auto"` (`light` / `dark_dimmed`) | OS `prefers-color-scheme` 자동 추적 | `#ffffff` / `#212830` |
+| `light` | `data-color-mode="light"` | Crisp Primer Light (`#f6f8fa` 캔버스 · `#ffffff` 카드) | `#ffffff` |
+| `dark_dimmed` | `data-color-mode="dark"` + `data-dark-theme="dark_dimmed"` | 장시간 독서에 최적화된 슬레이트 다크 (`#151b23` → `#212830` → `#2a313c`, `#000` 번짐 방지) | `#212830` |
+| `dark` | `data-color-mode="dark"` + `data-dark-theme="dark"` | 깊은 미드나잇 다크 (`#010409` → `#0d1117` → `#161b22` 오버레이 보정) | `#0d1117` |
+
+- **Zero-FOUC & 브라우저 크롬 동기화**: [`frontend/public/index.html`](./frontend/public/index.html)의 초기 인라인 스크립트와 [`ThemeContext.tsx`](./frontend/src/Components/Utils/ThemeContext.tsx)가 첫 페인트 전 `data-color-mode`, `data-dark-theme`, `color-scheme`, `<meta name="theme-color">`를 동기화합니다.
+- **서드파티 에디터 동기화**: `MDEditor` 등 자체 테마 속성을 가진 컴포넌트는 `"light"`를 하드코딩하지 않고 반드시 `useColorMode().resolvedColorMode`를 연결합니다.
+
+### 3.2 4단계 공간 계층 (Surface Elevation)
+다크 모드에서는 그림자만으로는 깊이가 구분되지 않으므로 **위로 올라올수록 한 단계 밝아지는 서피스 계층**과 미세한 상단 하이라이트 보더를 유지합니다.
+1. **페이지 캔버스(최하단)**: `var(--bgColor-inset)`
+2. **기본 카드·사이드바·헤더**: `var(--bgColor-default)`
+3. **카드 헤더 바·보조 영역·입력 배경**: `var(--bgColor-muted)`
+4. **플로팅 모달·드롭다운·팝오버(최상단)**: `var(--overlay-bgColor)` + `var(--shadow-lg)`
+
+### 3.3 60-30-10 색상 절제 원칙 및 토큰 규칙
+- **중립색 90% · 포인트색 10%**: 채도가 높은 강조색(`--bgColor-accent-emphasis`, `--button-primary-bgColor-rest`)은 핵심 CTA(글쓰기·제출·저장)와 현재 활성 상태에만 제한합니다. 장식 배지·보조 퀵링크에는 중립 서피스 + 컬러 아이콘 또는 부드러운 틴트(`--bgColor-accent-muted` / `color-mix`)를 사용합니다.
 - **하드코딩 색상 금지**: `#ffffff`, `#000000`, `#333333` 등 원시 hex를 단독으로 쓰지 말고, 반드시 Primer 시맨틱 토큰(또는 `index.css` 브리지 변수)을 사용합니다.
   - 텍스트: `var(--fgColor-default)`, `var(--fgColor-muted)`, `var(--fgColor-accent)`, `var(--fgColor-danger)`, `var(--fgColor-success)`, `var(--fgColor-attention)`, `var(--fgColor-onEmphasis)`
   - 배경: `var(--bgColor-default)`, `var(--bgColor-muted)`, `var(--bgColor-inset)`, `var(--bgColor-neutral-muted)`, `var(--bgColor-accent-muted)`, `var(--bgColor-accent-emphasis)`, `var(--overlay-bgColor)`
   - 보더: `var(--borderColor-default)`, `var(--borderColor-muted)`, `var(--borderColor-emphasis)`
 - 라이트/다크 양쪽에서 텍스트 대비 **WCAG AA(4.5:1 이상)** 를 유지합니다.
 - 포커스 스타일은 전역 `:focus-visible` (`var(--focus-outlineColor, #0969da)`)를 유지하며 `outline: none`으로 제거하지 않습니다.
+- **Primer `<Button>` 아이콘 정렬**: 아이콘이 포함된 `@primer/react` `<Button>`은 내부에 `<span className="*-inner">`를 중첩하지 말고 반드시 Primer 네이티브 **`leadingVisual`** prop을 사용합니다. (baseline 드리프트 방지 및 한글·아이콘 정중앙 정렬)
 
 ---
 
