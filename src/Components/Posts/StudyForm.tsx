@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'; // useRef 추가
 import MDEditor from '@uiw/react-md-editor';
 import { safeSanitizePlugin } from '../Utils/safeMarkdown';
+import { useColorMode } from '../Utils/ThemeContext';
 import './PostWrite.css';
 
 interface StudyFormProps {
@@ -47,6 +48,7 @@ const parseMarkdownToForm = (md: string) => {
 };
 
 const StudyForm: React.FC<StudyFormProps> = ({ setContent, initialContent }) => {
+  const { resolvedColorMode } = useColorMode();
   const [formState, setFormState] = useState(parseMarkdownToForm(initialContent));
 
   const lastGeneratedRef = useRef('');
@@ -242,7 +244,7 @@ ${plan}
           <MDEditor
             value={formState.plan}
             onChange={(val) => setFormState(prev => ({ ...prev, plan: val || '' }))}
-            data-color-mode="light"
+            data-color-mode={resolvedColorMode}
             height={300}
             preview="edit"
             previewOptions={{ rehypePlugins: [safeSanitizePlugin] }}

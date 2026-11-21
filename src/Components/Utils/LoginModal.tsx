@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { Button } from "@primer/react";
 import "./LoginModal.css";
 import { signin } from "../../API/req";
 import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 import { useJbnuEmail } from "./useJbnuEmail";
+import { useFocusTrap } from "./useFocusTrap";
 
 interface LoginModalProps {
     onClose: () => void;
@@ -15,6 +17,7 @@ const isValidPassword = (pwd: string) =>
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) => {
+    const dialogRef = useRef<HTMLDivElement>(null);
     const { email: userId, inputRef: userIdRef, onChange: onUserIdChange, onFocus: onUserIdFocus, onClick: onUserIdClick } = useJbnuEmail();
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -24,6 +27,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
 
     const navigate = useNavigate();
     const { setAuth } = useUser();
+
+    useFocusTrap(dialogRef, true, { onClose, initialFocusRef: userIdRef });
 
     const validateEmail = (value: string) => {
         if (!value.trim()) return "이메일을 입력해주세요.";
@@ -74,7 +79,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     result.refresh
                 );
                 onClose();
-                // 로그인한 뒤 호출한 화면으로 돌아간다. 기본 진입점은 홈이다.
                 if (window.location.pathname !== redirectTo) {
                     navigate(redirectTo);
                 }
@@ -105,13 +109,24 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
     };
 
     return (
-        <div className="login-modal-backdrop" onClick={handleBackdropClick}>
-            <div className="login-modal-container">
-                <button className="login-modal-close" onClick={onClose}>
+        <div
+            className="login-modal-backdrop"
+            onClick={handleBackdropClick}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="login-modal-heading"
+        >
+            <div ref={dialogRef} className="login-modal-container" tabIndex={-1}>
+                <button
+                    type="button"
+                    className="login-modal-close"
+                    onClick={onClose}
+                    aria-label="로그인 창 닫기"
+                >
                     &times;
                 </button>
                 <div className="login-modal-header">
-                    <h2 className="login-modal-title">로그인</h2>
+                    <h2 id="login-modal-heading" className="login-modal-title">로그인</h2>
                 </div>
                 <form className="login-modal-form" onSubmit={handleSubmit}>
                     <label className="login-modal-label" htmlFor="modal-userid">
@@ -130,7 +145,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                         onFocus={onUserIdFocus}
                         onClick={onUserIdClick}
                         onBlur={handleEmailBlur}
-                        autoFocus
                     />
                     {fieldErrors.email && <span className="login-modal-field-error">{fieldErrors.email}</span>}
 
@@ -149,26 +163,27 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                             }}
                             onBlur={handlePasswordBlur}
                         />
-                        <span
+                        <button
+                            type="button"
                             className="login-modal-toggle"
                             onClick={() => setShowPassword((prev) => !prev)}
                         >
                             {showPassword ? "숨기기" : "보이기"}
-                        </span>
+                        </button>
                     </div>
                     {fieldErrors.password && <span className="login-modal-field-error">{fieldErrors.password}</span>}
 
-                    {error && <div className="login-modal-error">{error}</div>}
+                    {error && <div className="login-modal-error" role="alert">{error}</div>}
 
-                    <button className="login-modal-button" type="submit" disabled={loading}>
+                    <Button variant="primary" block className="login-modal-button" type="submit" disabled={loading}>
                         {loading ? "로그인 중..." : "로그인"}
-                    </button>
+                    </Button>
                 </form>
                 <div className="login-modal-links">
-                    <button className="login-modal-link" onClick={handleSignupClick}>
+                    <button type="button" className="login-modal-link" onClick={handleSignupClick}>
                         가입하기
                     </button>
-                    <button className="login-modal-link" onClick={handleForgotPasswordClick}>
+                    <button type="button" className="login-modal-link" onClick={handleForgotPasswordClick}>
                         비밀번호를 잊어버리셨나요?
                     </button>
                 </div>

@@ -1,9 +1,12 @@
+/* GitHub Primer styled Note (Notion viewer) */
+
 .note-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px 24px;
-    background-color: #f5f7fa;
+    padding: 16px 24px 40px;
+    background-color: var(--bgColor-inset, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
     min-height: 100vh;
     box-sizing: border-box;
 }
@@ -14,45 +17,26 @@
     align-items: center;
     width: 100%;
     max-width: 900px;
-    padding: 10px 0 20px 0;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ccc;
-    height: 50px;
+    padding: 8px 0 14px 0;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--borderColor-default, #d0d7de);
     box-sizing: border-box;
 }
 
 .note-logo {
     font-size: 20px;
-    font-weight: bold;
+    font-weight: 700;
     text-decoration: none;
-    color: black;
+    color: var(--fgColor-default, #1f2328);
     cursor: pointer;
-}
-
-.refresh-button {
-    background: linear-gradient(to right, #43cea2, #185a9d);
-    border: none;
-    color: white;
-    font-size: 15px;
-    font-weight: 600;
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.15s ease, background 0.3s ease;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.refresh-button:hover {
-    background: linear-gradient(to right, #38b2ac, #2b6cb0);
-    transform: scale(1.05);
 }
 
 .note-content {
     width: 100%;
     max-width: 900px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    background-color: var(--bgColor-default, #ffffff);
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-md);
     overflow: hidden;
 }
 
@@ -64,84 +48,63 @@
     align-items: center;
     width: 100%;
     max-width: 900px;
-    height: 400px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    font-size: 18px;
-    color: #666;
-    gap: 16px;
+    height: 360px;
+    background-color: var(--bgColor-default, #ffffff);
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    color: var(--fgColor-muted, #656d76);
+    gap: 12px;
 }
 
 .note-error {
-    color: #e53e3e;
-}
-
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #185a9d;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    color: var(--fgColor-danger, #cf222e);
 }
 
 /* react-notion-x 스타일 오버라이드 */
 .notion-page {
-    padding: 0 !important;
+    padding: 24px 0 10vh !important;
 }
 
 .notion-page-content {
     padding: 20px !important;
 }
 
-
 .notion-title {
-    font-size: 2.2rem !important; 
+    font-size: 2rem !important;
     font-weight: 700 !important;
-    letter-spacing: -0.02em !important; 
-    margin-bottom: 1.5rem !important;
+    letter-spacing: -0.02em !important;
+    margin-bottom: 1.25rem !important;
 }
 
 .notion-h1 {
-    font-size: 1.75rem !important;
-    font-weight: 600 !important; 
-    letter-spacing: -0.015em !important;
-    margin-top: 2rem !important; 
+    font-size: 1.6rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.75rem !important;
 }
 
 .notion-h2 {
-    font-size: 1.5rem !important;
+    font-size: 1.35rem !important;
     font-weight: 600 !important;
-    letter-spacing: -0.01em !important;
 }
 
 .notion-h3 {
-    font-size: 1.25rem !important;
+    font-size: 1.15rem !important;
     font-weight: 600 !important;
-    letter-spacing: -0.01em !important;
 }
 
-/* 이미지 스타일 */
 .notion-asset-wrapper img {
     max-width: 100%;
     height: auto;
 }
 
-/* 코드 블록 스타일 */
 .notion-code {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-    font-size: 14px;
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
+    font-size: 13.5px;
 }
 
-/* 링크 스타일 */
 .notion-link {
-    color: #185a9d;
+    color: var(--fgColor-accent, #0969da);
     text-decoration: none;
 }
 
@@ -149,59 +112,14 @@
     text-decoration: underline;
 }
 
-/* 목차 스타일 */
 .notion-table-of-contents {
-    margin: 20px 0;
-    padding: 15px;
-    background-color: #f9fafb;
-    border-radius: 8px;
+    margin: 16px 0;
+    padding: 14px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border: 1px solid var(--borderColor-muted, #d0d7de);
+    border-radius: var(--radius-md);
 }
 
-/* 모바일 반응형 */
-@media (max-width: 768px) {
-    .note-wrapper {
-        padding: 10px 16px;
-    }
-
-    .note-header {
-        padding: 10px 0 15px 0;
-    }
-
-    .note-content {
-        border-radius: 4px;
-    }
-
-    .notion-page-content {
-        padding: 15px !important;
-    }
-}
-
-
-
-/* 1. 노션 오리지널 폰트 및 기본 글자색 강제 적용 */
-.notion {
-    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol" !important;
-    color: #37352f !important; 
-    font-size: 16px !important;
-}
-
-
-/* 여백 조정 */
-.notion-page {
-    padding-top: 30px !important;
-    padding-bottom: 10vh !important;
-}
-
-
-.notion-link:hover {
-    border-bottom-color: #37352f;
-    opacity: 1;
-}
-
-
-
-
-/* 1. 노션 전체 화면이 JBIG 하얀 박스 너비를 절대 넘지 않게 */
 .notion,
 .notion-frame,
 .notion-page {
@@ -209,7 +127,6 @@
     box-sizing: border-box !important;
 }
 
-/* 2. 들여쓰기, 텍스트, 리스트가 박스를 뚫고 나가는 것 차단 */
 .notion-block,
 .notion-list,
 .notion-list-item,
@@ -221,86 +138,16 @@
     box-sizing: border-box !important;
 }
 
-/* --------------------------------------
-들여쓰기 디자인
--------------------------------------- */
+.notion-list { list-style-type: disc !important; }
+.notion-list .notion-list { list-style-type: circle !important; }
+.notion-list .notion-list .notion-list { list-style-type: square !important; }
 
-.notion-list {
-    list-style-type: disc !important;
+@media (max-width: 768px) {
+    .note-wrapper {
+        padding: 12px 12px 32px;
+    }
+
+    .notion-page-content {
+        padding: 14px !important;
+    }
 }
-
-.notion-list .notion-list {
-    list-style-type: circle !important;
-}
-
-.notion-list .notion-list .notion-list {
-    list-style-type: square !important;
-}
-
-/* 홈으로 버튼 디자인 */
-
-.refresh-button {
-    background-image: none !important; 
-    background-color: var(--color-primary) !important; 
-    border: none !important;
-    color: var(--color-text-inverse, white) !important; 
-    
-    border-radius: 8px; 
-    transition: background-color 0.2s ease-in-out !important; 
-}
-
-.refresh-button:hover {
-    background-color: var(--color-primary-hover) !important;
-    transform: none !important; 
-}
-
-
-/* 코드 기본 폰트 및 정렬 설정 (먹색) */
-.notion-code code[class*="language-"],
-.notion-code pre[class*="language-"] {
-    color: #37352f !important; /* 노션 기본 먹색 */
-    font-family: Consolas, Monaco, 'Andale Mono', monospace !important;
-    text-shadow: none !important;
-    background: transparent !important;
-    text-align: left !important;
-    white-space: pre !important;
-    word-spacing: normal !important;
-    word-break: normal !important;
-    line-height: 1.5 !important;
-}
-
-/* 1. 주석 (차분한 회색) */
-.notion-code .token.comment,
-.notion-code .token.prolog,
-.notion-code .token.doctype,
-.notion-code .token.cdata { color: #8c8c8c !important; font-style: normal !important; }
-
-/* 2. 키워드 (노션 특유의 파란색) - import, as, from 등 */
-.notion-code .token.keyword,
-.notion-code .token.operator,
-.notion-code .token.boolean,
-.notion-code .token.number,
-.notion-code .token.atrule,
-.notion-code .token.selector { color: #007acc !important; }
-
-/* 3. 문자열 (붉은 갈색) - '데이터이름.csv' 등 */
-.notion-code .token.string,
-.notion-code .token.char,
-.notion-code .token.attr-value,
-.notion-code .token.regex,
-.notion-code .token.inserted { color: #b00020 !important; }
-
-/* 4. 함수 및 클래스 (보라색 포인트) */
-.notion-code .token.function,
-.notion-code .token.class-name,
-.notion-code .token.tag { color: #6f42c1 !important; }
-
-/* 5. 변수, 기호, 일반 텍스트 (기본 먹색) - pd, df, pandas 등 */
-.notion-code .token.punctuation,
-.notion-code .token.variable,
-.notion-code .token.property,
-.notion-code .token.constant,
-.notion-code .token.symbol,
-.notion-code .token.entity,
-.notion-code .token.url,
-.notion-code .token.deleted { color: #37352f !important; }

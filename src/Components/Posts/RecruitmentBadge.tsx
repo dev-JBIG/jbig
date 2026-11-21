@@ -1,43 +1,31 @@
 import React from 'react';
+import { Label } from '@primer/react';
 import { RecruitmentInfo } from '../Utils/interfaces';
 
 interface RecruitmentBadgeProps {
     info: RecruitmentInfo;
 }
 
-const STATUS_COLORS: Record<number, { bg: string; text: string }> = {
-    1: { bg: '#dcfce7', text: '#16a34a' }, // 모집중 - green
-    2: { bg: '#f3f4f6', text: '#6b7280' }, // 마감 - gray
-    3: { bg: '#dbeafe', text: '#2563eb' }, // 완료 - blue
-    4: { bg: '#fee2e2', text: '#dc2626' }, // 취소 - red
+const STATUS_VARIANTS: Record<number, 'success' | 'secondary' | 'accent' | 'danger'> = {
+    1: 'success',   // 모집중
+    2: 'secondary', // 마감
+    3: 'accent',    // 완료
+    4: 'danger',    // 취소
 };
 
 const RecruitmentBadge: React.FC<RecruitmentBadgeProps> = ({ info }) => {
-    const colors = STATUS_COLORS[info.status] || STATUS_COLORS[2];
+    const variant = STATUS_VARIANTS[info.status] || 'secondary';
     const progress = info.max_members > 0
         ? `${info.accepted_count}/${info.max_members}명`
         : null;
 
     return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
-            <span style={{
-                display: 'inline-block',
-                padding: '1px 6px',
-                borderRadius: '4px',
-                fontSize: '11px',
-                fontWeight: 600,
-                backgroundColor: colors.bg,
-                color: colors.text,
-                lineHeight: '18px',
-            }}>
+        <span className="recruitment-badge-wrap">
+            <Label variant={variant} size="small">
                 {info.status_display}
-            </span>
+            </Label>
             {progress && info.status === 1 && (
-                <span style={{
-                    fontSize: '11px',
-                    color: '#6b7280',
-                    fontWeight: 500,
-                }}>
+                <span className="recruitment-badge-progress">
                     {progress}
                 </span>
             )}

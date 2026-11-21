@@ -16,9 +16,11 @@ import {
     markNotificationRead,
     NotificationItem
 } from "../../API/req";
-import { CircleUserRound, Bell } from "lucide-react";
+import { CircleUserRound, Bell, Sun, Moon } from "lucide-react";
+import { Button } from "@primer/react";
 import {CalendarEventCreate, Section} from "../Utils/interfaces";
 import { useUser } from "../Utils/UserContext";
+import { useColorMode } from "../Utils/ThemeContext";
 import Calendar from "../Utils/Calendar/Calendar";
 import EventModal from "../Utils/Calendar/EventModal";
 import LoginModal from "../Utils/LoginModal";
@@ -27,7 +29,6 @@ import {useAlert} from "../Utils/AlertContext";
 import JbigInfo from "./JbigInfo";
 import PopupSlider from "../Utils/PopupSlider";
 import PhotoAlbumSlider from "./PhotoAlbumSlider";
-import $ from "jquery";
 import scheduleIdleTask from "../Utils/scheduleIdleTask";
 
 const PostDetail = lazy(() => import("../Posts/PostDetail"));
@@ -107,6 +108,7 @@ const Home: React.FC = () => {
     const { user, signOutLocal, authReady, accessToken, refreshToken } = useUser();
     const { staffAuth } = useStaffAuth();
     const { showAlert } = useAlert();
+    const { resolvedColorMode, toggleColorMode } = useColorMode();
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
@@ -415,15 +417,16 @@ const Home: React.FC = () => {
                 return;
             }
 
-            const $calendar = ($("#calendar") as any);
-
             if (modalMode === "edit" && id) {
                 const updated = await updateCalendarEvent(id, newEvent, accessToken);
-                $calendar.fullCalendar("removeEvents", id);
-                $calendar.fullCalendar("renderEvent", updated);
+                window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
+                    detail: { mode: "edit", event: updated },
+                }));
             } else {
                 const created = await createCalendarEvent(newEvent, accessToken);
-                $calendar.fullCalendar("renderEvent", created);
+                window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
+                    detail: { mode: "create", event: created },
+                }));
             }
 
             setModalOpen(false);
@@ -453,130 +456,156 @@ const Home: React.FC = () => {
     return (
         <div className={`home-wrapper${isArenaPage ? ' arena-home' : ''}`}>
             <header className="home-header">
-                <MobileNav
-                    boards={boards}
-                    isLogin={isLogin}
-                    quizURL={quizURL}
-                    totalCount={totalCount}
-                    navigate={navigate}
-                    staffAuth={staffAuth}
-                />
-                <div className="logo" onClick={() => navigate('/')}>JBIG</div>
-                <div className="header-right-section">
-                    {/* 알림 아이콘 */}
-                    {isLogin && (
-                        <div className="notification-wrapper" ref={notificationRef}>
-                            <div className="notification-icon-wrapper" onClick={handleOpenNotifications}>
-                                <Bell size={20} color="#000" />
-                                {unreadCount > 0 && (
-                                    <span className="notification-badge">
-                                        {unreadCount > 99 ? '99+' : unreadCount}
-                                    </span>
+                <div className="home-header-inner">
+                    <div className="home-header-left">
+                        <MobileNav
+                            boards={boards}
+                            isLogin={isLogin}
+                            quizURL={quizURL}
+                            totalCount={totalCount}
+                            navigate={navigate}
+                            staffAuth={staffAuth}
+                        />
+                        <button type="button" className="logo" onClick={() => navigate('/')}>JBIG</button>
+                    </div>
+                    <div className="header-right-section">
+                        <button
+                            type="button"
+                            className="theme-toggle-btn"
+                            onClick={toggleColorMode}
+                            aria-label={resolvedColorMode === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
+                            title={resolvedColorMode === "dark" ? "라이트 모드" : "다크 모드"}
+                        >
+                            {resolvedColorMode === "dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+                        </button>
+
+                        {/* 알림 아이콘 */}
+                        {isLogin && (
+                            <div className="notification-wrapper" ref={notificationRef}>
+                                <button
+                                    type="button"
+                                    className="notification-icon-wrapper"
+                                    onClick={handleOpenNotifications}
+                                    aria-label="알림 열기"
+                                    aria-expanded={notificationOpen}
+                                >
+                                    <Bell size={19} aria-hidden="true" />
+                                    {unreadCount > 0 && (
+                                        <span className="notification-badge">
+                                            {unreadCount > 99 ? '99+' : unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                                {notificationOpen && (
+                                    <div className="notification-dropdown">
+                                        <div className="notification-header">
+                                            <span className="notification-title">알림</span>
+                                            {unreadCount > 0 && (
+                                                <button type="button" className="mark-all-read-btn" onClick={handleMarkAllRead}>
+                                                    모두 읽음
+                                                </button>
+                                            )}
+                                        </div>
+                                        <div className="notification-list">
+                                            {notifications.length === 0 ? (
+                                                <div className="notification-empty">알림이 없습니다</div>
+                                            ) : (
+                                                notifications.map(n => (
+                                                    <div
+                                                        key={n.id}
+                                                        className={`notification-item ${!n.is_read ? 'unread' : ''}`}
+                                                        onClick={() => handleNotificationClick(n)}
+                                                    >
+                                                        <div className="notification-content">
+                                                            <span className="notification-actor">
+                                                                {n.actor_semester > 0 ? `${n.actor_semester}기 ` : ''}{n.actor_name}
+                                                            </span>
+                                                            <span className="notification-text">
+                                                                {n.notification_type <= 5 && '님이 '}
+                                                                {n.notification_type === 1 && '회원님의 글에 댓글을 남겼습니다'}
+                                                                {n.notification_type === 2 && '회원님의 댓글에 답글을 남겼습니다'}
+                                                                {n.notification_type === 3 && '회원님의 글을 좋아합니다'}
+                                                                {n.notification_type === 4 && '회원님의 댓글을 좋아합니다'}
+                                                                {n.notification_type === 5 && '회원님의 모집에 지원했습니다'}
+                                                                {n.notification_type === 6 && '모집에 합류가 확정되었습니다!'}
+                                                                {n.notification_type === 7 && '모집에 선발되지 않았습니다'}
+                                                                {n.notification_type === 8 && '모집이 마감되었습니다'}
+                                                            </span>
+                                                        </div>
+                                                        <div className="notification-post-title">
+                                                            {n.post_title && n.post_title.length > 25 ? n.post_title.slice(0, 25) + '...' : (n.post_title || '삭제된 게시글')}
+                                                        </div>
+                                                        {n.comment_content && (
+                                                            <div className="notification-comment">
+                                                                "{n.comment_content}"
+                                                            </div>
+                                                        )}
+                                                        <div className="notification-time">
+                                                            {new Date(n.created_at).toLocaleDateString('ko-KR', {
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </div>
                                 )}
                             </div>
-                            {notificationOpen && (
-                                <div className="notification-dropdown">
-                                    <div className="notification-header">
-                                        <span className="notification-title">알림</span>
-                                        {unreadCount > 0 && (
-                                            <button className="mark-all-read-btn" onClick={handleMarkAllRead}>
-                                                모두 읽음
-                                            </button>
+                        )}
+
+                        {/* 유저 메뉴 */}
+                        <div className="user-info-wrapper" ref={dropdownRef}>
+                            {userName ? (
+                                <button
+                                    type="button"
+                                    className="user-info-clickable"
+                                    onClick={() => setMenuOpen(prev => !prev)}
+                                    aria-expanded={menuOpen}
+                                >
+                                    <CircleUserRound size={18} aria-hidden="true" />
+                                    <span className="user-info-name">
+                                        {typeof userSemester === "number" && userSemester > 0 && (
+                                            <span className="user-semester-tag">{userSemester}기&nbsp;</span>
                                         )}
-                                    </div>
-                                    <div className="notification-list">
-                                        {notifications.length === 0 ? (
-                                            <div className="notification-empty">알림이 없습니다</div>
-                                        ) : (
-                                            notifications.map(n => (
-                                                <div
-                                                    key={n.id}
-                                                    className={`notification-item ${!n.is_read ? 'unread' : ''}`}
-                                                    onClick={() => handleNotificationClick(n)}
-                                                >
-                                                    <div className="notification-content">
-                                                        <span className="notification-actor">
-                                                            {n.actor_semester > 0 ? `${n.actor_semester}기 ` : ''}{n.actor_name}
-                                                        </span>
-                                                        <span className="notification-text">
-                                                            {n.notification_type <= 5 && '님이 '}
-                                                            {n.notification_type === 1 && '회원님의 글에 댓글을 남겼습니다'}
-                                                            {n.notification_type === 2 && '회원님의 댓글에 답글을 남겼습니다'}
-                                                            {n.notification_type === 3 && '회원님의 글을 좋아합니다'}
-                                                            {n.notification_type === 4 && '회원님의 댓글을 좋아합니다'}
-                                                            {n.notification_type === 5 && '회원님의 모집에 지원했습니다'}
-                                                            {n.notification_type === 6 && '모집에 합류가 확정되었습니다!'}
-                                                            {n.notification_type === 7 && '모집에 선발되지 않았습니다'}
-                                                            {n.notification_type === 8 && '모집이 마감되었습니다'}
-                                                        </span>
-                                                    </div>
-                                                    <div className="notification-post-title">
-                                                        {n.post_title && n.post_title.length > 25 ? n.post_title.slice(0, 25) + '...' : (n.post_title || '삭제된 게시글')}
-                                                    </div>
-                                                    {n.comment_content && (
-                                                        <div className="notification-comment">
-                                                            "{n.comment_content}"
-                                                        </div>
-                                                    )}
-                                                    <div className="notification-time">
-                                                        {new Date(n.created_at).toLocaleDateString('ko-KR', {
-                                                            month: 'short',
-                                                            day: 'numeric',
-                                                            hour: '2-digit',
-                                                            minute: '2-digit'
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
+                                        {userName}
+                                    </span>
+                                </button>
+                            ) : (
+                                <Button variant="default" size="small" className="login-button" onClick={() => setLoginModalOpen(true)}>
+                                    로그인
+                                </Button>
+                            )}
+
+                            {menuOpen && (
+                                <div className="user-dropdown" role="menu">
+                                    <button type="button" role="menuitem" className="dropdown-item" onClick={() => {
+                                        if (user?.email) {
+                                            const username = user.email.split("@")[0];
+                                            navigate(`/@${username}`);
+                                        }
+                                        setMenuOpen(false);
+                                    }}>
+                                        내 정보
+                                    </button>
+                                    {(staffAuth || user?.is_staff) && (
+                                        <button type="button" role="menuitem" className="dropdown-item" onClick={() => {
+                                            navigate('/admin');
+                                            setMenuOpen(false);
+                                        }}>
+                                            관리자 페이지 열기
+                                        </button>
+                                    )}
+                                    <div className="dropdown-divider" />
+                                    <button type="button" role="menuitem" className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
+                                        로그아웃
+                                    </button>
                                 </div>
                             )}
                         </div>
-                    )}
-
-                    {/* 유저 메뉴 */}
-                    <div className="user-info-wrapper" ref={dropdownRef}>
-                        {userName ? (
-                            <div className="user-info-clickable" onClick={() => setMenuOpen(prev => !prev)}>
-                                <CircleUserRound size={19} color="#000" />
-                                <span className="user-info-name">
-                                    {typeof userSemester === "number" && userSemester > 0 && (
-                                        <span style={{fontSize: 13, marginRight: 2}}>{userSemester}기&nbsp;</span>
-                                    )}
-                                    {userName}
-                                </span>
-                            </div>
-                        ) : (
-                            <button className="login-button" onClick={() => setLoginModalOpen(true)}>
-                                로그인
-                            </button>
-                        )}
-
-                        {menuOpen && (
-                            <div className="user-dropdown">
-                                <div className="dropdown-item" onClick={() => {
-                                    if (user?.email) {
-                                        const username = user.email.split("@")[0];
-                                        navigate(`/@${username}`);
-                                    }
-                                    setMenuOpen(false);
-                                }}>
-                                    내 정보
-                                </div>
-                                {(staffAuth || user?.is_staff) && (
-                                    <div className="dropdown-item" onClick={() => {
-                                        navigate('/admin');
-                                        setMenuOpen(false);
-                                    }}>
-                                        관리자 페이지 열기
-                                    </div>
-                                )}
-                                <div className="dropdown-item" onClick={handleLogout}>
-                                    로그아웃
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </header>

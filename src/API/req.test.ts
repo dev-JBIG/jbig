@@ -1,7 +1,7 @@
 import { AxiosError, AxiosAdapter } from "axios";
 import client from "./client";
 import { authTransport, getAuthState, readAuth, setAuth, signOutLocal, subscribeAuth } from "./auth";
-import { createPost, fetchPostDetail, fetchQuizUrl, signin } from "./req";
+import { createPost, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
 
 const user = { username: "회원", semester: "3", email: "member@jbnu.ac.kr", is_staff: false };
 const token = (seconds: number) => `header.${btoa(JSON.stringify({ exp: Date.now() / 1000 + seconds }))}.signature`;
@@ -127,3 +127,17 @@ test('logout while a request is in flight cannot log out a subsequent login', as
     expect(readAuth().session?.user.username).toBe('다른 회원');
     expect(refreshAdapter).not.toHaveBeenCalled();
 });
+
+test('fetchBoardPosts calls /api/posts/all/ with trailing slash when boardId is omitted', async () => {
+    adapter.mockImplementation(async (config) =>
+        ok(config, { posts: [], total_pages: 1, post_permission: false })
+    );
+
+    await fetchBoardPosts(undefined, 10, 1, false);
+    await fetchBoardPosts(undefined, 10, 1, true);
+
+    expect(adapter).toHaveBeenCalledTimes(2);
+    expect(new URL(adapter.mock.calls[0][0].url ?? '').pathname).toBe('/api/posts/all/');
+    expect(new URL(adapter.mock.calls[1][0].url ?? '').pathname).toBe('/api/posts/all/');
+});
+

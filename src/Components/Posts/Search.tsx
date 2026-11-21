@@ -1,6 +1,7 @@
 // Search.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Button } from "@primer/react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import PostList from "../Posts/PostList";
@@ -33,11 +34,6 @@ const Search: React.FC<{ boards?: Section[] }> = ({ boards }) => {
         }
         setSelectedBoardId(boardId);
     }, [boardId, qFromUrl, navigate]);
-
-    // URL q 변경 시 입력창 동기화
-    useEffect(() => {
-        setQuery(qFromUrl);
-    }, [qFromUrl]);
 
     // boards 옵션
     const boardOptions = useMemo(
@@ -72,6 +68,7 @@ const Search: React.FC<{ boards?: Section[] }> = ({ boards }) => {
                     className="search-board-select"
                     value={selectedBoardId}
                     onChange={handleBoardChange}
+                    aria-label="검색 대상 게시판"
                 >
                     <option value="all">전체 게시판</option>
                     {boardOptions.map((opt) => (
@@ -92,12 +89,13 @@ const Search: React.FC<{ boards?: Section[] }> = ({ boards }) => {
                 <select
                     className="search-perpage-select"
                     value={perPage}
+                    aria-label="페이지당 게시글 수"
                     onChange={(e) => {
                         const nextSize = Number(e.target.value);
                         setPerPage(nextSize);
                         const next = new URLSearchParams(sp);
                         next.set("page_size", String(nextSize));
-                        setSp(next, {replace: false});
+                        setSp(next, { replace: false });
                     }}
                 >
                     {[5, 10, 15, 20, 30].map((n) => (
@@ -105,9 +103,9 @@ const Search: React.FC<{ boards?: Section[] }> = ({ boards }) => {
                     ))}
                 </select>
 
-                <button type="submit" className="search-button">
+                <Button type="submit" variant="primary" className="search-button" aria-label="검색">
                     <FontAwesomeIcon icon={faMagnifyingGlass} />
-                </button>
+                </Button>
             </form>
 
             {/* 목록/페이징/표시는 전부 PostList가 처리 (boards만 전달) */}

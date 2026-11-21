@@ -1,6 +1,7 @@
 // PostList.tsx
-import React, {useEffect, useMemo, useRef, useState} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { Button, Label } from "@primer/react";
 import "./PostList.css";
 import "./PostList-mobile.css";
 import { PostItem, Section } from "../Utils/interfaces"
@@ -45,8 +46,6 @@ const getDisplayBoardName = (boardName: string): string => {
         "공모전게시판": "공모전",
     };
 
-    
-
     // 매핑에 정확히 일치하는 이름이 있으면 반환
     if (boardNameMap[name]) {
         return boardNameMap[name];
@@ -70,14 +69,16 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
     const [posts, setPosts] = useState<PostItem[] | null>(null);
     const [announcementPosts, setAnnouncementPosts] = useState<PostItem[]>([]);
     const [totalPages, setTotalPages] = useState(1);
-    //const [page, setPage] = useState(1);
     const [searchParams, setSearchParams] = useSearchParams();
     const page = parseInt(searchParams.get('page') || '1', 10);
 
-    const handlePageChange = (newPage: number) => {
-        searchParams.set('page', String(newPage));
-        setSearchParams(searchParams);
-    };
+    const handlePageChange = useCallback((newPage: number) => {
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('page', String(newPage));
+            return next;
+        });
+    }, [setSearchParams]);
 
     const [searchKeyword, setSearchKeyword] = useState("");
     const [postPermission, setPostPermission] = useState(false);
@@ -119,7 +120,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
             prevPerPageUrlRef.current = perPageFromUrl;
             handlePageChange(1);
         }
-    }, [isSearchPage, perPageFromUrl]);
+    }, [isSearchPage, perPageFromUrl, handlePageChange]);
 
 
     // boards 전개해서 id→존재 여부 판단
@@ -309,8 +310,9 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
         getPosts();
 
     }, [
-        boardIdRaw, location.pathname, location.search,
-        isHome, isUserPage, isSearchPage, q, page, effectivePerPage, searchScopeBoardId, accessToken
+        boardIdRaw, activeBoardID, location.pathname, location.search,
+        isHome, isUserPage, isSearchPage, q, page, effectivePerPage, searchScopeBoardId,
+        accessToken, navigate, showAlert, signOutLocal, userId
     ]);
 
     const displayPosts = posts ?? [];
@@ -367,18 +369,21 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                         </div>
                         
 
-                        {/* 태그 필터 탭 */}
+                        {/* 태그 필터 버튼 그룹 */}
                         {!isHome && activeBoard?.name !== BRAG_BOARD_NAME && activeBoard?.available_tags && activeBoard.available_tags.length > 0 && (
-                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                            <div className="postlist-tag-tabs" role="group" aria-label="태그 필터">
                                 <button
-                                    className={`pagination-btn ${selectedTag === '' ? 'active' : ''}`}
-                                    style={{ fontSize: '13px', padding: '4px 12px' }}
+                                    type="button"
+                                    aria-pressed={selectedTag === ''}
+                                    className={`postlist-tag-tab ${selectedTag === '' ? 'active' : ''}`}
                                     onClick={() => { setSelectedTag(''); handlePageChange(1); }}
                                 >전체</button>
                                 {activeBoard.available_tags.map((tag: string) => (
-                                    <button key={tag}
-                                        className={`pagination-btn ${selectedTag === tag ? 'active' : ''}`}
-                                        style={{ fontSize: '13px', padding: '4px 12px' }}
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        aria-pressed={selectedTag === tag}
+                                        className={`postlist-tag-tab ${selectedTag === tag ? 'active' : ''}`}
                                         onClick={() => { setSelectedTag(tag); handlePageChange(1); }}
                                     >{tag}</button>
                                 ))}
@@ -405,17 +410,18 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     value={searchKeyword}
                                     onChange={(e) => setSearchKeyword(e.target.value)}
                                 />
-                                <button type="submit" className="list-search-button">검색</button>
+                                <Button type="submit" variant="primary" size="small" className="list-search-button">검색</Button>
                             </form>
                         )}
 
                         {isHome && (
-                            <span
+                            <button
+                                type="button"
                                 className="more-link"
                                 onClick={() => navigate("/board/0")}
                             >
-              더보기 &gt;
-            </span>
+                                더보기 &gt;
+                            </button>
                         )}
                     </>
                 )}
@@ -468,13 +474,13 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     <td className="th-category">
                                         {p.board_name && (
                                             p.board_name === "공지사항" ? (
-                                                <span className="announcement-badge">
+                                                <Label variant="danger" size="small" className="announcement-badge">
                                                     공지
-                                                </span>
+                                                </Label>
                                             ) : (
-                                                <span className="category-badge">
+                                                <Label variant="accent" size="small" className="category-badge">
                                                     {displayName}
-                                                </span>
+                                                </Label>
                                             )
                                         )}
                                     </td>
@@ -565,7 +571,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                 }}
                             >
                                 <td className="th-category">
-                                    <span className="announcement-badge">공지</span>
+                                    <Label variant="danger" size="small" className="announcement-badge">공지</Label>
                                 </td>
                                 <td className="title-cell th-title">
                                     <span className="announcement-title">{p.title}</span>
@@ -604,22 +610,22 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     <td className="th-category">
                                         {p.board_name && (
                                             p.board_name === "공지사항" ? (
-                                                <span className="announcement-badge">
+                                                <Label variant="danger" size="small" className="announcement-badge">
                                                     공지
-                                                </span>
+                                                </Label>
                                             ) : (
-                                                <span className="category-badge">
+                                                <Label variant="accent" size="small" className="category-badge">
                                                     {displayName}
-                                                </span>
+                                                </Label>
                                             )
                                         )}
                                     </td>
                                 )}
                                 <td className="title-cell th-title">
                                     {p.tag && (
-                                        <span className="category-badge" style={{ marginRight: '6px', fontSize: '11px' }}>
+                                        <Label variant="secondary" size="small" className="postlist-tag-badge">
                                             {p.tag}
-                                        </span>
+                                        </Label>
                                     )}
                                     {p.title}
                                     {p.recruitment_info && (
@@ -680,9 +686,9 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     !(activeBoard?.name === "공지사항" && !staffAuth) &&
                                     postPermission && (
                                         <div className="write-button-row">
-                                            <button className="write-button" onClick={handleWrite}>
+                                            <Button variant="primary" className="write-button" onClick={handleWrite}>
                                                 글쓰기
-                                            </button>
+                                            </Button>
                                         </div>
                                     )}
 

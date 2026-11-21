@@ -1,20 +1,23 @@
+/* GitHub Primer styled ChangePWD */
+
 .changepwd-wrapper {
-    width: 100vw;
-    min-width: 350px;
+    width: 100%;
     min-height: 100vh;
-    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #f7f7f7; /* Added a light background like the previous example */
+    padding: 24px 16px;
+    background-color: var(--bgColor-inset, var(--color-bg-secondary));
 }
 
 .changepwd-container {
-    width: 350px;
-    padding: 32px 16px 24px 16px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 4px 0 #ddd;
+    width: 100%;
+    max-width: 400px;
+    padding: 28px 24px;
+    background: var(--bgColor-default, var(--color-bg-primary));
+    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -25,101 +28,85 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 14px;             /* Logo-text spacing */
-    margin-bottom: 24px;
-    padding-bottom: 15px;   /* Added from previous example for separation */
-    border-bottom: 1px solid #eee; /* Added from previous example */
+    gap: 10px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
 .changepwd-logo {
-    font-size: 2rem;
-    font-weight: 800;
-    color: #243763;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--fgColor-default, var(--color-text-primary));
     text-decoration: none;
     user-select: none;
-    letter-spacing: -1px;
-    transition: color 0.18s;
+    letter-spacing: -0.02em;
 }
 
 .changepwd-logo:hover {
-    color: #3563e9;
+    color: var(--fgColor-accent, var(--color-primary));
 }
 
 .changepwd-title {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -2px;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--fgColor-muted, var(--color-text-secondary));
     margin: 0;
-    text-align: left;
 }
 
 .changepwd-form {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Spacing between form elements */
+    gap: 8px;
 }
 
 .changepwd-label {
-    font-size: 1rem;
-    margin-bottom: 3px;
-    font-weight: 400;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, var(--color-text-primary));
+    margin-top: 4px;
 }
 
 .changepwd-input {
     width: 100%;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    font-size: 1rem;
-    background: #fafafa;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    background: var(--bgColor-default, var(--color-bg-primary));
+    color: var(--fgColor-default, var(--color-text-primary));
     box-sizing: border-box;
-}
-
-.changepwd-input:focus {
-    border-color: #666;
     outline: none;
 }
 
+.changepwd-input:focus {
+    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+}
+
 .changepwd-input:disabled {
-    background-color: #f2f2f2;
+    background-color: var(--bgColor-disabled, var(--color-bg-tertiary));
     cursor: not-allowed;
 }
 
 .changepwd-button {
-    width: 100%;
-    padding: 11px 0;
     margin-top: 8px;
-    background: #000;
-    color: #fff;
-    font-size: 1.1rem;
-    font-weight: 700;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.changepwd-button:hover {
-    background: #222;
-}
-
-.changepwd-button:disabled {
-    background-color: #a0a0a0;
-    cursor: not-allowed;
 }
 
 .changepwd-links {
     width: 100%;
     display: flex;
-    justify-content: space-between;
-    margin-top: 14px;
+    justify-content: center;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
 .changepwd-link {
-    font-size: 1rem;
-    color: #2d38d5;
+    font-size: 13px;
+    color: var(--fgColor-accent, var(--color-primary));
     text-decoration: none;
     font-weight: 500;
 }
@@ -128,25 +115,28 @@
     text-decoration: underline;
 }
 
-/* 인증코드 입력 행 */
 .changepwd-code-row {
     position: relative;
     width: 100%;
-    margin-bottom: 10px; /* input의 기본 margin-bottom과 동일하게 설정 */
+    margin-bottom: 4px;
 }
 
 .changepwd-code-row .changepwd-input {
-    /* 타이머가 들어갈 공간을 확보하기 위해 오른쪽 패딩을 추가합니다. */
-    padding-right: 55px;
-    margin-bottom: 0; /* 부모 div가 margin을 가지므로 자식의 margin은 제거 */
+    padding-right: 58px;
+    margin-bottom: 0;
 }
 
 .changepwd-timer {
     position: absolute;
     right: 12px;
-    top: 45%;
+    top: 50%;
     transform: translateY(-50%);
-    font-size: 14px;
-    font-weight: 500;
-    color: black; /* 기본 색상 */
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-muted, var(--color-text-secondary));
+    font-variant-numeric: tabular-nums;
+}
+
+.changepwd-timer.is-expiring {
+    color: var(--fgColor-danger, #cf222e);
 }

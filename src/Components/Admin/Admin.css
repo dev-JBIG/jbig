@@ -1,37 +1,29 @@
-/* --- CSS 변수 및 기본 스타일 --- */
-:root {
-    --primary-color: #3498db;
-    --primary-hover-color: #2980b9;
-    --danger-color: #e74c3c;
-    --danger-hover-color: #c0392b;
-    --success-color: #2ecc71;
-    --success-hover-color: #27ae60;
-    --secondary-color: #95a5a6;
-    --secondary-hover-color: #7f8c8d;
-    --background-color: #f4f6f9;
-    --sidebar-bg: #ffffff;
-    --header-bg: #ffffff;
-    --card-bg: #ffffff;
-    --text-color: #34495e;
-    --text-light-color: #7f8c8d;
-    --border-color: #e0e0e0;
-    --shadow-color: rgba(0, 0, 0, 0.05);
-}
+/* GitHub Primer styled Admin Dashboard (removed global * margin/padding reset) */
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
-
-/* --- 전체 레이아웃 --- */
 .admin-container {
+    --primary-color: var(--bgColor-accent-emphasis, #0969da);
+    --primary-hover-color: var(--color-primary-hover, #0550ae);
+    --danger-color: var(--bgColor-danger-emphasis, #cf222e);
+    --danger-hover-color: #a40e26;
+    --success-color: var(--bgColor-success-emphasis, #1f883d);
+    --success-hover-color: #1a7f37;
+    --secondary-color: var(--fgColor-muted, #656d76);
+    --secondary-hover-color: var(--fgColor-default, #1f2328);
+    --background-color: var(--bgColor-inset, #f6f8fa);
+    --sidebar-bg: var(--bgColor-default, #ffffff);
+    --header-bg: var(--bgColor-default, #ffffff);
+    --card-bg: var(--bgColor-default, #ffffff);
+    --text-color: var(--fgColor-default, #1f2328);
+    --text-light-color: var(--fgColor-muted, #656d76);
+    --border-color: var(--borderColor-default, #d0d7de);
+    --shadow-color: rgba(31, 35, 40, 0.06);
+
     display: flex;
     flex-direction: column;
     height: 100vh;
     background-color: var(--background-color);
     color: var(--text-color);
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-family-base);
 }
 
 .admin-header-bar {
@@ -39,23 +31,25 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 24px;
-    height: 60px;
+    height: 58px;
     background-color: var(--header-bg);
     border-bottom: 1px solid var(--border-color);
     flex-shrink: 0;
 }
 
 .admin-logo {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 600;
     cursor: pointer;
+    color: var(--text-color);
 }
 
 .admin-user-info {
     display: flex;
     align-items: center;
-    gap: 16px;
-    font-size: 14px;
+    gap: 14px;
+    font-size: 13px;
+    color: var(--text-light-color);
 }
 
 .admin-content {
@@ -64,43 +58,48 @@
     overflow: hidden;
 }
 
-/* --- 사이드바 --- */
+/* 사이드바 */
 .admin-sidebar {
-    width: 220px;
+    width: 232px;
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
-    padding: 20px 0;
+    padding: 16px 10px;
     display: flex;
     flex-direction: column;
 }
 
 .admin-menu ul {
     list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
 .admin-menu li {
-    padding: 12px 20px;
-    font-size: 15px;
+    padding: 8px 12px;
+    font-size: 14px;
     font-weight: 500;
-    color: var(--text-light-color);
+    color: var(--text-color);
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
     border-left: 3px solid transparent;
 }
 
 .admin-menu li:hover {
-    background-color: var(--background-color);
-    color: var(--primary-color);
+    background-color: var(--bgColor-muted, #f6f8fa);
 }
 
 .admin-menu li.active {
-    background-color: #eaf5fc;
-    color: var(--primary-color);
-    font-weight: 700;
-    border-left-color: var(--primary-color);
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+    font-weight: 600;
+    border-left-color: var(--fgColor-accent, #0969da);
 }
 
-/* --- 메인 컨텐츠 영역 --- */
+/* 메인 컨텐츠 영역 */
 .admin-main-area {
     flex: 1;
     overflow-y: auto;
@@ -108,35 +107,38 @@
 }
 
 .admin-content-header {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 24px;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 20px 0;
     color: var(--text-color);
 }
 
-/* --- 카드 --- */
+/* 카드 */
 .admin-card {
     background-color: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px var(--shadow-color);
-    padding: 24px;
-    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .card-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-color);
+    margin: 0;
 }
 
-/* --- 테이블 --- */
+/* 테이블 */
 .table-wrapper {
     overflow-x: auto;
 }
@@ -148,55 +150,42 @@
 }
 
 .admin-table thead tr {
-    background-color: var(--background-color);
+    background-color: var(--bgColor-muted, #f6f8fa);
 }
 
-.admin-table th {
-    font-weight: 600;
-    font-size: 14px;
-    padding: 12px 16px;
-    border-bottom: 2px solid var(--border-color);
-    text-align: left;
-    color: var(--text-light-color);
-}
-
-.admin-table td {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 14px;
-    vertical-align: middle;
-}
-
+.admin-table th,
 .admin-table-header {
-    background-color: var(--background-color);
     font-weight: 600;
-    font-size: 14px;
-    padding: 12px 16px;
-    border-bottom: 2px solid var(--border-color);
+    font-size: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
     text-align: left;
     color: var(--text-light-color);
+    background-color: var(--bgColor-muted, #f6f8fa);
 }
 
+.admin-table td,
 .admin-table-cell {
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border-color);
-    font-size: 14px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--borderColor-muted, var(--border-color));
+    font-size: 13.5px;
+    color: var(--text-color);
     vertical-align: middle;
 }
 
 .table-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
 }
 
-/* --- 아이콘 버튼 --- */
+/* 아이콘 버튼 */
 .admin-icon-button {
     padding: 6px;
-    background: transparent;
+    background: var(--bgColor-default, #ffffff);
     border: 1px solid var(--border-color);
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -204,76 +193,71 @@
 }
 
 .admin-icon-button:hover {
-    background-color: var(--background-color);
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    transform: translateY(-1px);
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent, #0969da);
 }
 
-/* --- 버튼 --- */
+/* 버튼 */
 .admin-button {
     padding: 6px 14px;
     font-size: 13px;
     font-weight: 500;
-    border: 1px solid transparent;
-    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-
-.admin-button:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .button-primary {
-    background-color: var(--primary-color);
-    color: white;
+    background-color: var(--bgColor-accent-emphasis, #0969da);
+    border-color: rgba(31, 35, 40, 0.15);
+    color: var(--fgColor-onEmphasis, #ffffff);
 }
-.button-primary:hover {
-    background-color: var(--primary-hover-color);
+.button-primary:hover:not(:disabled) {
+    filter: brightness(0.95);
 }
 
 .button-danger {
-    background-color: var(--danger-color);
-    color: white;
+    background-color: var(--bgColor-danger-emphasis, #cf222e);
+    border-color: rgba(31, 35, 40, 0.15);
+    color: var(--fgColor-onEmphasis, #ffffff);
 }
-.button-danger:hover {
-    background-color: var(--danger-hover-color);
+.button-danger:hover:not(:disabled) {
+    filter: brightness(0.95);
 }
 
 .button-success {
-    background-color: var(--success-color);
-    color: white;
+    background-color: var(--bgColor-success-emphasis, #1f883d);
+    border-color: rgba(31, 35, 40, 0.15);
+    color: var(--fgColor-onEmphasis, #ffffff);
 }
-.button-success:hover {
-    background-color: var(--success-hover-color);
+.button-success:hover:not(:disabled) {
+    filter: brightness(0.95);
 }
 
 .button-secondary {
-    background-color: transparent;
+    background-color: var(--bgColor-muted, #f6f8fa);
     border-color: var(--border-color);
-    color: var(--text-light-color);
+    color: var(--text-color);
 }
-.button-secondary:hover {
-    background-color: var(--background-color);
-    border-color: var(--secondary-hover-color);
-    color: var(--secondary-hover-color);
+.button-secondary:hover:not(:disabled) {
+    background-color: var(--bgColor-neutral-muted, #eaeef2);
 }
 
-
-/* --- 폼 요소 --- */
+/* 폼 요소 */
 .form-container {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: var(--background-color);
-    border-radius: 6px;
+    margin-top: 16px;
+    padding: 18px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
 }
 
 .admin-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
 }
 
 .form-group {
@@ -283,154 +267,158 @@
 }
 
 .form-label {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 600;
     color: var(--text-color);
 }
 
-.admin-input, .admin-select {
-    padding: 10px 12px;
+.admin-input,
+.admin-select {
+    padding: 8px 12px;
     font-size: 14px;
     border: 1px solid var(--border-color);
-    border-radius: 6px;
-    transition: border-color 0.2s;
+    border-radius: var(--radius-md);
+    background-color: var(--bgColor-default, #ffffff);
+    color: var(--text-color);
 }
 
-.admin-input:focus, .admin-select:focus {
+.admin-input:focus,
+.admin-select:focus {
     outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    border-color: var(--borderColor-accent-emphasis, #0969da);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
 }
 
-/* --- 상태 배지 --- */
+/* 상태 배지 */
 .status-badge {
-    padding: 4px 10px;
-    border-radius: 12px;
+    padding: 2px 10px;
+    border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
     display: inline-block;
+    border: 1px solid transparent;
 }
 
 .status-active {
-    background-color: #eafaf1;
-    color: #27ae60;
+    background-color: var(--bgColor-success-muted, #dafbe1);
+    color: var(--fgColor-success, #1a7f37);
+    border-color: var(--borderColor-success-muted, #4ac26b);
 }
 
 .status-inactive {
-    background-color: #fbeeee;
-    color: #c0392b;
+    background-color: var(--bgColor-danger-muted, #ffebe9);
+    color: var(--fgColor-danger, #cf222e);
+    border-color: var(--borderColor-danger-muted, #ff8182);
 }
 
-/* --- 대시보드 --- */
+/* 대시보드 */
 .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 24px;
-    margin-bottom: 24px;
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
 .stat-card {
     background-color: var(--card-bg);
-    border-radius: 8px;
-    box-shadow: 0 4px 6px var(--shadow-color);
-    padding: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 18px;
 }
 
 .stat-number {
-    font-size: 32px;
-    font-weight: 700;
-    margin-top: 8px;
+    font-size: 28px;
+    font-weight: 600;
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
 }
 
-.stat-blue { color: var(--primary-color); }
-.stat-green { color: var(--success-color); }
-.stat-red { color: var(--danger-color); }
+.stat-blue { color: var(--fgColor-accent, #0969da); }
+.stat-green { color: var(--fgColor-success, #1a7f37); }
+.stat-red { color: var(--fgColor-danger, #cf222e); }
 
 .activity-log {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .activity-item {
-    font-size: 14px;
+    font-size: 13.5px;
     color: var(--text-light-color);
     display: flex;
     align-items: center;
 }
+
 .activity-item span {
     padding-left: 8px;
 }
+
 .activity-item::before {
     content: '•';
-    color: var(--primary-color);
-    font-size: 18px;
+    color: var(--fgColor-accent, #0969da);
+    font-size: 16px;
 }
 
-/* --- 메시지 --- */
+/* 메시지 */
 .admin-message {
-    padding: 12px 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+    font-size: 13.5px;
+    border: 1px solid transparent;
 }
 
 .admin-message.success {
-    background-color: #eafaf1;
-    color: #27ae60;
-    border: 1px solid #27ae60;
+    background-color: var(--bgColor-success-muted, #dafbe1);
+    color: var(--fgColor-success, #1a7f37);
+    border-color: var(--borderColor-success-muted, #4ac26b);
 }
 
 .admin-message.error {
-    background-color: #fbeaea;
-    color: #c0392b;
-    border: 1px solid #c0392b;
+    background-color: var(--bgColor-danger-muted, #ffebe9);
+    color: var(--fgColor-danger, #cf222e);
+    border-color: var(--borderColor-danger-muted, #ff8182);
 }
 
-/* --- 폼 힌트 --- */
 .form-hint {
     font-size: 12px;
     color: var(--text-light-color);
     margin-top: 4px;
 }
 
-/* --- 로딩 --- */
 .admin-loading {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    font-size: 16px;
+    font-size: 15px;
     color: var(--text-light-color);
 }
 
-/* --- 비활성화 버튼 --- */
 .admin-button:disabled {
-    opacity: 0.6;
+    opacity: 0.55;
     cursor: not-allowed;
-    transform: none;
-    box-shadow: none;
 }
 
-/* --- 모바일 메뉴 토글 버튼 --- */
+/* 모바일 메뉴 토글 버튼 */
 .admin-menu-toggle {
     display: none;
     background: none;
     border: none;
-    padding: 8px;
+    padding: 6px;
     cursor: pointer;
     color: var(--text-color);
 }
 
-/* --- 모바일 오버레이 --- */
 .admin-sidebar-overlay {
     display: none;
     position: fixed;
-    top: 60px;
+    top: 56px;
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(27, 31, 36, 0.5);
     z-index: 99;
 }
 
@@ -438,7 +426,6 @@
     display: block;
 }
 
-/* --- 모바일 반응형 스타일 --- */
 @media (max-width: 768px) {
     .admin-header-bar {
         padding: 0 16px;
@@ -446,7 +433,7 @@
     }
 
     .admin-logo {
-        font-size: 18px;
+        font-size: 16px;
     }
 
     .admin-user-info {
@@ -476,17 +463,12 @@
         width: 260px;
         z-index: 100;
         transform: translateX(-100%);
-        transition: transform 0.3s ease;
-        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.25s ease;
+        box-shadow: var(--shadow-xl);
     }
 
     .admin-sidebar.open {
         transform: translateX(0);
-    }
-
-    .admin-menu li {
-        padding: 14px 20px;
-        font-size: 16px;
     }
 
     .admin-main-area {
@@ -495,8 +477,8 @@
     }
 
     .admin-content-header {
-        font-size: 22px;
-        margin-bottom: 16px;
+        font-size: 20px;
+        margin-bottom: 14px;
     }
 
     .admin-card {
@@ -504,62 +486,18 @@
         margin-bottom: 16px;
     }
 
-    .card-title {
+    .admin-input,
+    .admin-select {
         font-size: 16px;
     }
 
-    .admin-form {
-        gap: 14px;
-    }
-
-    .form-label {
-        font-size: 13px;
-    }
-
-    .admin-input, .admin-select {
-        padding: 12px;
-        font-size: 16px; /* iOS 줌 방지 */
-    }
-
-    .form-hint {
-        font-size: 11px;
-    }
-
     .admin-button {
-        padding: 10px 16px;
-        font-size: 14px;
+        padding: 8px 14px;
         width: 100%;
     }
 
-    .admin-message {
-        padding: 10px 14px;
-        font-size: 13px;
-    }
-
-    /* 대시보드 스탯 카드 */
     .dashboard-stats {
         grid-template-columns: 1fr;
-        gap: 16px;
-    }
-
-    .stat-card {
-        padding: 16px;
-    }
-
-    .stat-number {
-        font-size: 28px;
-    }
-
-    /* 테이블 모바일 대응 */
-    .table-wrapper {
-        margin: 0 -16px;
-        padding: 0 16px;
-    }
-
-    .admin-table-header,
-    .admin-table-cell {
-        padding: 10px 12px;
-        font-size: 13px;
     }
 
     .table-actions {

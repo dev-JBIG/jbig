@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from "react";
 import { Link, Routes, Route, useLocation } from "react-router-dom";
+import { Button, Spinner } from "@primer/react";
 import Home from "./Components/Home/Home";
 import "./App.css";
 import Signin from "./Components/Signin/Signin";
@@ -12,7 +13,12 @@ import { AlertProvider } from "./Components/Utils/AlertContext";
 
 const Note = lazy(() => import("./Components/Note/Note"));
 const Admin = lazy(() => import("./Components/Admin/Admin"));
-const pageLoading = <div className="app-loading" role="status">페이지를 불러오는 중입니다…</div>;
+const pageLoading = (
+    <div className="app-loading" role="status">
+        <Spinner size="small" />
+        <span>페이지를 불러오는 중입니다…</span>
+    </div>
+);
 
 function AppContent() {
     const location = useLocation();
@@ -30,17 +36,33 @@ function AppContent() {
                     </Routes>
                 ) : (
                     <div className="app-container">
-                        {!authReady && <header className="auth-header"><Link to="/">JBIG</Link><Link to="/signin">로그인</Link></header>}
+                        {!authReady && (
+                            <header className="auth-header">
+                                <Link to="/" className="auth-header-brand">JBIG</Link>
+                                <Link to="/signin" className="auth-header-signin">로그인</Link>
+                            </header>
+                        )}
                         {(authError || sessionExpired) && (
                             <div className="auth-notice" role="alert">
                                 <p>{authError || "세션이 만료되었습니다. 다시 로그인해주세요."}</p>
-                                {authError && <button onClick={retryAuth} disabled={checkingAuth}>다시 시도</button>}
-                                <Link to="/signin">로그인하기</Link>
+                                <div className="auth-notice-actions">
+                                    {authError && (
+                                        <Button size="small" onClick={retryAuth} disabled={checkingAuth}>
+                                            다시 시도
+                                        </Button>
+                                    )}
+                                    <Link to="/signin" className="auth-notice-link">로그인하기</Link>
+                                </div>
                             </div>
                         )}
                         <div className="app-content">
                             {!authReady ? (
-                                checkingAuth && <div className="app-loading" role="status">로그인 상태를 확인하고 있습니다…</div>
+                                checkingAuth && (
+                                    <div className="app-loading" role="status">
+                                        <Spinner size="small" />
+                                        <span>로그인 상태를 확인하고 있습니다…</span>
+                                    </div>
+                                )
                             ) : (
                                 <Suspense fallback={pageLoading}>
                                     <Routes>

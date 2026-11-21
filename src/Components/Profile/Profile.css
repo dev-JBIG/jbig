@@ -1,6 +1,5 @@
 /* ============================================================
-   Resume page — local design tokens
-   사이트 전역 토큰을 깨지 않기 위해 이력서 페이지 내에서만 사용
+   Resume page — GitHub Primer token mapping
    ============================================================ */
 .resume-page {
     --resume-fs-name: 28px;
@@ -12,24 +11,22 @@
     --resume-gap-section: 28px;
     --resume-gap-item: 14px;
 
-    --resume-color-text: #0f172a;
-    --resume-color-muted: #475569;
-    --resume-color-meta: #94a3b8;
-    --resume-color-border: #e2e8f0;
-    --resume-color-bg: #ffffff;
-    --resume-color-bg-soft: #f8fafc;
-    --resume-color-accent: #2563eb;
+    --resume-color-text: var(--fgColor-default, #1f2328);
+    --resume-color-muted: var(--fgColor-muted, #656d76);
+    --resume-color-meta: var(--fgColor-muted, #656d76);
+    --resume-color-border: var(--borderColor-default, #d0d7de);
+    --resume-color-bg: var(--bgColor-default, #ffffff);
+    --resume-color-bg-soft: var(--bgColor-muted, #f6f8fa);
+    --resume-color-accent: var(--fgColor-accent, #0969da);
 }
 
 .profile-container {
-    /* width:100% — home-wrapper(flex column) 안에서 margin:auto가 stretch를 무력화해
-       shrink-to-fit으로 좁아지는 것 방지 (명시적 폭이 있으면 960까지 채우고 중앙정렬) */
     width: 100%;
     max-width: 960px;
     margin: 0 auto;
-    padding: 48px 24px 80px;
+    padding: 36px 24px 80px;
     min-height: calc(100vh - 200px);
-    color: var(--resume-color-text, #0f172a);
+    color: var(--resume-color-text);
 }
 
 .profile-loading,
@@ -39,14 +36,14 @@
     align-items: center;
     justify-content: center;
     min-height: 400px;
-    color: #666;
+    color: var(--fgColor-muted, #656d76);
 }
 
 .loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #2563eb;
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--borderColor-default, #d0d7de);
+    border-top: 3px solid var(--fgColor-accent, #0969da);
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 16px;
@@ -60,17 +57,19 @@
 .profile-error h2 {
     font-size: 48px;
     margin-bottom: 16px;
+    color: var(--fgColor-default, #1f2328);
 }
 
 .profile-error button {
     margin-top: 20px;
-    padding: 10px 24px;
-    background: #2563eb;
-    color: white;
-    border: none;
-    border-radius: 8px;
+    padding: 8px 20px;
+    background: var(--bgColor-accent-emphasis, #0969da);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border: 1px solid rgba(31, 35, 40, 0.15);
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 14px;
+    font-weight: 500;
 }
 
 /* ============================================================
@@ -89,13 +88,14 @@
     width: 96px;
     height: 96px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #93c5fd 0%, #6366f1 100%);
+    background: var(--bgColor-accent-emphasis, #0969da);
+    border: 1px solid var(--borderColor-default, #d0d7de);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 38px;
-    font-weight: 700;
-    color: white;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--fgColor-onEmphasis, #ffffff);
     flex-shrink: 0;
     overflow: hidden;
 }
@@ -113,10 +113,10 @@
 
 .profile-name {
     font-size: var(--resume-fs-name);
-    font-weight: 700;
+    font-weight: 600;
     color: var(--resume-color-text);
     margin: 0 0 4px 0;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
@@ -146,10 +146,11 @@
 }
 
 .profile-semester {
-    background: #eff6ff;
-    color: var(--resume-color-accent);
-    padding: 3px 10px;
-    border-radius: 4px;
+    background: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-accent, #0969da);
+    border: 1px solid var(--borderColor-accent-muted, #54aeff);
+    padding: 2px 10px;
+    border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
 }
@@ -177,7 +178,7 @@
 }
 
 .profile-last-login {
-    color: #16a34a;
+    color: var(--fgColor-success, #1a7f37);
 }
 
 .profile-actions {
@@ -193,81 +194,66 @@
 .btn-cancel,
 .btn-password,
 .btn-delete-account {
-    padding: 9px 18px;
-    border-radius: 6px;
+    padding: 7px 16px;
+    border-radius: var(--radius-md);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s;
-    border: 1px solid transparent;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    border: 1px solid var(--borderColor-default, #d0d7de);
     white-space: nowrap;
 }
 
 .btn-edit {
-    background: var(--resume-color-accent);
-    color: white;
+    background: var(--bgColor-accent-emphasis, #0969da);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border-color: rgba(31, 35, 40, 0.15);
 }
 
 .btn-edit:hover {
-    background: #1d4ed8;
+    filter: brightness(0.95);
 }
 
-.btn-print {
-    background: white;
-    color: var(--resume-color-muted);
-    border-color: var(--resume-color-border);
+.btn-print,
+.btn-cancel,
+.btn-password {
+    background: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+    border-color: var(--borderColor-default, #d0d7de);
 }
 
-.btn-print:hover {
-    background: var(--resume-color-bg-soft);
-    color: var(--resume-color-text);
-    border-color: #cbd5e1;
+.btn-print:hover,
+.btn-cancel:hover,
+.btn-password:hover {
+    background: var(--bgColor-neutral-muted, #eaeef2);
 }
 
 .btn-save {
-    background: #16a34a;
-    color: white;
+    background: var(--bgColor-success-emphasis, #1f883d);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border-color: rgba(31, 35, 40, 0.15);
 }
 
 .btn-save:hover {
-    background: #15803d;
+    filter: brightness(0.95);
 }
 
 .btn-save:disabled {
-    background: #94a3b8;
+    opacity: 0.55;
     cursor: not-allowed;
 }
 
-.btn-cancel {
-    background: var(--resume-color-bg-soft);
-    color: var(--resume-color-muted);
-    border-color: var(--resume-color-border);
-}
-
-.btn-cancel:hover {
-    background: #e2e8f0;
-}
-
-.btn-password {
-    background: var(--resume-color-bg-soft);
-    color: var(--resume-color-muted);
-    border-color: var(--resume-color-border);
-}
-
-.btn-password:hover {
-    background: #e2e8f0;
-}
-
 .btn-delete-account {
-    background: white;
-    color: #dc2626;
-    border-color: #fecaca;
+    background: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-danger, #cf222e);
+    border-color: var(--borderColor-danger-muted, #ff8182);
     margin-top: 8px;
 }
 
 .btn-delete-account:hover {
-    background: #fef2f2;
-    border-color: #dc2626;
+    background: var(--bgColor-danger-emphasis, #cf222e);
+    color: var(--fgColor-onEmphasis, #ffffff);
+    border-color: var(--bgColor-danger-emphasis, #cf222e);
 }
 
 /* ============================================================
@@ -551,82 +537,85 @@
 }
 
 .modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 32px;
+    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-lg);
+    padding: 28px;
     max-width: 450px;
     width: 100%;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-xl);
 }
 
 .modal-content h3 {
-    margin: 0 0 16px 0;
-    font-size: 22px;
-    font-weight: 700;
+    margin: 0 0 14px 0;
+    font-size: 18px;
+    font-weight: 600;
     color: var(--resume-color-text);
 }
 
 .modal-warning {
-    color: #dc2626;
+    color: var(--fgColor-danger, #cf222e);
     font-size: 14px;
     line-height: 1.6;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .modal-input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border: 1px solid var(--resume-color-border);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
+    background: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-default, #1f2328);
     font-size: 14px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     box-sizing: border-box;
 }
 
 .modal-input:focus {
     outline: none;
-    border-color: var(--resume-color-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: var(--borderColor-accent-emphasis, #0969da);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
 }
 
 .modal-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
 }
 
 .modal-btn {
     flex: 1;
-    padding: 12px 20px;
-    border-radius: 8px;
+    padding: 9px 16px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s;
-    border: none;
+    transition: background-color var(--transition-fast);
+    border: 1px solid transparent;
 }
 
 .modal-btn-cancel {
-    background: #f1f5f9;
-    color: var(--resume-color-muted);
+    background: var(--bgColor-muted, #f6f8fa);
+    color: var(--fgColor-default, #1f2328);
+    border-color: var(--borderColor-default, #d0d7de);
 }
 
 .modal-btn-cancel:hover {
-    background: #e2e8f0;
+    background: var(--bgColor-neutral-muted, #eaeef2);
 }
 
 .modal-btn-delete {
-    background: #dc2626;
-    color: white;
+    background: var(--bgColor-danger-emphasis, #cf222e);
+    color: var(--fgColor-onEmphasis, #ffffff);
 }
 
 .modal-btn-delete:hover {
-    background: #b91c1c;
+    filter: brightness(0.95);
 }
 
 .modal-btn:disabled {
-    background: #94a3b8;
+    opacity: 0.55;
     cursor: not-allowed;
-    opacity: 0.6;
 }
 
 /* ============================================================
@@ -679,34 +668,33 @@
     }
 }
 
-/* ============================================================
-   Print — PDF 출력용
-   ============================================================ */
 /* ===== 편집 모드 토글 (블록 / HTML) ===== */
 .profile-edit-modes {
     display: inline-flex;
     gap: 4px;
     padding: 4px;
     margin-bottom: 16px;
-    background: #eef1f5;
-    border-radius: 10px;
+    background: var(--bgColor-muted, #f6f8fa);
+    border: 1px solid var(--borderColor-default, #d0d7de);
+    border-radius: var(--radius-md);
 }
 
 .profile-edit-mode {
     border: 0;
     background: transparent;
-    padding: 8px 18px;
-    border-radius: 7px;
-    font-size: 14px;
-    font-weight: 600;
-    color: #46505f;
+    padding: 6px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--fgColor-muted, #656d76);
     cursor: pointer;
 }
 
 .profile-edit-mode.is-active {
-    background: #ffffff;
-    color: #0e7c86;
-    box-shadow: 0 1px 3px rgba(20, 30, 45, 0.12);
+    background: var(--bgColor-default, #ffffff);
+    color: var(--fgColor-accent, #0969da);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
 }
 
 .profile-edit-mode:disabled {
