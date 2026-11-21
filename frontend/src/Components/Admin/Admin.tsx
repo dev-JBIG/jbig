@@ -55,10 +55,16 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+    const loadedSettingsRef = React.useRef(false);
+
     useEffect(() => {
+        if (loadedSettingsRef.current) return;
+        let cancelled = false;
         const load = async () => {
             try {
                 const settings = await fetchSiteSettings(accessToken);
+                if (cancelled) return;
+                loadedSettingsRef.current = true;
                 setNotionPageId(settings.notion_page_id || "");
                 setQuizUrl(settings.quiz_url || "");
                 setJbigDescription(settings.jbig_description || "");
@@ -70,12 +76,19 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
                 setJbigAdvisor(settings.jbig_advisor || "");
                 setJbigAdvisorDept(settings.jbig_advisor_dept || "");
             } catch {
-                setMessage({ type: 'error', text: '설정을 불러오는데 실패했습니다.' });
+                if (!cancelled) {
+                    setMessage({ type: 'error', text: '설정을 불러오는데 실패했습니다.' });
+                }
             } finally {
-                setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         };
         load();
+        return () => {
+            cancelled = true;
+        };
     }, [accessToken]);
 
     const handleSave = async () => {

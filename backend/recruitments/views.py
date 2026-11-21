@@ -211,11 +211,12 @@ class ApplyAPIView(APIView):
                 return Response({'error': '이미 지원한 모집입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
             try:
-                app = Application.objects.create(
-                    recruitment=recruitment,
-                    applicant=request.user,
-                    message=serializer.validated_data.get('message', '')
-                )
+                with transaction.atomic():
+                    app = Application.objects.create(
+                        recruitment=recruitment,
+                        applicant=request.user,
+                        message=serializer.validated_data.get('message', '')
+                    )
             except IntegrityError:
                 return Response({'error': '이미 지원한 모집입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 

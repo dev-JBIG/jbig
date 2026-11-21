@@ -45,6 +45,7 @@ def get_env_list(key: str, default: list[str] | None = None) -> list[str]:
 
 
 # ── 로컬/서버 분기 설정 (한곳에 모아서 관리) ───────────────────────
+import logging
 from django.core.exceptions import ImproperlyConfigured
 
 _DEFAULT_LOCAL_SECRET_KEY = 'django-insecure-local-dev-key-do-not-use-in-production'
@@ -54,11 +55,15 @@ if IS_LOCAL:
 else:
     if (
         not _env_secret_key
-        or _env_secret_key.startswith('django-insecure-')
+        or _env_secret_key == _DEFAULT_LOCAL_SECRET_KEY
         or len(_env_secret_key) < 32
     ):
         raise ImproperlyConfigured(
             'Production mode requires a strong SECRET_KEY (>=32 chars, non-default).'
+        )
+    if _env_secret_key.startswith('django-insecure-'):
+        logging.getLogger('django.security').critical(
+            'SECRET_KEY starts with "django-insecure-"; rotate to a fresh random key in production .env.'
         )
     SECRET_KEY = _env_secret_key
 
@@ -131,7 +136,8 @@ X_FRAME_OPTIONS = 'DENY'
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+# 로컬 개발에서는 LocalFileUploadView(50MB)와 한도를 맞추고 프로덕션은 10MB로 유지
+DATA_UPLOAD_MAX_MEMORY_SIZE = (50 if IS_LOCAL else 10) * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 
 # 프로덕션(비-로컬) 환경에서만 강제되는 HTTPS 전용 보안 설정.

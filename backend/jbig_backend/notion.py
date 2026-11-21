@@ -455,22 +455,36 @@ def _refresh_cache(page_id: str):
             _in_flight_refreshes.discard(key)
 
 
-def _get_build_lock(page_id: str) -> threading.Lock:
+from contextlib import contextmanager
+
+
+@contextmanager
+def _acquire_build_lock(page_id: str):
+    """참조 횟수 기반으로 페이지별 빌드 락을 대여해 대기 중인 호출자의 락이 제거되지 않게 보장한다."""
     with _build_locks_lock:
-        lock = _build_locks.get(page_id)
-        if lock is None:
-            lock = threading.Lock()
-            _build_locks[page_id] = lock
+        entry = _build_locks.get(page_id)
+        if entry is None:
+            entry = [threading.Lock(), 0]
+            _build_locks[page_id] = entry
         else:
             _build_locks.move_to_end(page_id)
-        # 사용 중이지 않은 오래된 락만 정리해 메모리 누수를 방지한다.
-        if len(_build_locks) > MAX_CACHE_ENTRIES:
-            for old_key in list(_build_locks.keys()):
-                if len(_build_locks) <= MAX_CACHE_ENTRIES:
-                    break
-                if old_key != page_id and not _build_locks[old_key].locked():
-                    _build_locks.pop(old_key, None)
-        return lock
+        entry[1] += 1
+        lock = entry[0]
+    try:
+        with lock:
+            yield
+    finally:
+        with _build_locks_lock:
+            entry = _build_locks.get(page_id)
+            if entry is not None:
+                entry[1] -= 1
+            if len(_build_locks) > MAX_CACHE_ENTRIES:
+                for old_key in list(_build_locks.keys()):
+                    if len(_build_locks) <= MAX_CACHE_ENTRIES:
+                        break
+                    old_entry = _build_locks.get(old_key)
+                    if old_entry is not None and old_entry[1] == 0 and not old_entry[0].locked():
+                        _build_locks.pop(old_key, None)
 
 
 def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
@@ -499,7 +513,12 @@ def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
                 _in_flight_refreshes.add(key)
                 should_refresh = True
         if should_refresh:
-            threading.Thread(target=_refresh_cache, args=(key,), daemon=True).start()
+            try:
+                threading.Thread(target=_refresh_cache, args=(key,), daemon=True).start()
+            except Exception as exc:
+                with _cache_lock:
+                    _in_flight_refreshes.discard(key)
+                logger.error(f'Notion background refresh thread start failed: {key}: {exc}')
         block_count, missing_count = _record_map_stats(cached['data'], key)
         _finish_diagnostics(
             diagnostics,
@@ -510,8 +529,7 @@ def fetch_page(page_id: str, diagnostics: dict = None) -> dict:
         return cached['data']
 
     # 첫 요청 → 동기 빌드 (page별 lock으로 동시 빌드 방지)
-    build_lock = _get_build_lock(key)
-    with build_lock:
+    with _acquire_build_lock(key):
         # lock 획득 후 다시 캐시 확인 (다른 worker가 이미 빌드했을 수 있음)
         with _cache_lock:
             cached = _cache.get(key)

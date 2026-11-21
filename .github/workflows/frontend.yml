@@ -52,7 +52,7 @@ jobs:
           REACT_APP_MEDIA_BASE_URL: https://cdn.jbig.co.kr
 
       - name: Upload build artifact
-        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: frontend-build
@@ -65,8 +65,8 @@ jobs:
     concurrency:
       group: deploy-frontend
       cancel-in-progress: false
-    # PR 이벤트에서는 빌드·테스트 검증(ci)만 수행하고, 실제 서버 배포는 main 푸시 또는 main 수동 실행에서만 진행한다.
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    # 프로덕션 배포는 main 브랜치의 push 이벤트에서만 실행한다.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifact

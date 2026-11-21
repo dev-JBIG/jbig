@@ -620,20 +620,11 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         for item in value:
             if not isinstance(item, dict):
                 raise serializers.ValidationError('각 첨부 항목은 객체여야 합니다.')
-            path = (item.get('path') or '').strip()
-            if not path.startswith('uploads/'):
-                raise serializers.ValidationError('잘못된 첨부 경로입니다.')
-            if '..' in path.split('/') or path.startswith('/'):
-                raise serializers.ValidationError('잘못된 첨부 경로입니다.')
-            parts = path.split('/')
-            if len(parts) < 6:
-                raise serializers.ValidationError('잘못된 첨부 경로 형식입니다.')
-            try:
-                owner_id = int(parts[4])
-            except (TypeError, ValueError):
-                raise serializers.ValidationError('잘못된 첨부 경로 형식입니다.')
-            if owner_id != user_id:
+            raw_path = (item.get('path') or '').strip()
+            path = raw_path.replace('\\', '/')
+            if not _validate_owned_upload_key(path, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 첨부할 수 있습니다.')
+            item['path'] = path
         return value
 
     def validate_content_md(self, value):
@@ -647,10 +638,15 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
         if user_id is None:
             raise serializers.ValidationError('인증이 필요합니다.')
 
-        media_keys = re.findall(r'media-key://(uploads/[^\s\)]+)', normalized)
-        for file_key in media_keys:
-            if not _validate_owned_upload_key(file_key, user_id):
+        # 역슬래시 구분자(media-key://uploads\...)를 포함한 모든 미디어 키에 소유권을 검증하고 정규화한다.
+        def _check_and_normalize_key(match):
+            raw_key = match.group(1)
+            norm_key = raw_key.replace('\\', '/')
+            if not _validate_owned_upload_key(norm_key, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 본문에 사용할 수 있습니다.')
+            return f'media-key://{norm_key}'
+
+        normalized = re.sub(r'media-key://(uploads[\\/][^\s\)]+)', _check_and_normalize_key, normalized)
         return normalized
 
 
@@ -754,10 +750,14 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
                 # 게시판이 실제로 변경되는 경우, board_post_id를 초기화하여 새로 할당되도록 함
                 instance.board = new_board
                 instance.board_post_id = None
-                # 비공개(사유서/author) 게시판으로 이동 시 글 단위 잠금을 부여한다.
+                # 비공개(사유서/author) 게시판으로 이동 시 DEFAULT 글에만 글 단위 잠금을 부여한다.
+                # STAFF_ONLY 글은 더 엄격한 스태프 전용 잠금을 유지해야 하므로 완화하지 않는다.
                 if (
-                    new_board.board_type == Board.BoardType.JUSTIFICATION_LETTER
-                    or new_board.read_permission == 'author'
+                    instance.post_type == Post.PostType.DEFAULT
+                    and (
+                        new_board.board_type == Board.BoardType.JUSTIFICATION_LETTER
+                        or new_board.read_permission == 'author'
+                    )
                 ):
                     instance.post_type = Post.PostType.JUSTIFICATION_LETTER
 
@@ -1047,13 +1047,15 @@ class DraftSerializer(serializers.ModelSerializer):
         user_id = getattr(getattr(request, 'user', None), 'id', None)
         if user_id is None:
             raise serializers.ValidationError('인증이 필요합니다.')
+        normalized_items = []
         for item in value:
             if not isinstance(item, dict):
                 raise serializers.ValidationError('각 첨부 항목은 객체여야 합니다.')
-            path = (item.get('path') or '').strip()
+            path = (item.get('path') or '').strip().replace('\\', '/')
             if not _validate_owned_upload_key(path, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 임시저장할 수 있습니다.')
-        return value
+            normalized_items.append({**item, 'path': path})
+        return normalized_items
 
     def validate_content_md(self, value):
         if value and len(value) > MAX_POST_CONTENT_LENGTH:
@@ -1065,10 +1067,14 @@ class DraftSerializer(serializers.ModelSerializer):
         user_id = getattr(getattr(request, 'user', None), 'id', None)
         if user_id is None:
             raise serializers.ValidationError('인증이 필요합니다.')
-        for file_key in re.findall(r'media-key://(uploads/[^\s\)]+)', normalized):
-            if not _validate_owned_upload_key(file_key, user_id):
+
+        def _check_and_normalize_key(match):
+            norm_key = match.group(1).replace('\\', '/')
+            if not _validate_owned_upload_key(norm_key, user_id):
                 raise serializers.ValidationError('본인이 업로드한 파일만 본문에 사용할 수 있습니다.')
-        return normalized
+            return f'media-key://{norm_key}'
+
+        return re.sub(r'media-key://(uploads[\\/][^\s\)]+)', _check_and_normalize_key, normalized)
 
     def to_representation(self, instance):
         """조회 시 media-key:// URL을 퍼블릭 URL로 변환"""

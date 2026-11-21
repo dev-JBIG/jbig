@@ -15,7 +15,15 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['retry_errors']:
-            Submission.objects.filter(status=Submission.Status.ERROR).update(status=Submission.Status.QUEUED)
+            from competitions.scoring import MAX_SCORING_ATTEMPTS
+            Submission.objects.filter(
+                status=Submission.Status.ERROR,
+                attempts__gte=MAX_SCORING_ATTEMPTS,
+            ).update(status=Submission.Status.QUEUED, attempts=0)
+            Submission.objects.filter(
+                status=Submission.Status.ERROR,
+                attempts__lt=MAX_SCORING_ATTEMPTS,
+            ).update(status=Submission.Status.QUEUED)
         scored = failed = 0
         try:
             while True:

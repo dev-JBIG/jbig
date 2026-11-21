@@ -57,8 +57,8 @@ jobs:
     concurrency:
       group: deploy-backend
       cancel-in-progress: false
-    # PR 이벤트에서는 테스트 검증(test)만 수행하고, 실제 서버 배포는 main 푸시 또는 main 수동 실행에서만 진행한다.
-    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    # 프로덕션 배포는 main 브랜치의 push 이벤트에서만 실행한다.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -123,6 +123,13 @@ jobs:
             HOME_REAL=$(realpath -m -- "$HOME")
             if [ -n "${BACKEND_DEPLOY_PATH:-}" ]; then
               APP_BASE_DIR=$(realpath -m -- "$HOME_REAL/${BACKEND_DEPLOY_PATH}")
+              case "$APP_BASE_DIR" in
+                "$HOME_REAL"/*) ;;
+                *)
+                  echo "Error: BACKEND_DEPLOY_PATH escapes HOME." >&2
+                  exit 1
+                  ;;
+              esac
             else
               GUNICORN_WD=$(systemctl show -p WorkingDirectory --value gunicorn-jbig 2>/dev/null || true)
               if [ -z "$GUNICORN_WD" ]; then
@@ -139,19 +146,15 @@ jobs:
               else
                 APP_BASE_DIR=$(realpath -m -- "$GUNICORN_WD")
               fi
-              echo "Auto-detected backend release directory from gunicorn-jbig systemd unit."
-            fi
-
-            case "$APP_BASE_DIR" in
-              "$HOME_REAL"/*) ;;
-              *)
-                echo "Error: Resolved backend deploy path escapes HOME." >&2
+              if [ -z "$APP_BASE_DIR" ] || [ "$APP_BASE_DIR" = "/" ] || [ "$APP_BASE_DIR" = "$HOME_REAL" ]; then
+                echo "Error: Unsafe auto-detected backend deploy path." >&2
                 exit 1
-                ;;
-            esac
-            if [ ! -d "$APP_BASE_DIR/shared" ] || [ ! -d "$APP_BASE_DIR/releases" ]; then
-              echo "Error: Backend deploy directory does not match expected shared/releases layout." >&2
-              exit 1
+              fi
+              if [ ! -d "$APP_BASE_DIR/shared" ] || [ ! -d "$APP_BASE_DIR/releases" ]; then
+                echo "Error: Auto-detected backend deploy directory does not match expected shared/releases layout." >&2
+                exit 1
+              fi
+              echo "Auto-detected backend release directory from gunicorn-jbig systemd unit."
             fi
 
             RELEASES_DIR="$APP_BASE_DIR/releases"

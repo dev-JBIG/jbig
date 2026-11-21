@@ -6,6 +6,7 @@ import { Button, Spinner } from "@primer/react";
 import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
 import { useColorMode } from "../Utils/ThemeContext";
+import { sanitizeMailto, sanitizeTel } from "../Utils/safeUrl";
 import { fetchSiteSettings, fetchNotionPage as fetchNotionPageAPI } from "../../API/req";
 import { Code } from 'react-notion-x/build/third-party/code';
 import { Collection } from 'react-notion-x/build/third-party/collection';
@@ -153,6 +154,17 @@ const Note: React.FC = () => {
             return;
         }
 
+        // 안전한 연락 스킴(mailto:, tel:)은 유효성 검증 후 브라우저 기본 동작을 유지한다.
+        if (parsed.protocol === "mailto:" || parsed.protocol === "tel:") {
+            const rawTarget = href.slice(parsed.protocol.length);
+            const validContact =
+                parsed.protocol === "mailto:" ? sanitizeMailto(rawTarget) : sanitizeTel(rawTarget);
+            if (!validContact) {
+                e.preventDefault();
+            }
+            return;
+        }
+
         // javascript:, vbscript:, data: 등 비-HTTP(S) 스킴 링크 실행 차단
         if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
             e.preventDefault();
@@ -168,10 +180,13 @@ const Note: React.FC = () => {
         }
 
         const notionIdMatch = parsed.pathname.match(/\/([a-f0-9]{32})$/i);
-        if (
-            notionIdMatch &&
-            (parsed.origin === window.location.origin || parsed.hostname.endsWith("notion.so") || parsed.hostname.endsWith("notion.site"))
-        ) {
+        const host = parsed.hostname.toLowerCase();
+        const isNotionHost =
+            host === "notion.so" ||
+            host.endsWith(".notion.so") ||
+            host === "notion.site" ||
+            host.endsWith(".notion.site");
+        if (notionIdMatch && (parsed.origin === window.location.origin || isNotionHost)) {
             e.preventDefault();
             loadPage(notionIdMatch[1]);
             return;

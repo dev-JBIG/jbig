@@ -347,17 +347,19 @@ class CustomTokenRefreshView(APIView):
                         old_token.blacklist()
                     except Exception:
                         pass
-                    raise AuthenticationFailed('Account disabled', code='account_disabled')
+                    return Response({"error": "Account disabled"}, status=status.HTTP_401_UNAUTHORIZED)
 
-                # 비밀번호 변경 이전에 발급된 리프레시 토큰 차단
-                if user.password_changed_at is not None:
-                    iat = old_token.get('iat')
-                    if iat is None or int(iat) < int(user.password_changed_at.timestamp()):
-                        try:
-                            old_token.blacklist()
-                        except Exception:
-                            pass
-                        raise AuthenticationFailed('Token invalidated by password change', code='token_not_valid')
+                # 비밀번호 변경 이전에 발급된 리프레시 토큰 차단 (같은 초 포함)
+                from .authentication import is_token_valid_for_password, issue_tokens_for_user
+                if not is_token_valid_for_password(old_token, user):
+                    try:
+                        old_token.blacklist()
+                    except Exception:
+                        pass
+                    return Response(
+                        {"error": "Token invalidated by password change"},
+                        status=status.HTTP_401_UNAUTHORIZED,
+                    )
 
                 try:
                     old_token.blacklist()
@@ -368,8 +370,8 @@ class CustomTokenRefreshView(APIView):
                 user.last_login = timezone.now()
                 user.save(update_fields=['last_login'])
 
-                # 새로운 리프레시 토큰 생성
-                new_refresh_token = RefreshToken.for_user(user)
+                # 비밀번호 지문(pwh)을 포함한 새로운 리프레시 토큰 생성
+                new_refresh_token = issue_tokens_for_user(user)
 
             response_data = {
                 "isSuccess": True,
@@ -631,10 +633,10 @@ class PasswordResetRequestView(APIView):
                 message = f'요청하신 비밀번호 변경 인증 코드는 다음과 같습니다: {code}'
                 if send_mail(subject, message, None, [user.email]) == 0:
                     raise SMTPException('Password reset email was not accepted')
-        except MAIL_DELIVERY_ERRORS:
-            return Response({
-                "message": "인증 메일을 보내지 못했습니다. 잠시 후 다시 시도해주세요."
-            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except Exception as exc:
+            # 메일 전송 장애 시에도 미등록 이메일과 동일한 200 응답을 반환해 계정 열거 오라클을 차단한다.
+            logger.error("Password reset email delivery failed for user_id=%s: %s", user.id, exc)
+            return generic_response
 
         return generic_response
 

@@ -3,6 +3,7 @@ import { Upload, X } from 'lucide-react';
 import { ImageBlock } from '../../types';
 import { uploadAttachment } from '../../../../API/req';
 import { useUser } from '../../../Utils/UserContext';
+import { sanitizeMediaUrl } from '../../../Utils/safeUrl';
 
 interface Props {
   block: ImageBlock;
@@ -47,11 +48,13 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
     onChange({ ...block, data: { ...block.data, path: '', url: '', alt: '' } });
   };
 
+  const safePreviewUrl = sanitizeMediaUrl(block.data.url);
+
   return (
     <div className="block-editor block-image-editor">
-      {block.data.url ? (
+      {safePreviewUrl ? (
         <div className="block-image-preview-wrap">
-          <img src={block.data.url} alt={block.data.alt} className="block-image-preview" referrerPolicy="no-referrer" />
+          <img src={safePreviewUrl} alt={block.data.alt} className="block-image-preview" referrerPolicy="no-referrer" />
           <button type="button" className="block-image-remove" aria-label="이미지 제거" onClick={handleRemove}>
             <X size={16} aria-hidden="true" />
           </button>

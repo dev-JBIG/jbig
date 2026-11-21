@@ -14,7 +14,7 @@ import ProjectBlockView from "../Profile/ProfileBlockRenderer/views/ProjectBlock
 import CertificationBlockView from "../Profile/ProfileBlockRenderer/views/CertificationBlockView";
 import PublicationBlockView from "../Profile/ProfileBlockRenderer/views/PublicationBlockView";
 import client from "../../API/client";
-import { signOutLocal } from "../../API/auth";
+import { SESSION_KEY, signOutLocal } from "../../API/auth";
 
 describe("safeUrl sanitization utilities", () => {
     test("sanitizeHttpUrl blocks dangerous schemes and protocol-relative URLs", () => {
@@ -45,6 +45,8 @@ describe("safeUrl sanitization utilities", () => {
         expect(sanitizeMailto("alice@jbnu.ac.kr?subject=phish")).toBeNull();
         expect(sanitizeMailto("javascript:alert(1)")).toBeNull();
         expect(sanitizeTel("+82 10-1234-5678")).toBe("tel:+8210-1234-5678");
+        expect(sanitizeTel("+33 6 12 34 56 78")).toBe("tel:+33612345678");
+        expect(sanitizeTel("12")).toBeNull();
         expect(sanitizeTel("javascript:alert(1)")).toBeNull();
     });
 
@@ -56,14 +58,22 @@ describe("safeUrl sanitization utilities", () => {
         expect(sanitizeInternalPath("javascript:alert(1)")).toBe("/");
     });
 
-    test("buildSandboxedProfileSrcDoc strips active tags and prepends strict CSP", () => {
-        const html = '<html><head><title>CV</title><meta http-equiv="refresh" content="0;url=https://evil.example"></head><body><h1>Hi</h1><script>alert(1)</script><iframe src="https://evil.example"></iframe></body></html>';
+    test("buildSandboxedProfileSrcDoc strips active tags, defeats HTML comment CSP bypass, and prepends strict CSP", () => {
+        const html = '<!-- <head> --><html><head><title>CV</title><meta http-equiv="Content-Security-Policy" content="default-src *"><meta http-equiv="refresh" content="0;url=https://evil.example"></head><body><h1>Hi</h1><script>alert(1)</script><scr<script>x</script>ipt>alert(2)</script><iframe src="https://evil.example"></iframe></body></html>';
         const out = buildSandboxedProfileSrcDoc(html);
         expect(out).toContain('http-equiv="Content-Security-Policy"');
         expect(out).toContain("form-action 'none'");
-        expect(out.toLowerCase()).not.toContain("<script>");
+        expect(out).not.toContain("default-src *");
+        expect(out).not.toContain("alert(1)");
         expect(out.toLowerCase()).not.toContain("<iframe");
         expect(out.toLowerCase()).not.toContain('http-equiv="refresh"');
+        // CSP 메타는 주석이 아니라 실제 <head> 첫 자식으로 삽입되고, DOM에 위험 요소가 없어야 한다.
+        const parsed = new DOMParser().parseFromString(out, "text/html");
+        expect(parsed.querySelectorAll("script, iframe, object, embed, applet, base")).toHaveLength(0);
+        expect(parsed.querySelectorAll('meta[http-equiv="refresh"]')).toHaveLength(0);
+        const firstHeadMeta = parsed.head.querySelector('meta[http-equiv="Content-Security-Policy"]');
+        expect(firstHeadMeta).not.toBeNull();
+        expect(firstHeadMeta?.getAttribute("content")).toContain("default-src 'none'");
     });
 });
 
@@ -121,16 +131,48 @@ describe("Profile block XSS defenses", () => {
 });
 
 describe("API auth & session cache security", () => {
-    test("axios client strips Authorization header for non-/api/ external URLs", async () => {
+    test("axios client strips Authorization header (case-insensitive) for non-/api/ external URLs", async () => {
         let seenAuth: unknown = "unset";
+        let seenLowerAuth: unknown = "unset";
         await client.get("https://storage.example.com/presigned-object", {
-            headers: { Authorization: "Bearer secret-jwt" },
+            headers: { authorization: "Bearer secret-jwt" },
             adapter: async (config) => {
                 seenAuth = config.headers?.Authorization;
+                seenLowerAuth = config.headers?.authorization;
                 return { data: "ok", status: 200, statusText: "OK", headers: {}, config };
             },
         });
         expect(seenAuth).toBeUndefined();
+        expect(seenLowerAuth).toBeUndefined();
+    });
+
+    test("axios client preserves Authorization when baseURL targets /api/", async () => {
+        localStorage.setItem(
+            SESSION_KEY,
+            JSON.stringify({
+                session: {
+                    id: "test-session",
+                    user: { username: "alice", semester: "1", email: "alice@jbnu.ac.kr" },
+                    accessToken: "valid-jwt",
+                    refreshToken: "valid-refresh",
+                },
+                expired: false,
+            })
+        );
+        try {
+            let seenAuth: unknown = "unset";
+            await client.get("/users/profile/", {
+                baseURL: "/api",
+                headers: { Authorization: "Bearer valid-jwt" },
+                adapter: async (config) => {
+                    seenAuth = config.headers?.Authorization;
+                    return { data: "ok", status: 200, statusText: "OK", headers: {}, config };
+                },
+            });
+            expect(seenAuth).toBe("Bearer valid-jwt");
+        } finally {
+            localStorage.removeItem(SESSION_KEY);
+        }
     });
 
     test("signOutLocal clears all jbig sessionStorage caches", () => {

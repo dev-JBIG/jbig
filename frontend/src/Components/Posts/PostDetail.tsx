@@ -1028,7 +1028,7 @@ const PostDetail: React.FC = () => {
 
                     {/* 사진첩 게시글: 이미지 첨부파일을 인라인으로 표시 */}
                     {post.board_type === 4 && post.attachments?.filter(att =>
-                        /^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || "")
+                        /^(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.fileType || "")
                     ).map(att => (
                         <img
                             key={att.id}
@@ -1045,7 +1045,7 @@ const PostDetail: React.FC = () => {
             {/* 첨부파일 (사진첩 게시글은 이미지 제외) */}
             {post.attachments && post.attachments.length > 0 && (() => {
                 const filtered = post.board_type === 4
-                    ? post.attachments.filter(att => !/^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || ""))
+                    ? post.attachments.filter(att => !/^(jpg|jpeg|png|gif|webp|bmp)$/i.test(att.fileType || ""))
                     : post.attachments;
                 return filtered.length > 0 ? (
                     <section className="postdetail-attachments" aria-label="첨부파일">

@@ -17,7 +17,7 @@ interface PhotoSlide {
 
 const PHOTO_BOARD_TYPE = 4;
 
-const isImageName = (name: string) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name);
+const isImageName = (name: string) => /\.(png|jpe?g|gif|webp|bmp)$/i.test(name);
 
 const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
     const [slides, setSlides] = useState<PhotoSlide[]>([]);

@@ -389,3 +389,171 @@ class SecurityHardeningTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertNotIn('X-Notion-Cache', res.headers)
         self.assertNotIn('X-Notion-Trace-Id', res.headers)
+
+    # ── [CR-1] 역슬래시 media-key://uploads\... IDOR 차단 ────────────────
+    def test_backslash_media_key_idor_is_blocked_in_post_and_draft(self):
+        self.client.force_authenticate(user=self.alice)
+        foreign_backslash = f'media-key://uploads\\2026\\11\\21\\{self.bob.id}\\secret.png'
+
+        res_post = self.client.post(
+            reverse('post-list-create', kwargs={'board_id': self.public_board.id}),
+            {'title': 'IDOR시도', 'content_md': f'![x]({foreign_backslash})'},
+            format='json',
+        )
+        self.assertEqual(res_post.status_code, status.HTTP_400_BAD_REQUEST)
+
+        res_draft = self.client.post(
+            reverse('draft-retrieve-create'),
+            {'title': '초안IDOR', 'content_md': f'![x]({foreign_backslash})'},
+            format='json',
+        )
+        self.assertEqual(res_draft.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── [CR-2] 동초(same-second) 비밀번호 변경 JWT 무효화 + 즉시 재로그인 ─
+    def test_same_second_password_change_invalidates_old_jwt_but_allows_immediate_relogin(self):
+        # 로그인으로 pwh 클레임이 포함된 토큰 발급
+        res_login1 = self.client.post(
+            reverse('signin'),
+            {'email': self.alice.email, 'password': 'StrongPassword!9'},
+            format='json',
+        )
+        self.assertEqual(res_login1.status_code, status.HTTP_200_OK)
+        old_access = res_login1.data['access']
+        old_refresh = res_login1.data['refresh']
+
+        # 비밀번호 변경 (같은 초 내에 발생해도 pwh 해시가 달라지므로 즉시 무효화)
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {old_access}')
+        res_change = self.client.post(
+            reverse('password-change'),
+            {
+                'old_password': 'StrongPassword!9',
+                'new_password1': 'BrandNewPassword!99',
+                'new_password2': 'BrandNewPassword!99',
+            },
+            format='json',
+        )
+        self.assertEqual(res_change.status_code, status.HTTP_200_OK)
+
+        # 이전 access & refresh 토큰 즉시 401
+        res_old_access = self.client.get(reverse('user-profile', kwargs={'user_id': 'alice'}))
+        self.assertEqual(res_old_access.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.client.credentials()
+        res_old_refresh = self.client.post(
+            reverse('token_refresh'), {'refresh': old_refresh}, format='json'
+        )
+        self.assertEqual(res_old_refresh.status_code, status.HTTP_401_UNAUTHORIZED)
+
+        # 변경 직후 같은 초에 새 비밀번호로 로그인한 토큰은 즉시 정상 동작해야 함
+        res_login2 = self.client.post(
+            reverse('signin'),
+            {'email': self.alice.email, 'password': 'BrandNewPassword!99'},
+            format='json',
+        )
+        self.assertEqual(res_login2.status_code, status.HTTP_200_OK)
+        new_access = res_login2.data['access']
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {new_access}')
+        res_new_access = self.client.get(reverse('user-profile', kwargs={'user_id': 'alice'}))
+        self.assertEqual(res_new_access.status_code, status.HTTP_200_OK)
+
+    # ── [CR-3] 스태프가 STAFF_ONLY 글을 author 게시판으로 이동 시 권한 유지
+    def test_staff_only_post_type_preserved_when_moved_to_author_board(self):
+        post = Post.objects.create(
+            author=self.staff,
+            board=self.staff_board,
+            title='운영진 전용 메모',
+            content_md='내부 내용',
+            post_type=Post.PostType.STAFF_ONLY,
+        )
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.patch(
+            reverse('post-detail-update-destroy', kwargs={'post_id': post.id}),
+            {'board_id': self.author_board.id},
+            format='json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        post.refresh_from_db()
+        self.assertEqual(post.board_id, self.author_board.id)
+        self.assertEqual(post.post_type, Post.PostType.STAFF_ONLY)
+
+    # ── [CR-4] SiteSettings PUT 부분 커밋 방지 & 이메일 검증 ─────────────
+    def test_site_settings_put_validates_all_fields_before_saving(self):
+        SiteSettings.set('is_new_semester', 'false')
+        SiteSettings.set('quiz_url', 'https://forms.gle/original')
+        self.client.force_authenticate(user=self.staff)
+
+        res = self.client.put(
+            reverse('site_settings'),
+            {'is_new_semester': True, 'quiz_url': 'javascript:alert(1)'},
+            format='json',
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        # 부분 커밋 없이 기존 값이 그대로 보존되어야 한다.
+        self.assertEqual(SiteSettings.get('is_new_semester'), 'false')
+        self.assertEqual(SiteSettings.get('quiz_url'), 'https://forms.gle/original')
+
+        res_email = self.client.put(
+            reverse('site_settings'),
+            {'jbig_email': 'not-an-email?subject=phish'},
+            format='json',
+        )
+        self.assertEqual(res_email.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # ── [CR-5] 비밀번호 재설정 요청 SMTP 실패 시 계정 열거 방지 ───────────
+    def test_password_reset_request_returns_generic_200_on_smtp_failure(self):
+        with patch('users.views.send_mail', side_effect=RuntimeError('SMTP down')):
+            res_existing = self.client.post(
+                reverse('password-reset-request'),
+                {'email': self.alice.email},
+                format='json',
+            )
+            res_missing = self.client.post(
+                reverse('password-reset-request'),
+                {'email': 'nobody@jbnu.ac.kr'},
+                format='json',
+            )
+        self.assertEqual(res_existing.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_missing.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_existing.data, res_missing.data)
+
+    # ── [CR-6] 프로필 블록 URL protocol-relative / traversal / 제어문자 차단
+    def test_profile_block_url_rejects_protocol_relative_and_traversal(self):
+        self.client.force_authenticate(user=self.alice)
+        for bad_url in (
+            '//evil.example/phish',
+            '/\\evil.example/phish',
+            '/etc/passwd',
+            '/media/../secret.txt',
+            'https://evil.example/\x00foo',
+        ):
+            res = self.client.patch(
+                reverse('profile-blocks-update'),
+                {
+                    'profile_blocks': [
+                        {
+                            'id': 'b1',
+                            'type': 'links',
+                            'data': {'items': [{'label': 'x', 'url': bad_url, 'icon': 'globe'}]},
+                        }
+                    ]
+                },
+                format='json',
+            )
+            self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST, msg=bad_url)
+
+    # ── [CR-7] 비활성 계정 리프레시 시도 시 블랙리스트 커밋 보장 ─────────
+    def test_disabled_user_refresh_commits_token_blacklist(self):
+        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+        from users.authentication import issue_tokens_for_user
+
+        refresh = issue_tokens_for_user(self.alice)
+        jti = refresh['jti']
+        self.alice.is_active = False
+        self.alice.save(update_fields=['is_active'])
+
+        res = self.client.post(
+            reverse('token_refresh'), {'refresh': str(refresh)}, format='json'
+        )
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertTrue(BlacklistedToken.objects.filter(token__jti=jti).exists())
+
+

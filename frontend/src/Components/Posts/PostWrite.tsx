@@ -73,7 +73,7 @@ export const extractKeyFromUrl = (url: string, fallback: string, explicitPath?: 
     }
 };
 
-const isImageByName = (name: string) => /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(name);
+const isImageByName = (name: string) => /\.(png|jpe?g|gif|webp|bmp)$/i.test(name);
 
 // 게시판이 사용하는 본문 입력 폼 종류. (모집 태그 차원은 무시 — 태그는 게시판 변경 시 별도로 초기화됨)
 type FormKind = 'photo' | 'absence' | 'feedback' | 'study' | 'generic';
@@ -919,7 +919,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                                 alignLeftCommand, alignCenterCommand, alignRightCommand, textColorCommand,
                             ]}
                         />
-                        <input type="file" ref={imageInputRef} accept="image/*" className="postwrite-hidden-input" onChange={handleImageUpload} />
+                        <input type="file" ref={imageInputRef} accept=".png,.jpg,.jpeg,.gif,.webp,.bmp" className="postwrite-hidden-input" onChange={handleImageUpload} />
                     </div>
                 )}
             </div>
@@ -954,7 +954,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             type="file"
                             ref={fileInputRef}
                             multiple
-                            accept="image/*"
+                            accept=".png,.jpg,.jpeg,.gif,.webp,.bmp"
                             disabled={remainingSlots === 0}
                             onChange={handleFileChange}
                             className="postwrite-hidden-input"

@@ -3,6 +3,7 @@ import { Upload, X } from 'lucide-react';
 import { ProjectBlock } from '../../types';
 import { uploadAttachment } from '../../../../API/req';
 import { useUser } from '../../../Utils/UserContext';
+import { sanitizeMediaUrl } from '../../../Utils/safeUrl';
 
 interface Props {
   block: ProjectBlock;
@@ -85,24 +86,27 @@ const ProjectBlockEditor: React.FC<Props> = ({ block, onChange }) => {
           onKeyDown={handleTagKeyDown}
         />
       </div>
-      {block.data.imageUrl ? (
-        <div className="block-image-preview-wrap">
-          <img src={block.data.imageUrl} alt="" className="block-image-preview block-image-preview-sm" referrerPolicy="no-referrer" />
-          <button
-            type="button"
-            className="block-image-remove"
-            aria-label="썸네일 제거"
-            onClick={() => onChange({ ...block, data: { ...block.data, imagePath: '', imageUrl: '' } })}
-          >
-            <X size={16} aria-hidden="true" />
+      {(() => {
+        const safeThumbUrl = sanitizeMediaUrl(block.data.imageUrl);
+        return safeThumbUrl ? (
+          <div className="block-image-preview-wrap">
+            <img src={safeThumbUrl} alt="" className="block-image-preview block-image-preview-sm" referrerPolicy="no-referrer" />
+            <button
+              type="button"
+              className="block-image-remove"
+              aria-label="썸네일 제거"
+              onClick={() => onChange({ ...block, data: { ...block.data, imagePath: '', imageUrl: '' } })}
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="block-image-upload-area block-image-upload-small" onClick={() => fileRef.current?.click()}>
+            <Upload size={18} aria-hidden="true" />
+            <span>{uploading ? '업로드 중...' : '썸네일 (선택)'}</span>
           </button>
-        </div>
-      ) : (
-        <button type="button" className="block-image-upload-area block-image-upload-small" onClick={() => fileRef.current?.click()}>
-          <Upload size={18} aria-hidden="true" />
-          <span>{uploading ? '업로드 중...' : '썸네일 (선택)'}</span>
-        </button>
-      )}
+        );
+      })()}
       <input ref={fileRef} type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.bmp" hidden onChange={handleImageUpload} />
     </div>
   );

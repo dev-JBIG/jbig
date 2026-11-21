@@ -13,6 +13,7 @@ from rest_framework_simplejwt.serializers import TokenRefreshSerializer, TokenOb
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from boards.serializers import sanitize_markdown
+from .authentication import issue_tokens_for_user
 from .models import User, EmailVerificationCode
 
 from django.contrib.auth import get_user_model
@@ -63,8 +64,8 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
 
-        # 수동으로 토큰 생성
-        refresh = RefreshToken.for_user(user)
+        # 비밀번호 지문(pwh)을 포함한 토큰 생성
+        refresh = issue_tokens_for_user(user)
 
         data = {
             'refresh': str(refresh),
@@ -410,14 +411,23 @@ def _validate_block_url(raw_url: str, field_name: str) -> str:
     cleaned = raw_url.strip()
     if not cleaned:
         return ''
-    # 내부 미디어 상대 경로(/media/...)만 허용; protocol-relative(//...)는 차단
-    if cleaned.startswith('/media/') and not cleaned.startswith('//'):
+    if any(ord(ch) <= 0x1F or ord(ch) == 0x7F for ch in cleaned):
+        raise serializers.ValidationError(f"허용되지 않는 문자가 포함된 URL입니다({field_name}).")
+    if cleaned.startswith('//') or cleaned.startswith('/\\') or '\\' in cleaned:
+        raise serializers.ValidationError(f"허용되지 않는 URL 형식입니다({field_name}).")
+    # 내부 미디어 상대 경로(/media/...)만 허용하되 상위 디렉토리 이동(..) 차단
+    if cleaned.startswith('/media/'):
+        if '..' in cleaned.split('/'):
+            raise serializers.ValidationError(f"허용되지 않는 미디어 경로입니다({field_name}).")
         return cleaned
+    if cleaned.startswith('/'):
+        raise serializers.ValidationError(f"허용되지 않는 상대 URL입니다({field_name}).")
     parsed = urlparse(cleaned)
     scheme = (parsed.scheme or '').lower()
     if not scheme:
-        # 스킴 없이 도메인만 입력한 경우(예: github.com/foo) 허용하되 제어문자/콜론 우회 차단
-        if ':' in cleaned.split('/', 1)[0]:
+        # 스킴 없이 도메인만 입력한 경우(예: github.com/foo) 허용하되 콜론/비도메인 우회 차단
+        first_segment = cleaned.split('/', 1)[0]
+        if ':' in first_segment or '.' not in first_segment or first_segment.startswith('.'):
             raise serializers.ValidationError(f"허용되지 않는 URL 형식입니다({field_name}).")
         return cleaned
     if scheme not in _ALLOWED_BLOCK_URL_SCHEMES:
@@ -471,12 +481,21 @@ class ProfileBlocksUpdateSerializer(serializers.ModelSerializer):
 
 
 MAX_PROFILE_HTML_SIZE = 2 * 1024 * 1024  # 2MB (base64 인라인 이미지 포함 여유분)
-_DANGEROUS_HTML_TAG_RE = re.compile(
-    r'<\s*(script|iframe|object|embed|applet|base)\b[^>]*>.*?<\s*/\s*\1\s*>|'
-    r'<\s*(script|iframe|object|embed|applet|base)\b[^>]*/?>|'
-    r'<\s*meta\b[^>]*http-equiv\s*=\s*["\']?\s*refresh\b[^>]*>',
-    re.IGNORECASE | re.DOTALL,
-)
+_DANGEROUS_PROFILE_HTML_TAGS = ('script', 'iframe', 'object', 'embed', 'applet', 'base')
+
+
+def _strip_dangerous_profile_html(raw_html: str) -> str:
+    """선형 시간 HTML 파서(BeautifulSoup)로 위험한 활성 태그를 제거한다(보조 방어; 주 보안 경계는 iframe sandbox + CSP)."""
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(raw_html, 'html.parser')
+    for tag in soup.find_all(_DANGEROUS_PROFILE_HTML_TAGS):
+        tag.decompose()
+    for meta in soup.find_all('meta'):
+        http_equiv = meta.get('http-equiv')
+        if isinstance(http_equiv, str) and http_equiv.strip().lower() == 'refresh':
+            meta.decompose()
+    return str(soup)
 
 
 class ProfileHtmlUpdateSerializer(serializers.ModelSerializer):
@@ -499,5 +518,5 @@ class ProfileHtmlUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 f"HTML은 {MAX_PROFILE_HTML_SIZE // (1024 * 1024)}MB 이하여야 합니다."
             )
-        # 프론트엔드 iframe sandbox="" + CSP와 함께 다층 방어: 위험한 활성 태그 사전 제거
-        return _DANGEROUS_HTML_TAG_RE.sub('', value)
+        # 프론트엔드 iframe sandbox="" + CSP와 함께 다층 방어: 선형 파서로 위험 태그 사전 제거
+        return _strip_dangerous_profile_html(value)

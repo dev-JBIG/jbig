@@ -87,26 +87,37 @@ def _is_upload_owned_by(file_key, owner_id):
 
 
 def _json_paths_reference(model, field_name, file_key):
+    normalized = file_key.replace('\\', '/')
+    legacy = normalized.replace('/', '\\')
     try:
-        return model.objects.filter(
-            **{f'{field_name}__contains': [{'path': file_key}]}
-        ).exists()
+        return (
+            model.objects.filter(**{f'{field_name}__contains': [{'path': normalized}]}).exists()
+            or (
+                legacy != normalized
+                and model.objects.filter(**{f'{field_name}__contains': [{'path': legacy}]}).exists()
+            )
+        )
     except NotSupportedError:
         paths_lists = model.objects.values_list(field_name, flat=True).iterator()
         return any(
-            isinstance(item, dict) and item.get('path') == file_key
+            isinstance(item, dict)
+            and isinstance(item.get('path'), str)
+            and item['path'].replace('\\', '/') == normalized
             for paths in paths_lists if isinstance(paths, list)
             for item in paths
         )
 
 
 def _is_upload_referenced(file_key):
-    marker = f'media-key://{file_key}'
+    normalized = file_key.replace('\\', '/')
+    legacy = normalized.replace('/', '\\')
+    marker_norm = f'media-key://{normalized}'
+    marker_legacy = f'media-key://{legacy}'
     return (
-        Post.objects.filter(content_md__contains=marker).exists()
-        or Draft.objects.filter(content_md__contains=marker).exists()
-        or _json_paths_reference(Post, 'attachment_paths', file_key)
-        or _json_paths_reference(Draft, 'uploaded_paths', file_key)
+        Post.objects.filter(Q(content_md__contains=marker_norm) | Q(content_md__contains=marker_legacy)).exists()
+        or Draft.objects.filter(Q(content_md__contains=marker_norm) | Q(content_md__contains=marker_legacy)).exists()
+        or _json_paths_reference(Post, 'attachment_paths', normalized)
+        or _json_paths_reference(Draft, 'uploaded_paths', normalized)
     )
 
 
@@ -818,12 +829,17 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             for att in instance.attachment_paths:
                 if isinstance(att, dict) and 'path' in att:
                     file_key = att['path']
-                    if isinstance(file_key, str) and file_key.startswith('uploads/'):
-                        old_attachment_keys.add(file_key)
+                    if isinstance(file_key, str):
+                        normalized_key = file_key.replace('\\', '/')
+                        if normalized_key.startswith('uploads/'):
+                            old_attachment_keys.add(normalized_key)
 
         old_content_keys = set()
         if instance.content_md:
-            old_content_keys = set(re.findall(r'media-key://(uploads/[^\s\)]+)', instance.content_md))
+            old_content_keys = {
+                k.replace('\\', '/')
+                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
+            }
 
         # 실제 수정 수행
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -837,12 +853,17 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             for att in instance.attachment_paths:
                 if isinstance(att, dict) and 'path' in att:
                     file_key = att['path']
-                    if isinstance(file_key, str) and file_key.startswith('uploads/'):
-                        new_attachment_keys.add(file_key)
+                    if isinstance(file_key, str):
+                        normalized_key = file_key.replace('\\', '/')
+                        if normalized_key.startswith('uploads/'):
+                            new_attachment_keys.add(normalized_key)
 
         new_content_keys = set()
         if instance.content_md:
-            new_content_keys = set(re.findall(r'media-key://(uploads/[^\s\)]+)', instance.content_md))
+            new_content_keys = {
+                k.replace('\\', '/')
+                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
+            }
 
         # 삭제할 파일 키 계산 (기존에 있었지만 새로운 버전에 없는 것)
         removed_keys = (old_attachment_keys - new_attachment_keys) | (old_content_keys - new_content_keys)
@@ -873,11 +894,16 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
             for att in instance.attachment_paths:
                 if isinstance(att, dict) and 'path' in att:
                     file_key = att['path']
-                    if _is_upload_owned_by(file_key, author_id):
-                        candidate_keys.add(file_key)
+                    if isinstance(file_key, str):
+                        normalized_key = file_key.replace('\\', '/')
+                        if _is_upload_owned_by(normalized_key, author_id):
+                            candidate_keys.add(normalized_key)
 
         if instance.content_md:
-            content_keys = re.findall(r'media-key://(uploads/[^\s\)]+)', instance.content_md)
+            content_keys = (
+                k.replace('\\', '/')
+                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
+            )
             candidate_keys.update(k for k in content_keys if _is_upload_owned_by(k, author_id))
 
         response = super().destroy(request, *args, **kwargs)

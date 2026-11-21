@@ -158,7 +158,9 @@ class SiteSettingsView(APIView):
         responses={200: OpenApiTypes.OBJECT}
     )
     def put(self, request):
-        updated = {}
+        from django.db import transaction
+
+        pending = {}
         fields = [
             'notion_page_id', 'quiz_url', 'jbig_description', 'jbig_president', 'jbig_president_dept',
             'jbig_vice_president', 'jbig_vice_president_dept', 'jbig_email',
@@ -178,12 +180,21 @@ class SiteSettingsView(APIView):
                         val = _validate_http_url(val)
                     except DjangoValidationError:
                         return Response({'error': 'quiz_url must be a valid http(s) URL.'}, status=status.HTTP_400_BAD_REQUEST)
-                SiteSettings.set(field, val)
-                updated[field] = val
+                if field == 'jbig_email' and val:
+                    from django.core.validators import EmailValidator
+                    try:
+                        EmailValidator()(val)
+                    except DjangoValidationError:
+                        return Response({'error': 'jbig_email must be a valid email address.'}, status=status.HTTP_400_BAD_REQUEST)
+                pending[field] = val
         
-        if not updated:
+        if not pending:
             return Response({'error': 'No valid fields provided'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'message': 'Settings updated', **updated})
+
+        with transaction.atomic():
+            for field, val in pending.items():
+                SiteSettings.set(field, val)
+        return Response({'message': 'Settings updated', **pending})
 
 class NotionPageView(APIView):
     """Notion 내부 API 프록시 (splitbee 대체)"""
