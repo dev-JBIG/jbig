@@ -14,6 +14,27 @@ const getFocusableElements = (container: HTMLElement): HTMLElement[] =>
         (el) => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true"
     );
 
+// 중첩 모달 지원: 가장 최근에 열린(스택 최상단) 모달만 키보드/포커스 트랩을 처리한다.
+const activeModalStack: HTMLElement[] = [];
+
+const isTopmostModal = (container: HTMLElement): boolean => {
+    if (activeModalStack.length > 0 && activeModalStack[activeModalStack.length - 1] !== container) {
+        return false;
+    }
+
+    // useFocusTrap 외부에서 렌더된 다른 aria-modal 다이얼로그가 현재 포커스를 보유 중이면 양보한다.
+    const activeEl = document.activeElement;
+    if (activeEl instanceof HTMLElement && !container.contains(activeEl)) {
+        const activeDialog = activeEl.closest('[role="dialog"][aria-modal="true"]');
+        const ownDialog = container.closest('[role="dialog"][aria-modal="true"]') ?? container;
+        if (activeDialog && activeDialog !== ownDialog) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
 interface UseFocusTrapOptions {
     onClose?: () => void;
     initialFocusRef?: RefObject<HTMLElement | null>;
@@ -23,8 +44,7 @@ interface UseFocusTrapOptions {
 /**
  * 모달/드로어 다이얼로그의 접근성 포커스 관리 훅:
  * - 열릴 때 이전 포커스 저장 후 내부 요소로 포커스 이동
- * - 열려 있는 동안 Tab/Shift+Tab 순환 및 외부 포커스 이탈 차단
- * - Escape 키 닫기 지원
+ * - 중첩 모달 시 최상위 모달만 Tab/Shift+Tab, Escape, focusin을 처리
  * - 닫힐 때 살아있는 트리거 요소로 포커스 복원
  */
 export function useFocusTrap(
@@ -41,6 +61,8 @@ export function useFocusTrap(
         if (!active) return;
         const container = containerRef.current;
         if (!container) return;
+
+        activeModalStack.push(container);
 
         const previousFocus =
             document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -61,9 +83,12 @@ export function useFocusTrap(
         }
 
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (!isTopmostModal(container)) return;
+
             if (e.key === "Escape") {
                 if (onCloseRef.current) {
-                    e.stopPropagation();
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
                     onCloseRef.current();
                 }
                 return;
@@ -96,12 +121,9 @@ export function useFocusTrap(
         };
 
         const handleFocusIn = (e: FocusEvent) => {
+            if (!isTopmostModal(container)) return;
             const target = e.target as Node | null;
             if (!target || container.contains(target)) return;
-            // 다른 상위 모달(예: AlertModal)이 열려 해당 모달로 포커스가 간 경우는 방해하지 않음
-            if (target instanceof HTMLElement && target.closest('[role="dialog"][aria-modal="true"]')) {
-                return;
-            }
             const focusables = getFocusableElements(container);
             (focusables[0] ?? container).focus();
         };
@@ -110,6 +132,10 @@ export function useFocusTrap(
         document.addEventListener("focusin", handleFocusIn);
 
         return () => {
+            const stackIdx = activeModalStack.lastIndexOf(container);
+            if (stackIdx !== -1) {
+                activeModalStack.splice(stackIdx, 1);
+            }
             document.removeEventListener("keydown", handleKeyDown);
             document.removeEventListener("focusin", handleFocusIn);
 

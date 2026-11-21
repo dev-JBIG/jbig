@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Button } from '@primer/react';
 import './AlertModal.css';
+import { useFocusTrap } from './useFocusTrap';
 
 interface AlertModalProps {
     show: boolean;
@@ -31,7 +32,6 @@ const AlertModal: React.FC<AlertModalProps> = ({
     useEffect(() => {
         if (show) {
             document.body.classList.add('modal-open');
-            modalRef.current?.focus();
         } else {
             document.body.classList.remove('modal-open');
         }
@@ -41,17 +41,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
         };
     }, [show]);
 
-    // ESC 키로 모달 닫기
-    useEffect(() => {
-        const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && show) {
-                onClose();
-            }
-        };
-
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [show, onClose]);
+    useFocusTrap(modalRef, show, { onClose });
 
     const handleConfirm = () => {
         if (isConfirm && onConfirm) {
