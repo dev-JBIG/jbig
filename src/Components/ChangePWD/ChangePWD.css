@@ -16,7 +16,7 @@
     padding: 28px 24px;
     background: var(--bgColor-default, var(--color-bg-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--radius-md);
+    border-radius: var(--borderRadius-large, 12px);
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
@@ -35,12 +35,28 @@
 }
 
 .changepwd-logo {
-    font-size: 24px;
-    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 22px;
+    font-weight: 800;
     color: var(--fgColor-default, var(--color-text-primary));
     text-decoration: none;
     user-select: none;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+}
+
+.changepwd-logo-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background-color: var(--fgColor-default, #1f2328);
+    color: var(--bgColor-default, #ffffff);
+    font-size: 14px;
+    font-weight: 800;
 }
 
 .changepwd-logo:hover {
@@ -48,7 +64,7 @@
 }
 
 .changepwd-title {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 600;
     color: var(--fgColor-muted, var(--color-text-secondary));
     margin: 0;

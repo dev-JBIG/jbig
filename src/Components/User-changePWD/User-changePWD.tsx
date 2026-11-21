@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@primer/react";
 import { changePassword, signout } from "../../API/req";
 import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
@@ -104,9 +105,16 @@ const UserChangePWD: React.FC = () => {
                     placeholder="새 비밀번호 확인"
                 />
 
-                <button onClick={handleChangePassword} disabled={loading}>
+                <Button
+                    type="button"
+                    variant="primary"
+                    block
+                    className="user-pwchange-submit"
+                    onClick={handleChangePassword}
+                    disabled={loading}
+                >
                     {loading ? "변경 중..." : "비밀번호 변경하기"}
-                </button>
+                </Button>
             </div>
         </div>
     );

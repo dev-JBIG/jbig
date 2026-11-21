@@ -12,9 +12,19 @@ import rehypeRaw from 'rehype-raw';
 import rehypeSanitize, { defaultSchema } from 'rehype-sanitize';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import { Label } from '@primer/react';
+import { Button, Label } from '@primer/react';
 import {useUser} from "../Utils/UserContext";
-import { Heart } from "lucide-react";
+import {
+    Heart,
+    Paperclip,
+    FileText,
+    Download,
+    Eye,
+    Clock,
+    ArrowLeft,
+    MessageSquare,
+    MoreHorizontal,
+} from "lucide-react";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
 import { useColorMode } from "../Utils/ThemeContext";
@@ -851,14 +861,25 @@ const PostDetail: React.FC = () => {
             <div className="postdetail-container post-not-found">
                 <h2>해당 게시글을 찾을 수 없습니다.</h2>
                 <p>게시글이 삭제되었거나, 주소가 잘못되었습니다.</p>
-                <button className="post-not-found-btn" onClick={() => navigate(-1)}>
+                <Button variant="default" className="post-not-found-btn" onClick={() => navigate(-1)}>
                     이전 페이지로
-                </button>
+                </Button>
             </div>
         );
     }
 
-    if (!post) return <div className="postdetail-container">로딩 중...</div>;
+    if (!post) {
+        return (
+            <div className="postdetail-container postdetail-skeleton" aria-busy="true" aria-label="게시글 로딩 중">
+                <div className="postdetail-skeleton-line postdetail-skeleton-crumb" />
+                <div className="postdetail-skeleton-line postdetail-skeleton-title" />
+                <div className="postdetail-skeleton-line postdetail-skeleton-meta" />
+                <div className="postdetail-divider" />
+                <div className="postdetail-skeleton-line postdetail-skeleton-body" />
+                <div className="postdetail-skeleton-line postdetail-skeleton-body short" />
+            </div>
+        );
+    }
 
     // 폼 게시판(사유서·에러/피드백 제보)은 본문을 form-style로 렌더한다.
     const isFormBoard =
@@ -874,7 +895,8 @@ const PostDetail: React.FC = () => {
                             className="postdetail-category postdetail-category-link"
                             onClick={() => navigate(`/board/${post.board_id}`)}
                         >
-                            {post.board}
+                            <ArrowLeft size={14} aria-hidden="true" />
+                            <span>{post.board}</span>
                         </button>
                         {post.tag && (
                             <Label variant="accent" size="small" className="postdetail-tag-label">
@@ -884,26 +906,24 @@ const PostDetail: React.FC = () => {
                     </div>
                     {post.is_owner && (
                         <div className="postdetail-actions">
-                            <span
+                            <Button
+                                size="small"
+                                variant="default"
                                 className="postdetail-edit-link"
-                                role="button"
-                                tabIndex={0}
                                 aria-label="게시글 수정"
                                 onClick={handleEditPost}
-                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleEditPost(); }}
                             >
-                              수정
-                            </span>
-                            <span
+                                수정
+                            </Button>
+                            <Button
+                                size="small"
+                                variant="danger"
                                 className="postdetail-delete-link"
-                                role="button"
-                                tabIndex={0}
                                 aria-label="게시글 삭제"
                                 onClick={handleDeletePost}
-                                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleDeletePost(); }}
                             >
-                              삭제
-                            </span>
+                                삭제
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -922,22 +942,33 @@ const PostDetail: React.FC = () => {
                 </h2>
             </div>
             <div className="postdetail-info-row">
-            <span className="postdetail-author" onClick={() => navigate(`/@${post.user_id}`)}>
-                {post.author_semester ? `${post.author_semester}기 ` : ""}{post.author}
-            </span>
-                <span className="postdetail-dot">·</span>
-                <span className="postdetail-date">
-                    {post.date}
+                <button
+                    type="button"
+                    className="postdetail-author"
+                    onClick={() => navigate(`/@${post.user_id}`)}
+                >
+                    {post.author_semester ? `${post.author_semester}기 ` : ""}{post.author}
+                </button>
+                <span className="postdetail-dot" aria-hidden="true">·</span>
+                <span className="postdetail-meta-item postdetail-date">
+                    <Clock size={13} aria-hidden="true" />
+                    <span>{post.date}</span>
                     {post.updatedAt && post.updatedAt !== post.date && (
                         <span className="postdetail-updated-time">
-                            수정: {post.updatedAt}
+                            (수정 {post.updatedAt})
                         </span>
                     )}
                 </span>
-                <span className="postdetail-dot">·</span>
-                <span>조회수 {post.views}</span>
-                <span className="postdetail-dot">·</span>
-                <span>좋아요 {post.likes}</span>
+                <span className="postdetail-dot" aria-hidden="true">·</span>
+                <span className="postdetail-meta-item">
+                    <Eye size={13} aria-hidden="true" />
+                    <span>조회수 {post.views}</span>
+                </span>
+                <span className="postdetail-dot" aria-hidden="true">·</span>
+                <span className="postdetail-meta-item">
+                    <Heart size={13} aria-hidden="true" />
+                    <span>좋아요 {post.likes}</span>
+                </span>
             </div>
             <div className="postdetail-divider"/>
 
@@ -960,41 +991,40 @@ const PostDetail: React.FC = () => {
             )}
 
             {/* 본문 */}
-                <div className="content-body">
-                    <div className={`postdetail-content${isFormBoard ? " form-style" : ""}`}>
-                        <ReactMarkdown
-                            remarkPlugins={[remarkGfm, remarkMath]}
-                            rehypePlugins={[
-                                rehypeRaw,
-                                [rehypeSanitize, sanitizeSchema],
-                                rehypeKatex
-                            ]}
+            <div className="content-body">
+                <div className={`postdetail-content${isFormBoard ? " form-style" : ""}`}>
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[
+                            rehypeRaw,
+                            [rehypeSanitize, sanitizeSchema],
+                            rehypeKatex
+                        ]}
+                        components={{
+                            a: ({node, children, ...props}) => (
+                                <a {...props} target="_blank" rel="noopener noreferrer">
+                                    {children}
+                                </a>
+                            )
+                        }}
+                    >
+                        {post.content_md}
+                    </ReactMarkdown>
 
-                            components={{
-                                a: ({node, children, ...props}) => (
-                                    <a {...props} target="_blank" rel="noopener noreferrer">
-                                        {children}
-                                    </a>
-                                )
-                            }}
-                        >
-                            {post.content_md}
-                        </ReactMarkdown>
-
-                        {/* 사진첩 게시글: 이미지 첨부파일을 인라인으로 표시 */}
-                        {post.board_type === 4 && post.attachments?.filter(att =>
-                            /^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || "")
-                        ).map(att => (
-                            <img
-                                key={att.id}
-                                src={att.fileUrl}
-                                alt={att.fileName}
-                                className="photo-album-inline-image"
-                                loading="lazy"
-                            />
-                        ))}
-                    </div>
+                    {/* 사진첩 게시글: 이미지 첨부파일을 인라인으로 표시 */}
+                    {post.board_type === 4 && post.attachments?.filter(att =>
+                        /^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || "")
+                    ).map(att => (
+                        <img
+                            key={att.id}
+                            src={att.fileUrl}
+                            alt={att.fileName}
+                            className="photo-album-inline-image"
+                            loading="lazy"
+                        />
+                    ))}
                 </div>
+            </div>
 
             {/* 첨부파일 (사진첩 게시글은 이미지 제외) */}
             {post.attachments && post.attachments.length > 0 && (() => {
@@ -1002,26 +1032,35 @@ const PostDetail: React.FC = () => {
                     ? post.attachments.filter(att => !/^(jpg|jpeg|png|gif|webp|bmp|svg)$/i.test(att.fileType || ""))
                     : post.attachments;
                 return filtered.length > 0 ? (
-                    <div className="postdetail-attachments">
-                        <div className="postdetail-attachments-title">첨부파일</div>
-                        <ul>
+                    <section className="postdetail-attachments" aria-label="첨부파일">
+                        <div className="postdetail-attachments-header">
+                            <Paperclip size={14} aria-hidden="true" />
+                            <span>첨부파일</span>
+                            <span className="postdetail-attachments-count">{filtered.length}</span>
+                        </div>
+                        <ul className="postdetail-attachments-list">
                             {filtered.map(att => (
-                                <li key={att.id}>
+                                <li key={att.id} className="postdetail-attachment-item">
                                     <a
                                         href={att.fileUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
+                                        className="postdetail-attachment-link"
                                         onClick={att.gated ? (e) => handleGatedDownload(e, att.fileUrl, att.fileName) : undefined}
                                     >
-                                        {att.fileName}
+                                        <FileText size={15} className="postdetail-attachment-icon" aria-hidden="true" />
+                                        <span className="postdetail-attachment-name">{att.fileName}</span>
                                         {att.fileType && (
-                                            <span className="file-type"> ({att.fileType})</span>
+                                            <Label variant="secondary" size="small" className="postdetail-attachment-type">
+                                                {att.fileType.toUpperCase()}
+                                            </Label>
                                         )}
+                                        <Download size={14} className="postdetail-attachment-download" aria-hidden="true" />
                                     </a>
                                 </li>
                             ))}
                         </ul>
-                    </div>
+                    </section>
                 ) : null;
             })()}
 
@@ -1037,12 +1076,9 @@ const PostDetail: React.FC = () => {
                     disabled={isLikePending}
                 >
                     <Heart
-                        size={20}
+                        size={18}
                         aria-hidden="true"
-                        style={{
-                            fill: post.isLiked ? "#e0245e" : "transparent",
-                            stroke: post.isLiked ? "#e0245e" : "currentColor",
-                        }}
+                        className={`postdetail-heart-icon${post.isLiked ? " is-liked" : ""}`}
                     />
                     <span>{post.isLiked ? "추천했어요" : "추천"}</span>
                     <span className="postdetail-inline-like-count">{post.likes}</span>
@@ -1050,104 +1086,126 @@ const PostDetail: React.FC = () => {
             </div>
 
             {/* 댓글 영역 */}
-            <div className="postdetail-comment-section">
+            <section className="postdetail-comment-section" aria-label="댓글">
                 <div className="postdetail-comment-header">
-                    댓글 <b>{commentCount}</b>
+                    <MessageSquare size={16} aria-hidden="true" />
+                    <span>댓글</span>
+                    <span className="postdetail-comment-count-pill">{commentCount}</span>
                 </div>
                 <ul className="postdetail-comment-list">
                     {(post.comments || []).map(c => (
                         <li className="postdetail-comment-item" key={c.id}>
                             <div className="comment-item">
                                 <div className="comment-meta">
-                                    <span className={"comment-author" + (c.is_deleted ? " deleted" : "")}
+                                    <button
+                                        type="button"
+                                        className={"comment-author" + (c.is_deleted ? " deleted" : "")}
+                                        disabled={c.is_deleted}
                                         onClick={() => !c.is_deleted && navigate(`/@${c.user_id}`)}
                                     >
                                         {!c.is_deleted && c.author_semester ? `${c.author_semester}기 ` : ""}{c.author}
-                                        {!c.is_deleted && c.is_owner && (
-                                            <span className="comment-owner-badge">
-                                                (나)
-                                            </span>
-                                        )}
-                                    </span>
+                                    </button>
+                                    {!c.is_deleted && c.is_owner && (
+                                        <Label variant="accent" size="small" className="comment-owner-badge">
+                                            나
+                                        </Label>
+                                    )}
                                     <span className="comment-date">{c.date}</span>
-                                    {!c.is_deleted && (
-                                        <button
-                                            className={`comment-like-btn ${c.isLiked ? "liked" : ""}`}
-                                            onClick={() => handleToggleCommentLike(c.id, false)}
-                                            aria-label={c.isLiked ? "좋아요 취소" : "좋아요"}
-                                        >
-                                            <Heart
-                                                size={14}
-                                                style={{
-                                                    fill: c.isLiked ? "#e0245e" : "transparent",
-                                                    stroke: c.isLiked ? "#e0245e" : "currentColor",
-                                                }}
-                                            />
-                                            <span className="comment-like-count">{c.likes || 0}</span>
-                                        </button>
-                                    )}
-                                    {!c.is_deleted && (
-                                        <span
-                                            className="reply-write-btn"
-                                            onClick={() => handleReplyWriteClick(c.id)}
-                                        >
-                                        답글쓰기
-                                        </span>
-                                    )}
-                                    {!c.is_deleted && (c.is_owner || c.can_delete) && (
-                                        <div className="more-wrapper">
+                                    <div className="comment-meta-actions">
+                                        {!c.is_deleted && (
                                             <button
                                                 type="button"
-                                                className="more-btn"
-                                                aria-haspopup="menu"
-                                                aria-expanded={openMenu?.type === "comment" && openMenu.id === c.id}
-                                                onClick={() => toggleCommentMenu(c.id)}
-                                                title="더보기"
+                                                className={`comment-like-btn ${c.isLiked ? "liked" : ""}`}
+                                                onClick={() => handleToggleCommentLike(c.id, false)}
+                                                aria-label={c.isLiked ? "좋아요 취소" : "좋아요"}
                                             >
-                                                ⋯
+                                                <Heart
+                                                    size={13}
+                                                    aria-hidden="true"
+                                                    className={`postdetail-heart-icon${c.isLiked ? " is-liked" : ""}`}
+                                                />
+                                                <span className="comment-like-count">{c.likes || 0}</span>
                                             </button>
-                                            {openMenu?.type === "comment" && openMenu.id === c.id && (
-                                                <div className="more-menu" role="menu">
-                                                    {c.is_owner && (
-                                                        <div className="more-menu-item" role="menuitem"
-                                                             onClick={() => { setOpenMenu(null); handleEditComment(c.id); }}>
-                                                            수정
-                                                        </div>
-                                                    )}
-                                                    <div className="more-menu-item danger" role="menuitem"
-                                                         onClick={() => { setOpenMenu(null); handleDeleteComment(c.id); }}>
-                                                        삭제
+                                        )}
+                                        {!c.is_deleted && (
+                                            <button
+                                                type="button"
+                                                className="reply-write-btn"
+                                                onClick={() => handleReplyWriteClick(c.id)}
+                                            >
+                                                답글쓰기
+                                            </button>
+                                        )}
+                                        {!c.is_deleted && (c.is_owner || c.can_delete) && (
+                                            <div className="more-wrapper">
+                                                <button
+                                                    type="button"
+                                                    className="more-btn"
+                                                    aria-haspopup="menu"
+                                                    aria-expanded={openMenu?.type === "comment" && openMenu.id === c.id}
+                                                    onClick={() => toggleCommentMenu(c.id)}
+                                                    title="더보기"
+                                                    aria-label="댓글 더보기"
+                                                >
+                                                    <MoreHorizontal size={16} aria-hidden="true" />
+                                                </button>
+                                                {openMenu?.type === "comment" && openMenu.id === c.id && (
+                                                    <div className="more-menu" role="menu">
+                                                        {c.is_owner && (
+                                                            <button
+                                                                type="button"
+                                                                className="more-menu-item"
+                                                                role="menuitem"
+                                                                onClick={() => { setOpenMenu(null); handleEditComment(c.id); }}
+                                                            >
+                                                                수정
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            type="button"
+                                                            className="more-menu-item danger"
+                                                            role="menuitem"
+                                                            onClick={() => { setOpenMenu(null); handleDeleteComment(c.id); }}
+                                                        >
+                                                            삭제
+                                                        </button>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {editingCommentId === c.id ? (
-                                    <div className="reply-input-box">
-                                    <textarea
-                                        className="reply-input"
-                                        rows={2}
-                                        value={editText}
-                                        onChange={e => setEditText(e.target.value)}
-                                        placeholder="내용을 수정하세요"
-                                        style={{ resize: "none" }}
-                                    />
+                                    <div className="comment-body-edit">
+                                        <textarea
+                                            className="reply-input"
+                                            rows={2}
+                                            value={editText}
+                                            onChange={e => setEditText(e.target.value)}
+                                            placeholder="내용을 수정하세요"
+                                        />
                                         <div className="reply-action-row">
-                                            <label style={{ fontSize: '0.85em', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', marginRight: 'auto' }}>
+                                            <label className="comment-realname-label">
                                                 <input
                                                     type="checkbox"
                                                     checked={editShowRealName}
                                                     onChange={(e) => setEditShowRealName(e.target.checked)}
                                                 />
-                                                비회원에게도 실명이 표시돼요
+                                                <span>비회원에게도 실명이 표시돼요</span>
                                             </label>
-                                            <span className="reply-cancel-text" onClick={cancelEdit}>취소</span>
-                                            <span
-                                                className={"reply-register-text" + (editText.trim() ? " active" : "")}
+                                            <Button type="button" variant="default" size="small" onClick={cancelEdit}>
+                                                취소
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="primary"
+                                                size="small"
+                                                disabled={!editText.trim()}
                                                 onClick={() => editText.trim() && saveEditComment(c.id)}
-                                            >저장</span>
+                                            >
+                                                저장
+                                            </Button>
                                         </div>
                                     </div>
                                 ) : (
@@ -1157,137 +1215,157 @@ const PostDetail: React.FC = () => {
                                 )}
                             </div>
                             {/* 답글 리스트 */}
-                            <ul className="reply-list">
-                                {(c.replies || []).map(r => (
-                                    <li className="reply-item" key={r.id}>
-                                        <div className="reply-meta">
-                                <span className={"reply-author" + (r.is_deleted ? " deleted" : "")}
-                                      onClick={() => !r.is_deleted && navigate(`/@${r.user_id}`)}
-                                >
-                                    {!r.is_deleted && r.author_semester ? `${r.author_semester}기 ` : ""}{r.author}
-                                    {!r.is_deleted && r.is_owner && (
-                                        <span className="comment-owner-badge">
-                                            (나)
-                                        </span>
-                                    )}
-                                </span>
-                                            <span className="reply-date">{r.date}</span>
-                                            {!r.is_deleted && (
+                            {(c.replies && c.replies.length > 0) && (
+                                <ul className="reply-list">
+                                    {c.replies.map(r => (
+                                        <li className="reply-item" key={r.id}>
+                                            <div className="reply-meta">
                                                 <button
-                                                    className={`comment-like-btn ${r.isLiked ? "liked" : ""}`}
-                                                    onClick={() => handleToggleCommentLike(r.id, true)}
-                                                    aria-label={r.isLiked ? "좋아요 취소" : "좋아요"}
+                                                    type="button"
+                                                    className={"reply-author" + (r.is_deleted ? " deleted" : "")}
+                                                    disabled={r.is_deleted}
+                                                    onClick={() => !r.is_deleted && navigate(`/@${r.user_id}`)}
                                                 >
-                                                    <Heart
-                                                        size={14}
-                                                        style={{
-                                                            fill: r.isLiked ? "#e0245e" : "transparent",
-                                                            stroke: r.isLiked ? "#e0245e" : "currentColor",
-                                                        }}
-                                                    />
-                                                    <span className="comment-like-count">{r.likes || 0}</span>
+                                                    {!r.is_deleted && r.author_semester ? `${r.author_semester}기 ` : ""}{r.author}
                                                 </button>
-                                            )}
-                                            {!r.is_deleted && (r.is_owner || r.can_delete) && (
-                                                <div className="more-wrapper">
-                                                    <button
-                                                        type="button"
-                                                        className="more-btn"
-                                                        aria-haspopup="menu"
-                                                        aria-expanded={openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id}
-                                                onClick={() => toggleReplyMenu(c.id, r.id)}
-                                                title="더보기"
-                                            >
-                                                ⋯
-                                            </button>
-                                            {openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id && (
-                                                <div className="more-menu" role="menu">
-                                                    {r.is_owner && (
-                                                        <div className="more-menu-item" role="menuitem"
-                                                             onClick={() => { setOpenMenu(null); handleEditReply(c.id, r.id); }}>
-                                                            수정
+                                                {!r.is_deleted && r.is_owner && (
+                                                    <Label variant="accent" size="small" className="comment-owner-badge">
+                                                        나
+                                                    </Label>
+                                                )}
+                                                <span className="reply-date">{r.date}</span>
+                                                <div className="comment-meta-actions">
+                                                    {!r.is_deleted && (
+                                                        <button
+                                                            type="button"
+                                                            className={`comment-like-btn ${r.isLiked ? "liked" : ""}`}
+                                                            onClick={() => handleToggleCommentLike(r.id, true)}
+                                                            aria-label={r.isLiked ? "좋아요 취소" : "좋아요"}
+                                                        >
+                                                            <Heart
+                                                                size={13}
+                                                                aria-hidden="true"
+                                                                className={`postdetail-heart-icon${r.isLiked ? " is-liked" : ""}`}
+                                                            />
+                                                            <span className="comment-like-count">{r.likes || 0}</span>
+                                                        </button>
+                                                    )}
+                                                    {!r.is_deleted && (r.is_owner || r.can_delete) && (
+                                                        <div className="more-wrapper">
+                                                            <button
+                                                                type="button"
+                                                                className="more-btn"
+                                                                aria-haspopup="menu"
+                                                                aria-expanded={openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id}
+                                                                onClick={() => toggleReplyMenu(c.id, r.id)}
+                                                                title="더보기"
+                                                                aria-label="답글 더보기"
+                                                            >
+                                                                <MoreHorizontal size={16} aria-hidden="true" />
+                                                            </button>
+                                                            {openMenu?.type === "reply" && openMenu.cId === c.id && openMenu.rId === r.id && (
+                                                                <div className="more-menu" role="menu">
+                                                                    {r.is_owner && (
+                                                                        <button
+                                                                            type="button"
+                                                                            className="more-menu-item"
+                                                                            role="menuitem"
+                                                                            onClick={() => { setOpenMenu(null); handleEditReply(c.id, r.id); }}
+                                                                        >
+                                                                            수정
+                                                                        </button>
+                                                                    )}
+                                                                    <button
+                                                                        type="button"
+                                                                        className="more-menu-item danger"
+                                                                        role="menuitem"
+                                                                        onClick={() => { setOpenMenu(null); handleDeleteReply(c.id, r.id); }}
+                                                                    >
+                                                                        삭제
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )}
-                                                    <div className="more-menu-item danger" role="menuitem"
-                                                         onClick={() => { setOpenMenu(null); handleDeleteReply(c.id, r.id); }}>
-                                                        삭제
+                                                </div>
+                                            </div>
+                                            {editingReplyKey && editingReplyKey.cId === c.id && editingReplyKey.rId === r.id ? (
+                                                <div className="comment-body-edit">
+                                                    <textarea
+                                                        className="reply-input"
+                                                        rows={2}
+                                                        value={editText}
+                                                        onChange={e => setEditText(e.target.value)}
+                                                        placeholder="내용을 수정하세요"
+                                                    />
+                                                    <div className="reply-action-row">
+                                                        <label className="comment-realname-label">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={editShowRealName}
+                                                                onChange={(e) => setEditShowRealName(e.target.checked)}
+                                                            />
+                                                            <span>비회원에게도 실명이 표시돼요</span>
+                                                        </label>
+                                                        <Button type="button" variant="default" size="small" onClick={cancelEdit}>
+                                                            취소
+                                                        </Button>
+                                                        <Button
+                                                            type="button"
+                                                            variant="primary"
+                                                            size="small"
+                                                            disabled={!editText.trim()}
+                                                            onClick={() => editText.trim() && saveEditReply(c.id, r.id)}
+                                                        >
+                                                            저장
+                                                        </Button>
                                                     </div>
                                                 </div>
+                                            ) : (
+                                                <div className={"reply-content" + (r.is_deleted ? " deleted" : "")}>
+                                                    {r.content}
+                                                </div>
                                             )}
-                                        </div>
-                                    )}
-
-                                    </div>
-                                        {editingReplyKey && editingReplyKey.cId === c.id && editingReplyKey.rId === r.id ? (
-                                        <div className="reply-input-box">
-                                            <textarea
-                                                className="reply-input"
-                                                rows={2}
-                                                value={editText}
-                                                onChange={e => setEditText(e.target.value)}
-                                                placeholder="내용을 수정하세요"
-                                                style={{ resize: "none" }}
-                                            />
-                                            <div className="reply-action-row">
-                                                <label style={{ fontSize: '0.85em', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', marginRight: 'auto' }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={editShowRealName}
-                                                        onChange={(e) => setEditShowRealName(e.target.checked)}
-                                                    />
-                                                    비회원에게도 실명이 표시돼요
-                                                </label>
-                                                <span className="reply-cancel-text" onClick={cancelEdit}>취소</span>
-                                                <span
-                                                    className={"reply-register-text" + (editText.trim() ? " active" : "")}
-                                                    onClick={() => editText.trim() && saveEditReply(c.id, r.id)}
-                                                >저장</span>
-                                            </div>
-                                        </div>
-                                        ) : (
-                                            <div className={"reply-content" + (r.is_deleted ? " deleted" : "")}>
-                                                {r.content}
-                                            </div>
-                                        )}
-
-                                    </li>
-                                ))}
-                            </ul>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                             {/* 답글 입력창: replyTargetId와 id가 같을 때만 노출 */}
                             {replyTargetId === c.id && (
                                 <div className="reply-input-box">
                                     <textarea
                                         className="reply-input"
-                                        rows={1}
+                                        rows={2}
                                         placeholder="답글을 입력하세요"
                                         value={replyInput}
                                         onChange={e => setReplyInput(e.target.value)}
-                                        style={{resize: "none"}}
                                     />
                                     <div className="reply-action-row">
                                         {accessToken ? (
-                                            <label style={{ fontSize: '0.85em', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', marginRight: 'auto' }}>
+                                            <label className="comment-realname-label">
                                                 <input
                                                     type="checkbox"
                                                     checked={showReplyRealName}
                                                     onChange={(e) => setShowReplyRealName(e.target.checked)}
                                                 />
-                                                비회원에게도 실명이 표시돼요
+                                                <span>비회원에게도 실명이 표시돼요</span>
                                             </label>
                                         ) : (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: 'auto' }}>
-                                                <span style={{ fontSize: '0.85em', color: '#666' }}>
+                                            <div className="comment-guest-hint-row">
+                                                <span className="comment-guest-hint">
                                                     비회원은 익명으로 작성됩니다
                                                 </span>
                                                 {turnstileToken ? (
-                                                    <span style={{ fontSize: '0.8em', color: '#28a745' }}>CAPTCHA 완료</span>
+                                                    <span className="comment-captcha-status is-ok">CAPTCHA 완료</span>
                                                 ) : (
-                                                    <span style={{ fontSize: '0.8em', color: '#dc3545' }}>아래 댓글창에서 CAPTCHA 인증 필요</span>
+                                                    <span className="comment-captcha-status is-needed">아래 댓글창에서 CAPTCHA 인증 필요</span>
                                                 )}
                                             </div>
                                         )}
-                                        <span
-                                            className="reply-cancel-text"
+                                        <Button
+                                            type="button"
+                                            variant="default"
+                                            size="small"
                                             onClick={() => {
                                                 setReplyInput("");
                                                 setShowReplyRealName(false);
@@ -1295,18 +1373,18 @@ const PostDetail: React.FC = () => {
                                             }}
                                         >
                                             취소
-                                        </span>
-                                        <span
-                                            className={
-                                                "reply-register-text" +
-                                                ((replyInput.trim() && (accessToken || turnstileToken)) ? " active" : "")
-                                            }
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="primary"
+                                            size="small"
+                                            disabled={!replyInput.trim() || (!accessToken && !turnstileToken)}
                                             onClick={() => {
                                                 if (replyInput.trim() && (accessToken || turnstileToken)) handleAddReply(c.id);
                                             }}
                                         >
                                             등록
-                                        </span>
+                                        </Button>
                                     </div>
                                 </div>
                             )}
@@ -1315,33 +1393,32 @@ const PostDetail: React.FC = () => {
                 </ul>
 
                 <div className="postdetail-comment-input-row">
-                    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '8px' }}>
+                    <div className="comment-composer">
                         {getCommentVisibilityHint(post.board_read_scope, post.post_type) && (
-                            <span style={{ fontSize: '0.8em', color: '#888' }}>
+                            <span className="comment-visibility-hint">
                                 {getCommentVisibilityHint(post.board_read_scope, post.post_type)}
                             </span>
                         )}
                         <textarea
                             className="postdetail-comment-input"
-                            rows={1}
+                            rows={2}
                             placeholder="댓글을 입력하세요"
                             value={commentInput}
                             onChange={e => setCommentInput(e.target.value)}
-                            style={{resize: "none"}}
                         />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="comment-composer-footer">
                             {accessToken ? (
-                                <label style={{ fontSize: '0.9em', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+                                <label className="comment-realname-label">
                                     <input
                                         type="checkbox"
                                         checked={showCommentRealName}
                                         onChange={(e) => setShowCommentRealName(e.target.checked)}
                                     />
-                                    비회원에게도 실명이 표시돼요
+                                    <span>비회원에게도 실명이 표시돼요</span>
                                 </label>
                             ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <span style={{ fontSize: '0.85em', color: '#666' }}>
+                                <div className="comment-guest-stack">
+                                    <span className="comment-guest-hint">
                                         비회원은 익명으로 작성됩니다
                                     </span>
                                     {process.env.REACT_APP_TURNSTILE_SITE_KEY && (
@@ -1356,45 +1433,44 @@ const PostDetail: React.FC = () => {
                                     )}
                                 </div>
                             )}
-                            <button
+                            <Button
+                                type="button"
+                                variant="primary"
                                 className="postdetail-comment-btn"
                                 onClick={handleAddComment}
                                 disabled={!commentInput.trim() || (!accessToken && !turnstileToken)}
                             >
                                 등록
-                            </button>
+                            </Button>
                         </div>
                     </div>
-                        </div>
-                    </div>
-              <div className={`postdetail-like-floating${isScrolling ? ' scrolling' : ''}`}>
-                    <div className="postdetail-like-btn-wrapper">
-                      <button
-                          type="button"
-                          className="postdetail-like-btn"
-                          onClick={() => handleToggleLike(true)}
-                          aria-label={post.isLiked
-                              ? `게시글 추천 취소, 현재 ${post.likes}개`
-                              : `게시글 추천, 현재 ${post.likes}개`}
-                          aria-pressed={!!post.isLiked}
-                          title={post.isLiked ? "좋아요 취소" : "좋아요"}
-                          disabled={isLikePending}
-                      >
-                          <Heart
-                              size={18}
-                              style={{
-                                  fill: post.isLiked ? "#e0245e" : "transparent",
-                                  stroke: post.isLiked ? "#e0245e" : "#999",
-                                  transition: "all .15s ease",
-                              }}
-                          />
-                        </button>
-                        <HeartBurst triggerKey={heartBurstKey} />
-                        <LikePlusOne triggerKey={likePlusOneKey} count={post.likes ?? 0} isLiked={post.isLiked ?? false} />
-                  </div>
+                </div>
+            </section>
+            <div className={`postdetail-like-floating${isScrolling ? ' scrolling' : ''}`}>
+                <div className="postdetail-like-btn-wrapper">
+                    <button
+                        type="button"
+                        className="postdetail-like-btn"
+                        onClick={() => handleToggleLike(true)}
+                        aria-label={post.isLiked
+                            ? `게시글 추천 취소, 현재 ${post.likes}개`
+                            : `게시글 추천, 현재 ${post.likes}개`}
+                        aria-pressed={!!post.isLiked}
+                        title={post.isLiked ? "좋아요 취소" : "좋아요"}
+                        disabled={isLikePending}
+                    >
+                        <Heart
+                            size={18}
+                            aria-hidden="true"
+                            className={`postdetail-heart-icon postdetail-floating-heart${post.isLiked ? " is-liked" : ""}`}
+                        />
+                    </button>
+                    <HeartBurst triggerKey={heartBurstKey} />
+                    <LikePlusOne triggerKey={likePlusOneKey} count={post.likes ?? 0} isLiked={post.isLiked ?? false} />
+                </div>
             </div>
         </div>
-);
+    );
 };
 
 export default PostDetail;

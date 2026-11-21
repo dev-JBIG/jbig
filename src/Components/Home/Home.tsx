@@ -16,7 +16,17 @@ import {
     markNotificationRead,
     NotificationItem
 } from "../../API/req";
-import { CircleUserRound, Bell, Sun, Moon } from "lucide-react";
+import {
+    Bell,
+    Sun,
+    Moon,
+    Search as SearchIcon,
+    ChevronDown,
+    User as UserIcon,
+    Shield,
+    LogOut,
+    Plus,
+} from "lucide-react";
 import { Button } from "@primer/react";
 import {CalendarEventCreate, Section} from "../Utils/interfaces";
 import { useUser } from "../Utils/UserContext";
@@ -36,7 +46,13 @@ const PostWrite = lazy(() => import("../Posts/PostWrite"));
 const Search = lazy(() => import("../Posts/Search"));
 const Profile = lazy(() => import("../Profile/Profile"));
 const Arena = lazy(() => import("../Competitions/Arena"));
-const routeFallback = <div style={{ minHeight: 240 }} />;
+const routeFallback = (
+    <div className="route-loading-fallback" aria-busy="true" aria-label="페이지 로딩 중">
+        <div className="route-loading-bar route-loading-bar-lg" />
+        <div className="route-loading-bar route-loading-bar-md" />
+        <div className="route-loading-bar route-loading-bar-sm" />
+    </div>
+);
 
 // 미디어(CDN) 베이스 URL. 운영은 REACT_APP_MEDIA_BASE_URL 로 주입(R2 + Cloudflare CDN).
 // 미설정 시 CDN 커스텀 도메인으로 폴백.
@@ -105,6 +121,7 @@ const Home: React.FC = () => {
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [headerSearch, setHeaderSearch] = useState("");
     const { user, signOutLocal, authReady, accessToken, refreshToken } = useUser();
     const { staffAuth } = useStaffAuth();
     const { showAlert } = useAlert();
@@ -112,9 +129,11 @@ const Home: React.FC = () => {
 
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
+    const headerSearchRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
     const location = useLocation();
 
+    const isHomePage = location.pathname === '/';
     const isProfilePage = decodeURIComponent(location.pathname).startsWith('/@');
     const isArenaPage = location.pathname === '/arena' || location.pathname.startsWith('/arena/');
     const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -258,7 +277,7 @@ const Home: React.FC = () => {
         shouldDeferBoards,
     ]);
 
-    // 외부 클릭 시 드롭다운 닫기
+    // 외부 클릭 및 Escape로 드롭다운 닫기, '/'로 헤더 검색 포커스
     useEffect(() => {
         const handleClickOutside = (e: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -268,9 +287,46 @@ const Home: React.FC = () => {
                 setNotificationOpen(false);
             }
         };
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setMenuOpen(false);
+                setNotificationOpen(false);
+                return;
+            }
+            if (
+                e.key === "/" &&
+                !e.metaKey &&
+                !e.ctrlKey &&
+                !e.altKey &&
+                !isModalOpen &&
+                !isLoginModalOpen &&
+                headerSearchRef.current
+            ) {
+                const target = e.target as HTMLElement | null;
+                const tag = target?.tagName;
+                if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target?.isContentEditable) {
+                    return;
+                }
+                const formEl = headerSearchRef.current.closest("form");
+                const formStyle = formEl ? window.getComputedStyle(formEl) : null;
+                const inputStyle = window.getComputedStyle(headerSearchRef.current);
+                if (
+                    (!formStyle || formStyle.display !== "none") &&
+                    inputStyle.display !== "none" &&
+                    inputStyle.visibility !== "hidden"
+                ) {
+                    e.preventDefault();
+                    headerSearchRef.current.focus();
+                }
+            }
+        };
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [isModalOpen, isLoginModalOpen]);
 
     // 알림 개수 주기적으로 조회 (30초마다)
     useEffect(() => {
@@ -451,6 +507,15 @@ const Home: React.FC = () => {
         setModalOpen(false);
     };
 
+    const handleHeaderSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = headerSearch.trim();
+        if (!trimmed) return;
+        setHeaderSearch("");
+        navigate(`/search/all?q=${encodeURIComponent(trimmed)}&page_size=10`);
+    };
+
+    const userInitial = userName ? userName.trim().charAt(0).toUpperCase() : "J";
     const sidebarProps = { boards, isLogin, quizURL, totalCount, navigate };
 
     return (
@@ -466,8 +531,28 @@ const Home: React.FC = () => {
                             navigate={navigate}
                             staffAuth={staffAuth}
                         />
-                        <button type="button" className="logo" onClick={() => navigate('/')}>JBIG</button>
+                        <button type="button" className="logo" onClick={() => navigate('/')}>
+                            <span className="logo-mark" aria-hidden="true">J</span>
+                            <span className="logo-text">JBIG</span>
+                        </button>
+                        <span className="header-brand-divider" aria-hidden="true">/</span>
+                        <span className="header-brand-context">Big Data &amp; AI</span>
                     </div>
+
+                    <form className="header-search-form" onSubmit={handleHeaderSearchSubmit} role="search">
+                        <SearchIcon size={15} className="header-search-icon" aria-hidden="true" />
+                        <input
+                            ref={headerSearchRef}
+                            type="text"
+                            className="header-search-input"
+                            placeholder="게시글 검색..."
+                            aria-label="전체 게시글 검색"
+                            value={headerSearch}
+                            onChange={(e) => setHeaderSearch(e.target.value)}
+                        />
+                        <kbd className="header-search-kbd" aria-hidden="true">/</kbd>
+                    </form>
+
                     <div className="header-right-section">
                         <button
                             type="button"
@@ -476,7 +561,7 @@ const Home: React.FC = () => {
                             aria-label={resolvedColorMode === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
                             title={resolvedColorMode === "dark" ? "라이트 모드" : "다크 모드"}
                         >
-                            {resolvedColorMode === "dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+                            {resolvedColorMode === "dark" ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
                         </button>
 
                         {/* 알림 아이콘 */}
@@ -489,7 +574,7 @@ const Home: React.FC = () => {
                                     aria-label="알림 열기"
                                     aria-expanded={notificationOpen}
                                 >
-                                    <Bell size={19} aria-hidden="true" />
+                                    <Bell size={17} aria-hidden="true" />
                                     {unreadCount > 0 && (
                                         <span className="notification-badge">
                                             {unreadCount > 99 ? '99+' : unreadCount}
@@ -508,10 +593,14 @@ const Home: React.FC = () => {
                                         </div>
                                         <div className="notification-list">
                                             {notifications.length === 0 ? (
-                                                <div className="notification-empty">알림이 없습니다</div>
+                                                <div className="notification-empty">
+                                                    <Bell size={22} className="notification-empty-icon" aria-hidden="true" />
+                                                    <span>새로운 알림이 없습니다</span>
+                                                </div>
                                             ) : (
                                                 notifications.map(n => (
-                                                    <div
+                                                    <button
+                                                        type="button"
                                                         key={n.id}
                                                         className={`notification-item ${!n.is_read ? 'unread' : ''}`}
                                                         onClick={() => handleNotificationClick(n)}
@@ -533,11 +622,11 @@ const Home: React.FC = () => {
                                                             </span>
                                                         </div>
                                                         <div className="notification-post-title">
-                                                            {n.post_title && n.post_title.length > 25 ? n.post_title.slice(0, 25) + '...' : (n.post_title || '삭제된 게시글')}
+                                                            {n.post_title && n.post_title.length > 28 ? n.post_title.slice(0, 28) + '...' : (n.post_title || '삭제된 게시글')}
                                                         </div>
                                                         {n.comment_content && (
                                                             <div className="notification-comment">
-                                                                "{n.comment_content}"
+                                                                &ldquo;{n.comment_content}&rdquo;
                                                             </div>
                                                         )}
                                                         <div className="notification-time">
@@ -548,7 +637,7 @@ const Home: React.FC = () => {
                                                                 minute: '2-digit'
                                                             })}
                                                         </div>
-                                                    </div>
+                                                    </button>
                                                 ))
                                             )}
                                         </div>
@@ -566,13 +655,14 @@ const Home: React.FC = () => {
                                     onClick={() => setMenuOpen(prev => !prev)}
                                     aria-expanded={menuOpen}
                                 >
-                                    <CircleUserRound size={18} aria-hidden="true" />
+                                    <span className="user-avatar-chip" aria-hidden="true">{userInitial}</span>
                                     <span className="user-info-name">
                                         {typeof userSemester === "number" && userSemester > 0 && (
                                             <span className="user-semester-tag">{userSemester}기&nbsp;</span>
                                         )}
                                         {userName}
                                     </span>
+                                    <ChevronDown size={14} className="user-chevron" aria-hidden="true" />
                                 </button>
                             ) : (
                                 <Button variant="default" size="small" className="login-button" onClick={() => setLoginModalOpen(true)}>
@@ -582,6 +672,14 @@ const Home: React.FC = () => {
 
                             {menuOpen && (
                                 <div className="user-dropdown" role="menu">
+                                    <div className="dropdown-user-header">
+                                        <span className="dropdown-user-name">
+                                            {typeof userSemester === "number" && userSemester > 0 ? `${userSemester}기 ` : ""}
+                                            {userName}
+                                        </span>
+                                        {user?.email && <span className="dropdown-user-email">{user.email}</span>}
+                                    </div>
+                                    <div className="dropdown-divider" />
                                     <button type="button" role="menuitem" className="dropdown-item" onClick={() => {
                                         if (user?.email) {
                                             const username = user.email.split("@")[0];
@@ -589,19 +687,22 @@ const Home: React.FC = () => {
                                         }
                                         setMenuOpen(false);
                                     }}>
-                                        내 정보
+                                        <UserIcon size={15} aria-hidden="true" />
+                                        <span>내 정보</span>
                                     </button>
                                     {(staffAuth || user?.is_staff) && (
                                         <button type="button" role="menuitem" className="dropdown-item" onClick={() => {
                                             navigate('/admin');
                                             setMenuOpen(false);
                                         }}>
-                                            관리자 페이지 열기
+                                            <Shield size={15} aria-hidden="true" />
+                                            <span>관리자 페이지 열기</span>
                                         </button>
                                     )}
                                     <div className="dropdown-divider" />
                                     <button type="button" role="menuitem" className="dropdown-item dropdown-item-danger" onClick={handleLogout}>
-                                        로그아웃
+                                        <LogOut size={15} aria-hidden="true" />
+                                        <span>로그아웃</span>
                                     </button>
                                 </div>
                             )}
@@ -615,9 +716,13 @@ const Home: React.FC = () => {
                 </Suspense>
             ) : (
             <>
-            {!isArenaPage && <button type="button" className="home-banner" onClick={() => navigate('/')} aria-label="홈으로 이동">
-                <img src={BANNER_IMAGE_URL} alt="banner-image" className="banner-image"/>
-            </button>}
+            {isHomePage && !isArenaPage && (
+                <div className="home-banner-wrap">
+                    <button type="button" className="home-banner" onClick={() => navigate('/')} aria-label="홈으로 이동">
+                        <img src={BANNER_IMAGE_URL} alt="JBIG 배너" className="banner-image"/>
+                    </button>
+                </div>
+            )}
             <div className="home-content">
                 <Routes>
                     {/* home-content 전체 차지하는 경로 */}
@@ -641,16 +746,22 @@ const Home: React.FC = () => {
                     }/>
                     <Route path="/" element={
                         <MainLayout sidebarProps={sidebarProps}>
-                            <JbigInfo calendarSlot={
-                                <>
-                                    <Calendar staffAuth={staffAuth} compact />
-                                    {staffAuth && (
-                                        <span className="add-event-text-home" onClick={handleAddEvent}>
+                            <JbigInfo
+                                calendarAction={staffAuth ? (
+                                    <Button
+                                        size="small"
+                                        variant="default"
+                                        onClick={handleAddEvent}
+                                        className="add-event-btn-home"
+                                    >
+                                        <span className="add-event-btn-inner">
+                                            <Plus size={13} aria-hidden="true" />
                                             일정 추가
                                         </span>
-                                    )}
-                                </>
-                            } />
+                                    </Button>
+                                ) : undefined}
+                                calendarSlot={<Calendar staffAuth={staffAuth} compact />}
+                            />
                             <PostList boards={boards} isHome={true}/>
                             <PhotoAlbumSlider boards={boards} />
                         </MainLayout>

@@ -98,12 +98,11 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                 <div className="postwrite-inline-group">
                     <input
                         id="maxMembers"
-                        className="postwrite-title-input"
+                        className="postwrite-title-input postwrite-number-input"
                         type="number"
                         min="0"
                         value={maxMembers}
                         onChange={e => setMaxMembers(Math.max(0, Number(e.target.value)))}
-                        style={{ maxWidth: '120px' }}
                     />
                     <span className="postwrite-inline-hint">
                         {maxMembers === 0 ? '(인원 제한 없음)' : `${maxMembers}명`}
@@ -121,7 +120,6 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                         value={deadline}
                         onChange={e => setDeadline(e.target.value)}
                         disabled={isDeadlineTbd}
-                        style={{ flex: 1 }}
                     />
                     <label className="postwrite-checkbox-inline">
                         <input
@@ -132,15 +130,15 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                                 if (e.target.checked) setDeadline('');
                             }}
                         />
-                        상시모집
+                        <span>상시모집</span>
                     </label>
                 </div>
             </div>
 
             <div className="postwrite-row">
                 <label>필요 기술/역할</label>
-                <div style={{ flex: 1 }}>
-                    <div className="postwrite-inline-group" style={{ marginBottom: '8px' }}>
+                <div className="postwrite-skills-wrap">
+                    <div className="postwrite-inline-group">
                         <input
                             className="postwrite-title-input"
                             type="text"
@@ -148,7 +146,6 @@ const RecruitmentForm: React.FC<RecruitmentFormProps> = ({
                             value={skillInput}
                             onChange={e => setSkillInput(e.target.value)}
                             onKeyDown={handleSkillKeyDown}
-                            style={{ flex: 1 }}
                         />
                         <Button type="button" variant="default" size="small" onClick={handleAddSkill}>
                             추가

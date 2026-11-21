@@ -2,6 +2,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Button, Label } from "@primer/react";
+import { MessageSquare, PenSquare, Search as SearchIcon, Inbox, Lock } from "lucide-react";
 import "./PostList.css";
 import "./PostList-mobile.css";
 import { PostItem, Section } from "../Utils/interfaces"
@@ -341,95 +342,135 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
 
     const getPostRouteBoardId = (post: PostItem) => post.board_id ?? fallbackRouteBoardId;
 
+    const canWritePost = Boolean(
+        !isSearchPage &&
+        !isUserPage &&
+        !isHome &&
+        activeBoardID !== 0 &&
+        !(activeBoard?.name === "공지사항" && !staffAuth) &&
+        postPermission
+    );
+
+    const renderCommentCount = (count: number) =>
+        count > 0 ? (
+            <span className="comment-count" title={`댓글 ${count}개`}>
+                <MessageSquare size={12} aria-hidden="true" />
+                <span>{count}</span>
+            </span>
+        ) : null;
+
+    const renderPrivateBadge = (postId: number) =>
+        postTypes.get(postId) === 3 ? (
+            <span
+                className="private-post-badge"
+                title="해당 게시물은 작성자와 관리자만 열람할 수 있습니다"
+            >
+                <Lock size={11} aria-hidden="true" />
+                <span>비공개</span>
+            </span>
+        ) : null;
+
     return (
-        <div className="postlist-container">
-            <div className="postlist-header">
-                {!isUserPage && !isSearchPage && (
-                    <>
+        <div className={`postlist-container${isHome ? " postlist-home-card" : ""}`}>
+            {!isUserPage && !isSearchPage && (
+                <div className={`postlist-header${isHome ? " postlist-header-home" : ""}`}>
+                    <div className="postlist-header-top">
                         <div className="title-wrapper">
                             <h2
-                            className={`postlist-title ${isHome ? "home" : ""} ${isSearchPage ? "search" : ""}`}
+                                className={`postlist-title ${isHome ? "home" : ""} ${isSearchPage ? "search" : ""}`}
                             >
                                 {(activeBoardID === 0 || isHome)
                                     ? "전체 글 보기"
-                                    : (activeBoard?.name || "") 
+                                    : (activeBoard?.name || "")
                                 }
                             </h2>
 
                             <p className="board-description">
-                                {(isHome || activeBoardID === 0) 
+                                {(isHome || activeBoardID === 0)
                                     ? BOARD_DESCRIPTIONS["전체 글 보기"]
-        
-                                    : activeBoard 
+                                    : activeBoard
                                         ? BOARD_DESCRIPTIONS[activeBoard.name]
-            
                                         : "\u00A0" /* 공백 문자(줄 높이 유지용) */
                                 }
                             </p>
                         </div>
-                        
 
-                        {/* 태그 필터 버튼 그룹 */}
-                        {!isHome && activeBoard?.name !== BRAG_BOARD_NAME && activeBoard?.available_tags && activeBoard.available_tags.length > 0 && (
-                            <div className="postlist-tag-tabs" role="group" aria-label="태그 필터">
+                        <div className="postlist-header-actions">
+                            {/* 검색란: 검색페이지가 아니고, 홈도 아니고, 유저페이지도 아니고, 게시글이 '있는' 경우에만 표시 */}
+                            {!isHome && !isSearchPage && !isUserPage && displayPosts.length > 0 && (
+                                <form
+                                    className="list-search-form"
+                                    onSubmit={(e) => {
+                                        e.preventDefault();
+                                        if (searchKeyword.trim()) {
+                                            navigate(
+                                                `/search/${activeBoardID || "all"}?q=${encodeURIComponent(searchKeyword)}&page_size=10`
+                                            );
+                                        }
+                                    }}
+                                >
+                                    <div className="list-search-input-wrap">
+                                        <SearchIcon size={14} className="list-search-icon" aria-hidden="true" />
+                                        <input
+                                            className="list-search-input"
+                                            type="text"
+                                            placeholder="게시판 내 검색"
+                                            aria-label="게시판 내 검색"
+                                            value={searchKeyword}
+                                            onChange={(e) => setSearchKeyword(e.target.value)}
+                                        />
+                                    </div>
+                                    <Button type="submit" variant="default" size="small" className="list-search-button">검색</Button>
+                                </form>
+                            )}
+
+                            {canWritePost && (
+                                <Button variant="primary" size="small" className="write-button" onClick={handleWrite}>
+                                    <span className="write-button-inner">
+                                        <PenSquare size={14} aria-hidden="true" />
+                                        <span>글쓰기</span>
+                                    </span>
+                                </Button>
+                            )}
+
+                            {isHome && (
                                 <button
                                     type="button"
-                                    aria-pressed={selectedTag === ''}
-                                    className={`postlist-tag-tab ${selectedTag === '' ? 'active' : ''}`}
-                                    onClick={() => { setSelectedTag(''); handlePageChange(1); }}
-                                >전체</button>
-                                {activeBoard.available_tags.map((tag: string) => (
-                                    <button
-                                        key={tag}
-                                        type="button"
-                                        aria-pressed={selectedTag === tag}
-                                        className={`postlist-tag-tab ${selectedTag === tag ? 'active' : ''}`}
-                                        onClick={() => { setSelectedTag(tag); handlePageChange(1); }}
-                                    >{tag}</button>
-                                ))}
-                            </div>
-                        )}
+                                    className="more-link"
+                                    onClick={() => navigate("/board/0")}
+                                >
+                                    더보기 &gt;
+                                </button>
+                            )}
+                        </div>
+                    </div>
 
-                        {/* 검색란: 검색페이지가 아니고, 홈도 아니고, 유저페이지도 아니고, 게시글이 '있는' 경우에만 표시 */}
-                        {!isHome && !isSearchPage && !isUserPage && displayPosts.length > 0 && (
-                            <form
-                                className="list-search-form"
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    if (searchKeyword.trim()) {
-                                        navigate(
-                                            `/search/${activeBoardID || "all"}?q=${encodeURIComponent(searchKeyword)}&page_size=10`
-                                        );
-                                    }
-                                }}
-                            >
-                                <input
-                                    className="list-search-input"
-                                    type="text"
-                                    placeholder="검색어 입력"
-                                    value={searchKeyword}
-                                    onChange={(e) => setSearchKeyword(e.target.value)}
-                                />
-                                <Button type="submit" variant="primary" size="small" className="list-search-button">검색</Button>
-                            </form>
-                        )}
-
-                        {isHome && (
+                    {/* 태그 필터 버튼 그룹 */}
+                    {!isHome && activeBoard?.name !== BRAG_BOARD_NAME && activeBoard?.available_tags && activeBoard.available_tags.length > 0 && (
+                        <div className="postlist-tag-tabs" role="group" aria-label="태그 필터">
                             <button
                                 type="button"
-                                className="more-link"
-                                onClick={() => navigate("/board/0")}
-                            >
-                                더보기 &gt;
-                            </button>
-                        )}
-                    </>
-                )}
-            </div>
+                                aria-pressed={selectedTag === ''}
+                                className={`postlist-tag-tab ${selectedTag === '' ? 'active' : ''}`}
+                                onClick={() => { setSelectedTag(''); handlePageChange(1); }}
+                            >전체</button>
+                            {activeBoard.available_tags.map((tag: string) => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    aria-pressed={selectedTag === tag}
+                                    className={`postlist-tag-tab ${selectedTag === tag ? 'active' : ''}`}
+                                    onClick={() => { setSelectedTag(tag); handlePageChange(1); }}
+                                >{tag}</button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* 로딩 스켈레톤 */}
             {loading && (
-                <div className="skeleton-container">
+                <div className="skeleton-container" aria-busy="true" aria-label="게시글 목록 로딩 중">
                     {[...Array(5)].map((_, i) => (
                         <div key={i} className="skeleton-row">
                             <div className="skeleton skeleton-id" />
@@ -446,7 +487,8 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                 // 검색 페이지
                 (!q.trim() || displayPosts.length === 0) ? (
                     <div className="no-search-results">
-                        해당 게시물이 없습니다.
+                        <Inbox size={28} className="empty-posts-icon" aria-hidden="true" />
+                        <div className="empty-posts-title">해당 게시물이 없습니다.</div>
                     </div>
                 ) : (
                     <table className="postlist-table">
@@ -486,30 +528,21 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     </td>
                                 )}
                                 <td className="title-cell th-title">
-                                    {p.title}
-                                    {p.comment_count > 0 && (
-                                        <span className="comment-count">[{p.comment_count}]</span>
-                                    )}
-                                    {postTypes.get(p.id) === 3 && (
-                                        <span
-                                            className="private-post-badge"
-                                            title="해당 게시물은 작성자와 관리자만 열람할 수 있습니다"
-                                        >
-                                            (비공개)
-                                        </span>
-                                    )}
+                                    <span className="postlist-title-text">{p.title}</span>
+                                    {renderCommentCount(p.comment_count)}
+                                    {renderPrivateBadge(p.id)}
                                 </td>
                                 <td className="author-cell th-author">
-                  <span
-                    className="author-text author-link"
-                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/@${p.user_id}`);
-                                    }}
-                                    title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
-                  >
-                    {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
-                  </span>
+                                    <span
+                                        className="author-text author-link"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/@${p.user_id}`);
+                                        }}
+                                        title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
+                                    >
+                                        {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
+                                    </span>
                                 </td>
                                 <td className="th-date">{p.date}</td>
                                 <td className="th-views">{p.views.toLocaleString()}</td>
@@ -524,27 +557,13 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                 // 검색 페이지가 아닐 때
                 displayPosts.length === 0 && !isHome ? (
                     <div className="empty-posts-message">
-                        <div>게시글이 없습니다</div>
-                        {(!isUserPage &&
-                            !isHome &&
-                            activeBoardID !== 0 &&
-                            !(activeBoard?.name === "공지사항" && !staffAuth) &&
-                            postPermission) && (
+                        <Inbox size={28} className="empty-posts-icon" aria-hidden="true" />
+                        <div className="empty-posts-title">게시글이 없습니다</div>
+                        {canWritePost && (
                             <div className="empty-posts-message-with-link">
-                                <span
-                                  role="link"
-                                  tabIndex={0}
-                                  onClick={handleWrite}
-                                  onKeyDown={(e) => {
-                                      if (e.key === "Enter" || e.key === " ") {
-                                          e.preventDefault();
-                                          handleWrite();
-                                      }
-                                  }}
-                                  className="write-post-link"
-                                >
+                                <Button variant="primary" size="small" onClick={handleWrite}>
                                     게시글 작성하러가기
-                                </span>
+                                </Button>
                             </div>
                         )}
                     </div>
@@ -575,21 +594,19 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                 </td>
                                 <td className="title-cell th-title">
                                     <span className="announcement-title">{p.title}</span>
-                                    {p.comment_count > 0 && (
-                                        <span className="comment-count">[{p.comment_count}]</span>
-                                    )}
+                                    {renderCommentCount(p.comment_count)}
                                 </td>
                                 <td className="author-cell th-author">
-                  <span
-                    className="author-text author-link"
-                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/@${p.user_id}`);
-                                    }}
-                                    title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
-                  >
-                    {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
-                  </span>
+                                    <span
+                                        className="author-text author-link"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/@${p.user_id}`);
+                                        }}
+                                        title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
+                                    >
+                                        {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
+                                    </span>
                                 </td>
                                 <td className="th-date">{p.date}</td>
                                 <td className="th-views">{p.views.toLocaleString()}</td>
@@ -627,33 +644,24 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                             {p.tag}
                                         </Label>
                                     )}
-                                    {p.title}
+                                    <span className="postlist-title-text">{p.title}</span>
                                     {p.recruitment_info && (
                                         <RecruitmentBadge info={p.recruitment_info} />
                                     )}
-                                    {p.comment_count > 0 && (
-                                        <span className="comment-count">[{p.comment_count}]</span>
-                                    )}
-                                    {postTypes.get(p.id) === 3 && (
-                                        <span
-                                            className="private-post-badge"
-                                            title="해당 게시물은 작성자와 관리자만 열람할 수 있습니다"
-                                        >
-                                            (비공개)
-                                        </span>
-                                    )}
+                                    {renderCommentCount(p.comment_count)}
+                                    {renderPrivateBadge(p.id)}
                                 </td>
                                 <td className="author-cell th-author">
-                  <span
-                    className="author-text author-link"
-                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        navigate(`/@${p.user_id}`);
-                                    }}
-                                    title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
-                  >
-                    {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
-                  </span>
+                                    <span
+                                        className="author-text author-link"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigate(`/@${p.user_id}`);
+                                        }}
+                                        title={`${p.author_semester ? `${p.author_semester}기 ` : ""}${p.author}`}
+                                    >
+                                        {p.author_semester ? `${p.author_semester}기 ` : ""}{p.author}
+                                    </span>
                                 </td>
                                 <td className="th-date">{p.date}</td>
                                 <td className="th-views">{p.views.toLocaleString()}</td>
@@ -668,7 +676,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
 
             {/* Pagination (5개 단위 그룹) */}
             {!isHome && totalPages >= 1 && (
-                <div className="pagination-row">
+                <nav className="pagination-row" aria-label="페이지 이동">
                     {(() => {
                         const GROUP_SIZE = 5;
                         const currentGroup = Math.floor((page - 1) / GROUP_SIZE);
@@ -679,21 +687,9 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
 
                         return (
                             <>
-                                {!isSearchPage &&
-                                    !isUserPage &&
-                                    !isHome &&
-                                    activeBoardID !== 0 &&
-                                    !(activeBoard?.name === "공지사항" && !staffAuth) &&
-                                    postPermission && (
-                                        <div className="write-button-row">
-                                            <Button variant="primary" className="write-button" onClick={handleWrite}>
-                                                글쓰기
-                                            </Button>
-                                        </div>
-                                    )}
-
                                 {totalPages > GROUP_SIZE && (
                                     <button
+                                        type="button"
                                         className="pagination-btn"
                                         onClick={() => handlePageChange(1)}
                                         disabled={page === 1}
@@ -703,6 +699,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                 )}
 
                                 <button
+                                    type="button"
                                     className="pagination-btn"
                                     onClick={() => handlePageChange(hasPrevGroup ? start - 1 : 1)}
                                     disabled={!hasPrevGroup}
@@ -712,7 +709,9 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
 
                                 {Array.from({ length: end - start + 1 }, (_, i) => start + i).map((n) => (
                                     <button
+                                        type="button"
                                         key={n}
+                                        aria-current={n === page ? "page" : undefined}
                                         className={`pagination-btn ${n === page ? "active" : ""}`}
                                         onClick={() => handlePageChange(n)}
                                     >
@@ -721,6 +720,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                 ))}
 
                                 <button
+                                    type="button"
                                     className="pagination-btn"
                                     onClick={() => handlePageChange(hasNextGroup ? end + 1 : totalPages)}
                                     disabled={!hasNextGroup}
@@ -730,6 +730,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
 
                                 {totalPages > GROUP_SIZE && (
                                     <button
+                                        type="button"
                                         className="pagination-btn"
                                         onClick={() => handlePageChange(totalPages)}
                                         disabled={page === totalPages}
@@ -740,7 +741,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                             </>
                         );
                     })()}
-                </div>
+                </nav>
             )}
         </div>
     );

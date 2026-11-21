@@ -2,10 +2,11 @@
 
 .postdetail-container {
     background-color: var(--bgColor-default, var(--color-bg-primary));
-    border-radius: var(--radius-md);
+    border-radius: var(--borderRadius-large, 12px);
     padding: var(--space-lg);
     max-width: 100%;
     border: 1px solid var(--borderColor-default, var(--color-border-light));
+    box-shadow: var(--shadow-sm);
 }
 
 .postdetail-container.has-floating-like {
@@ -19,6 +20,57 @@
         max-width: 1180px;
         margin: 0 auto;
     }
+}
+
+.post-not-found {
+    text-align: center;
+    padding: 56px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.post-not-found h2 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.post-not-found p {
+    margin: 0 0 8px;
+    font-size: 14px;
+    color: var(--fgColor-muted, #59636e);
+}
+
+/* 스켈레톤 */
+.postdetail-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.postdetail-skeleton-line {
+    border-radius: var(--radius-sm);
+    background: linear-gradient(
+        90deg,
+        var(--bgColor-muted, #f6f8fa) 25%,
+        var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16)) 50%,
+        var(--bgColor-muted, #f6f8fa) 75%
+    );
+    background-size: 200% 100%;
+    animation: postdetailShimmer 1.4s infinite;
+}
+
+.postdetail-skeleton-crumb { width: 110px; height: 18px; }
+.postdetail-skeleton-title { width: 68%; height: 28px; }
+.postdetail-skeleton-meta { width: 42%; height: 16px; }
+.postdetail-skeleton-body { width: 100%; height: 18px; }
+.postdetail-skeleton-body.short { width: 76%; }
+
+@keyframes postdetailShimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
 }
 
 .postdetail-header {
@@ -46,46 +98,30 @@
 
 .postdetail-actions {
     display: flex;
-    gap: 12px;
+    gap: 6px;
     align-items: center;
     margin-left: auto;
 }
 
-.postdetail-edit-link,
-.postdetail-delete-link {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--fgColor-muted, var(--color-text-secondary));
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: var(--radius-md);
-    transition: color var(--transition-fast), background-color var(--transition-fast);
-}
-
-.postdetail-edit-link:hover {
-    color: var(--fgColor-default, var(--color-text-primary));
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-}
-
-.postdetail-delete-link:hover {
-    color: var(--fgColor-danger, #cf222e);
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-}
-
 .postdetail-category {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 8px;
+    margin-left: -8px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    font-family: inherit;
     font-size: 13px;
     color: var(--fgColor-accent, var(--color-primary));
-    font-weight: 500;
-}
-
-.postdetail-category-link {
+    font-weight: 600;
     cursor: pointer;
-    color: var(--fgColor-accent, var(--color-primary));
-    font-weight: 500;
+    transition: background-color var(--transition-fast);
 }
 
 .postdetail-category-link:hover {
-    text-decoration: underline;
+    background-color: var(--bgColor-accent-muted, #ddf4ff);
 }
 
 .postdetail-tag-label {
@@ -124,7 +160,18 @@
     flex-wrap: wrap;
 }
 
+.postdetail-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .postdetail-author {
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: inherit;
     font-weight: 600;
     color: var(--fgColor-default, var(--color-text-primary));
     cursor: pointer;
@@ -138,7 +185,114 @@
 
 .postdetail-updated-time {
     color: var(--fgColor-muted, var(--color-text-tertiary));
-    margin-left: 6px;
+    margin-left: 4px;
+}
+
+/* 첨부파일 박스 (GitHub Release Asset Box 스타일) */
+.postdetail-attachments {
+    margin: var(--space-xl) 0 var(--space-lg);
+    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background-color: var(--bgColor-default, #ffffff);
+}
+
+.postdetail-attachments-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 14px;
+    background-color: var(--bgColor-muted, #f6f8fa);
+    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--fgColor-default, #1f2328);
+}
+
+.postdetail-attachments-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16));
+    color: var(--fgColor-muted, #59636e);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.postdetail-attachments-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.postdetail-attachment-item {
+    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+}
+
+.postdetail-attachment-item:last-child {
+    border-bottom: none;
+}
+
+.postdetail-attachment-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: var(--fgColor-accent, #0969da);
+    transition: background-color var(--transition-fast);
+}
+
+.postdetail-attachment-link:hover {
+    background-color: var(--bgColor-muted, #f6f8fa);
+    text-decoration: none;
+}
+
+.postdetail-attachment-icon {
+    color: var(--fgColor-muted, #59636e);
+    flex-shrink: 0;
+}
+
+.postdetail-attachment-name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.postdetail-attachment-link:hover .postdetail-attachment-name {
+    text-decoration: underline;
+}
+
+.postdetail-attachment-type {
+    flex-shrink: 0;
+}
+
+.postdetail-attachment-download {
+    color: var(--fgColor-muted, #59636e);
+    flex-shrink: 0;
+}
+
+/* 하트 아이콘 상태 (인라인 스타일 제거) */
+.postdetail-heart-icon {
+    fill: transparent;
+    stroke: currentColor;
+    transition: fill var(--transition-fast), stroke var(--transition-fast), transform var(--transition-fast);
+}
+
+.postdetail-floating-heart {
+    stroke: var(--fgColor-muted, #59636e);
+}
+
+.postdetail-heart-icon.is-liked {
+    fill: var(--fgColor-danger, #cf222e);
+    stroke: var(--fgColor-danger, #cf222e);
 }
 
 /* 좋아요 버튼 & 애니메이션 */

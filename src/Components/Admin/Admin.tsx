@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Button, Label } from "@primer/react";
 import { useUser } from "../Utils/UserContext";
 import { useStaffAuth } from "../Utils/StaffAuthContext";
 import { useAlert } from "../Utils/AlertContext";
+import { useColorMode } from "../Utils/ThemeContext";
 import {
     fetchSiteSettings,
     updateSiteSettings,
@@ -19,7 +21,22 @@ import {
     BoardReadPermission,
     BoardTwoLevelPermission
 } from "../../API/req";
-import { Menu, X, Plus, Edit2, Trash2, Eye, EyeOff } from "lucide-react";
+import {
+    Menu,
+    X,
+    Plus,
+    Edit2,
+    Trash2,
+    Eye,
+    EyeOff,
+    Lock,
+    Sun,
+    Moon,
+    LayoutDashboard,
+    SlidersHorizontal,
+    Settings,
+    Megaphone,
+} from "lucide-react";
 import "./Admin.css";
 
 function SettingsManagement({ accessToken }: { accessToken: string }) {
@@ -89,7 +106,7 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
             <>
                 <h2 className="admin-content-header">사이트 설정</h2>
                 <div className="admin-card">
-                    <p>로딩 중...</p>
+                    <p className="admin-muted-text">로딩 중...</p>
                 </div>
             </>
         );
@@ -101,14 +118,15 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
             <div className="admin-card">
                 <h3 className="card-title">주요 설정</h3>
                 {message && (
-                    <div className={`admin-message ${message.type}`}>
+                    <div className={`admin-message ${message.type}`} role={message.type === "error" ? "alert" : "status"}>
                         {message.text}
                     </div>
                 )}
                 <div className="admin-form">
                     <div className="form-group">
-                        <label className="form-label">Notion 페이지 ID</label>
+                        <label className="form-label" htmlFor="admin-notion-id">Notion 페이지 ID</label>
                         <input
+                            id="admin-notion-id"
                             className="admin-input"
                             type="text"
                             value={notionPageId}
@@ -118,8 +136,9 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
                         <p className="form-hint">교안 페이지의 기본 Notion 페이지 ID입니다.</p>
                     </div>
                     <div className="form-group">
-                        <label className="form-label">퀴즈 URL</label>
+                        <label className="form-label" htmlFor="admin-quiz-url">퀴즈 URL</label>
                         <input
+                            id="admin-quiz-url"
                             className="admin-input"
                             type="url"
                             value={quizUrl}
@@ -128,67 +147,76 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
                         />
                         <p className="form-hint">사이드바에 표시되는 퀴즈 링크입니다.</p>
                     </div>
-                    
-                    <h3 className="card-title" style={{ marginTop: '2rem' }}>JBIG 정보</h3>
-                    
+
+                    <h3 className="card-title admin-section-divider-title">JBIG 정보</h3>
+
                     <div className="form-group">
-                        <label className="form-label">JBIG 소개</label>
+                        <label className="form-label" htmlFor="admin-jbig-desc">JBIG 소개</label>
                         <textarea
-                            className="admin-input"
+                            id="admin-jbig-desc"
+                            className="admin-input admin-textarea"
                             value={jbigDescription}
                             onChange={(e) => setJbigDescription(e.target.value)}
                             placeholder="예: 'JBIG'(JBNU Big Data & AI Group)은..."
                             rows={3}
-                            style={{ resize: 'vertical', fontFamily: 'inherit' }}
                         />
                         <p className="form-hint">홈페이지 상단에 표시되는 JBIG 학회 소개 문구입니다.</p>
                     </div>
-                    
-                    <div className="form-group">
-                        <label className="form-label">회장 이름</label>
-                        <input
-                            className="admin-input"
-                            type="text"
-                            value={jbigPresident}
-                            onChange={(e) => setJbigPresident(e.target.value)}
-                            placeholder="예: 박성현"
-                        />
+
+                    <div className="admin-grid-2">
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="admin-president">회장 이름</label>
+                            <input
+                                id="admin-president"
+                                className="admin-input"
+                                type="text"
+                                value={jbigPresident}
+                                onChange={(e) => setJbigPresident(e.target.value)}
+                                placeholder="예: 박성현"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="admin-president-dept">회장 소속</label>
+                            <input
+                                id="admin-president-dept"
+                                className="admin-input"
+                                type="text"
+                                value={jbigPresidentDept}
+                                onChange={(e) => setJbigPresidentDept(e.target.value)}
+                                placeholder="예: 전자공학부"
+                            />
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">회장 소속</label>
-                        <input
-                            className="admin-input"
-                            type="text"
-                            value={jbigPresidentDept}
-                            onChange={(e) => setJbigPresidentDept(e.target.value)}
-                            placeholder="예: 전자공학부"
-                        />
+
+                    <div className="admin-grid-2">
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="admin-vp">부회장 이름</label>
+                            <input
+                                id="admin-vp"
+                                className="admin-input"
+                                type="text"
+                                value={jbigVicePresident}
+                                onChange={(e) => setJbigVicePresident(e.target.value)}
+                                placeholder="예: 국환"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="admin-vp-dept">부회장 소속</label>
+                            <input
+                                id="admin-vp-dept"
+                                className="admin-input"
+                                type="text"
+                                value={jbigVicePresidentDept}
+                                onChange={(e) => setJbigVicePresidentDept(e.target.value)}
+                                placeholder="예: 사회학과"
+                            />
+                        </div>
                     </div>
-                    
+
                     <div className="form-group">
-                        <label className="form-label">부회장 이름</label>
+                        <label className="form-label" htmlFor="admin-email">이메일</label>
                         <input
-                            className="admin-input"
-                            type="text"
-                            value={jbigVicePresident}
-                            onChange={(e) => setJbigVicePresident(e.target.value)}
-                            placeholder="예: 국환"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="form-label">부회장 소속</label>
-                        <input
-                            className="admin-input"
-                            type="text"
-                            value={jbigVicePresidentDept}
-                            onChange={(e) => setJbigVicePresidentDept(e.target.value)}
-                            placeholder="예: 사회학과"
-                        />
-                    </div>
-                    
-                    <div className="form-group">
-                        <label className="form-label">이메일</label>
-                        <input
+                            id="admin-email"
                             className="admin-input"
                             type="email"
                             value={jbigEmail}
@@ -196,50 +224,97 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
                             placeholder="예: green031234@naver.com"
                         />
                     </div>
-                    
-                    <div className="form-group">
-                        <label className="form-label">지도 교수</label>
-                        <input
-                            className="admin-input"
-                            type="text"
-                            value={jbigAdvisor}
-                            onChange={(e) => setJbigAdvisor(e.target.value)}
-                            placeholder="예: 최규빈 교수님"
-                        />
+
+                    <div className="admin-grid-2">
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="admin-advisor">지도 교수</label>
+                            <input
+                                id="admin-advisor"
+                                className="admin-input"
+                                type="text"
+                                value={jbigAdvisor}
+                                onChange={(e) => setJbigAdvisor(e.target.value)}
+                                placeholder="예: 최규빈 교수님"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label" htmlFor="admin-advisor-dept">지도 교수 소속</label>
+                            <input
+                                id="admin-advisor-dept"
+                                className="admin-input"
+                                type="text"
+                                value={jbigAdvisorDept}
+                                onChange={(e) => setJbigAdvisorDept(e.target.value)}
+                                placeholder="예: 통계학과"
+                            />
+                        </div>
                     </div>
-                    <div className="form-group">
-                        <label className="form-label">지도 교수 소속</label>
-                        <input
-                            className="admin-input"
-                            type="text"
-                            value={jbigAdvisorDept}
-                            onChange={(e) => setJbigAdvisorDept(e.target.value)}
-                            placeholder="예: 통계학과"
-                        />
+
+                    <div className="admin-form-actions">
+                        <Button
+                            type="button"
+                            variant="primary"
+                            onClick={handleSave}
+                            disabled={saving}
+                        >
+                            {saving ? "저장 중..." : "설정 저장"}
+                        </Button>
                     </div>
-                    
-                    <button
-                        className="admin-button button-primary"
-                        onClick={handleSave}
-                        disabled={saving}
-                    >
-                        {saving ? "저장 중..." : "설정 저장"}
-                    </button>
                 </div>
             </div>
         </>
     );
 }
 
-function Dashboard() {
+function Dashboard({ onSelectPage }: { onSelectPage: (page: string) => void }) {
+    const shortcuts = [
+        {
+            id: "boards",
+            title: "게시판 관리",
+            desc: "게시판별 조회·작성·댓글 권한 정책을 관리합니다.",
+            icon: SlidersHorizontal,
+        },
+        {
+            id: "settings",
+            title: "사이트 설정",
+            desc: "Notion 페이지 ID, 퀴즈 URL, JBIG 운영진 정보를 수정합니다.",
+            icon: Settings,
+        },
+        {
+            id: "popups",
+            title: "팝업 관리",
+            desc: "홈페이지 공지 팝업의 게시 기간과 노출 순서를 관리합니다.",
+            icon: Megaphone,
+        },
+    ];
+
     return (
         <>
             <h2 className="admin-content-header">대시보드</h2>
             <div className="admin-card">
                 <h3 className="card-title">관리자 페이지</h3>
-                <p style={{ color: '#666', marginTop: 12 }}>
-                    왼쪽 메뉴에서 관리할 항목을 선택하세요.
+                <p className="admin-muted-text admin-card-lead">
+                    왼쪽 메뉴 또는 아래 바로가기에서 관리할 항목을 선택하세요.
                 </p>
+                <div className="admin-shortcut-grid">
+                    {shortcuts.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                            <button
+                                key={item.id}
+                                type="button"
+                                className="admin-shortcut-card"
+                                onClick={() => onSelectPage(item.id)}
+                            >
+                                <div className="admin-shortcut-icon">
+                                    <Icon size={18} aria-hidden="true" />
+                                </div>
+                                <div className="admin-shortcut-title">{item.title}</div>
+                                <div className="admin-shortcut-desc">{item.desc}</div>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
         </>
     );
@@ -335,94 +410,89 @@ function BoardManagement({ accessToken }: { accessToken: string }) {
         return (
             <>
                 <h2 className="admin-content-header">게시판 관리</h2>
-                <div className="admin-card"><p>로딩 중...</p></div>
+                <div className="admin-card"><p className="admin-muted-text">로딩 중...</p></div>
             </>
         );
     }
-
-    const selectStyle = { minWidth: 0 } as const;
-    const cellLabelStyle = { fontSize: 11, color: '#999', marginBottom: 2 } as const;
 
     return (
         <>
             <h2 className="admin-content-header">게시판 관리</h2>
             <div className="admin-card">
                 <h3 className="card-title">게시판 권한</h3>
-                <p className="form-hint" style={{ marginBottom: 16 }}>
-                    게시판별로 조회·작성·댓글 권한을 지정합니다. 조회의 '본인+스태프'는 회원이
+                <p className="form-hint admin-board-intro">
+                    게시판별로 조회·작성·댓글 권한을 지정합니다. 조회의 &lsquo;본인+스태프&rsquo;는 회원이
                     제출은 할 수 있지만 글은 작성자 본인과 스태프만 볼 수 있는 범위입니다.
                     비공개 범위 게시판의 글과 첨부파일은 권한 확인 후에만 내려갑니다.
                 </p>
                 {message && (
-                    <div className={`admin-message ${message.type}`}>{message.text}</div>
+                    <div className={`admin-message ${message.type}`} role={message.type === "error" ? "alert" : "status"}>
+                        {message.text}
+                    </div>
                 )}
                 {grouped.map(({ category, list }) => (
-                    <div key={category} style={{ marginBottom: 20 }}>
-                        <h4 style={{ margin: '12px 0 8px', color: '#444' }}>{category}</h4>
-                        {list.map((board) => {
-                            const policy = getBoardPolicy(board);
-                            const saving = savingId === board.id;
-                            return (
-                                <div
-                                    key={board.id}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                        flexWrap: 'wrap', gap: 12, padding: '10px 0', borderBottom: '1px solid #eee',
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 140 }}>
-                                        <span style={{ fontWeight: 500 }}>{board.name}</span>
-                                        {policy.hint && (
-                                            <span style={{ fontSize: 12, color: '#888' }}>🔒 {policy.hint}</span>
-                                        )}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', width: 180 }}>
-                                            <span style={cellLabelStyle}>조회</span>
-                                            <select
-                                                className="admin-input"
-                                                style={selectStyle}
-                                                value={board.read_permission}
-                                                disabled={saving || policy.readOptions.length <= 1}
-                                                onChange={(e) => handleChange(board, 'read_permission', e.target.value)}
-                                            >
-                                                {policy.readOptions.map((opt) => (
-                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                ))}
-                                            </select>
+                    <div key={category} className="admin-board-category">
+                        <h4 className="admin-board-category-title">{category}</h4>
+                        <div className="admin-board-list">
+                            {list.map((board) => {
+                                const policy = getBoardPolicy(board);
+                                const saving = savingId === board.id;
+                                return (
+                                    <div key={board.id} className="admin-board-row">
+                                        <div className="admin-board-info">
+                                            <span className="admin-board-name">{board.name}</span>
+                                            {policy.hint && (
+                                                <span className="admin-board-hint">
+                                                    <Lock size={12} aria-hidden="true" />
+                                                    <span>{policy.hint}</span>
+                                                </span>
+                                            )}
                                         </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', width: 110 }}>
-                                            <span style={cellLabelStyle}>작성</span>
-                                            <select
-                                                className="admin-input"
-                                                style={selectStyle}
-                                                value={board.post_permission}
-                                                disabled={saving}
-                                                onChange={(e) => handleChange(board, 'post_permission', e.target.value)}
-                                            >
-                                                {TWO_LEVEL_OPTIONS.map((opt) => (
-                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', width: 110 }}>
-                                            <span style={cellLabelStyle}>댓글</span>
-                                            <select
-                                                className="admin-input"
-                                                style={selectStyle}
-                                                value={board.comment_permission}
-                                                disabled={saving}
-                                                onChange={(e) => handleChange(board, 'comment_permission', e.target.value)}
-                                            >
-                                                {TWO_LEVEL_OPTIONS.map((opt) => (
-                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                                ))}
-                                            </select>
+                                        <div className="admin-board-controls">
+                                            <label className="admin-perm-field admin-perm-field-read">
+                                                <span className="admin-perm-label">조회</span>
+                                                <select
+                                                    className="admin-input admin-perm-select"
+                                                    value={board.read_permission}
+                                                    disabled={saving || policy.readOptions.length <= 1}
+                                                    onChange={(e) => handleChange(board, 'read_permission', e.target.value)}
+                                                >
+                                                    {policy.readOptions.map((opt) => (
+                                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                            <label className="admin-perm-field">
+                                                <span className="admin-perm-label">작성</span>
+                                                <select
+                                                    className="admin-input admin-perm-select"
+                                                    value={board.post_permission}
+                                                    disabled={saving}
+                                                    onChange={(e) => handleChange(board, 'post_permission', e.target.value)}
+                                                >
+                                                    {TWO_LEVEL_OPTIONS.map((opt) => (
+                                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                            <label className="admin-perm-field">
+                                                <span className="admin-perm-label">댓글</span>
+                                                <select
+                                                    className="admin-input admin-perm-select"
+                                                    value={board.comment_permission}
+                                                    disabled={saving}
+                                                    onChange={(e) => handleChange(board, 'comment_permission', e.target.value)}
+                                                >
+                                                    {TWO_LEVEL_OPTIONS.map((opt) => (
+                                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                    ))}
+                                                </select>
+                                            </label>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
                 ))}
             </div>
@@ -448,7 +518,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
     const [endDate, setEndDate] = useState("");
     const [isActive, setIsActive] = useState(true);
     const [order, setOrder] = useState(0);
-    
+
     const imageInputRef = React.useRef<HTMLInputElement>(null);
 
     const loadPopups = React.useCallback(async () => {
@@ -522,7 +592,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
         }
 
         setImageFile(file);
-        
+
         // 미리보기 생성
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -562,7 +632,6 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
             // 새로운 이미지 파일이 있으면 오브젝트 스토리지에 업로드
             if (imageFile) {
                 const uploadResult = await uploadAttachment(imageFile, accessToken);
-                console.log('[Popup] Upload result:', uploadResult);
                 if (uploadResult.message || !uploadResult.path) {
                     showAlert({ message: `이미지 업로드 실패: ${uploadResult.message || '알 수 없는 오류'}`, type: 'error' });
                     setUploading(false);
@@ -570,7 +639,6 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                 }
                 // path를 저장 (게시글과 동일한 방식)
                 finalImagePath = uploadResult.path;
-                console.log('[Popup] Image path to save:', finalImagePath);
             }
 
             const data: PopupCreate = {
@@ -594,9 +662,9 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
             loadPopups();
         } catch (err) {
             console.error('[Popup] Failed to save popup:', err);
-            showAlert({ 
-                message: editingPopup ? "팝업 수정에 실패했습니다." : "팝업 생성에 실패했습니다.", 
-                type: 'error' 
+            showAlert({
+                message: editingPopup ? "팝업 수정에 실패했습니다." : "팝업 생성에 실패했습니다.",
+                type: 'error'
             });
         } finally {
             setUploading(false);
@@ -622,9 +690,9 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
     const toggleActive = async (popup: PopupItem) => {
         try {
             await updatePopup(popup.id, { is_active: !popup.is_active }, accessToken);
-            showAlert({ 
-                message: `팝업이 ${!popup.is_active ? '활성화' : '비활성화'}되었습니다.`, 
-                type: 'success' 
+            showAlert({
+                message: `팝업이 ${!popup.is_active ? '활성화' : '비활성화'}되었습니다.`,
+                type: 'success'
             });
             loadPopups();
         } catch (err) {
@@ -638,7 +706,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
             <>
                 <h2 className="admin-content-header">팝업 관리</h2>
                 <div className="admin-card">
-                    <p>로딩 중...</p>
+                    <p className="admin-muted-text">로딩 중...</p>
                 </div>
             </>
         );
@@ -647,17 +715,18 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
     return (
         <>
             <h2 className="admin-content-header">팝업 관리</h2>
-            
+
             {/* 팝업 생성/수정 폼 */}
             {showForm && (
-                <div className="admin-card" style={{ marginBottom: 24 }}>
-                    <h3 className="card-title">
+                <div className="admin-card">
+                    <h3 className="card-title admin-card-title-spaced">
                         {editingPopup ? '팝업 수정' : '새 팝업 생성'}
                     </h3>
                     <form className="admin-form" onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label className="form-label">제목 *</label>
+                            <label className="form-label" htmlFor="popup-title">제목 *</label>
                             <input
+                                id="popup-title"
                                 className="admin-input"
                                 type="text"
                                 value={title}
@@ -667,68 +736,55 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">내용</label>
+                            <label className="form-label" htmlFor="popup-content">내용</label>
                             <textarea
-                                className="admin-input"
+                                id="popup-content"
+                                className="admin-input admin-textarea"
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
                                 placeholder="팝업 내용 (이미지만 있어도 생성 가능)"
                                 rows={6}
-                                style={{ resize: 'vertical', fontFamily: 'inherit' }}
                             />
-                            <small style={{ color: '#666', fontSize: '0.9em', display: 'block', marginTop: '4px' }}>
+                            <small className="form-hint">
                                 내용 또는 이미지 중 하나는 필수입니다.
                             </small>
                         </div>
                         <div className="form-group">
-                            <label className="form-label">이미지 (선택)</label>
+                            <label className="form-label" htmlFor="popup-image">이미지 (선택)</label>
                             <input
+                                id="popup-image"
                                 ref={imageInputRef}
-                                className="admin-input"
+                                className="admin-input admin-file-input"
                                 type="file"
                                 accept="image/*"
                                 onChange={handleImageChange}
-                                style={{ padding: '8px' }}
                             />
-                            <small style={{ color: '#666', fontSize: '0.9em', display: 'block', marginTop: '4px' }}>
+                            <small className="form-hint">
                                 이미지를 업로드하면 팝업 상단에 표시됩니다. (최대 10MB)
                             </small>
                             {imagePreview && (
-                                <div style={{ marginTop: '12px', position: 'relative' }}>
-                                    <img 
-                                        src={imagePreview} 
-                                        alt="미리보기" 
-                                        style={{ 
-                                            maxWidth: '300px', 
-                                            maxHeight: '200px', 
-                                            border: '1px solid #ddd',
-                                            borderRadius: '4px',
-                                            display: 'block'
-                                        }} 
+                                <div className="admin-image-preview-wrap">
+                                    <img
+                                        src={imagePreview}
+                                        alt="미리보기"
+                                        className="admin-image-preview"
                                     />
-                                    <button
+                                    <Button
                                         type="button"
+                                        variant="danger"
+                                        size="small"
                                         onClick={handleRemoveImage}
-                                        style={{
-                                            marginTop: '8px',
-                                            padding: '4px 12px',
-                                            backgroundColor: '#e74c3c',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            cursor: 'pointer',
-                                            fontSize: '0.9em'
-                                        }}
                                     >
                                         이미지 제거
-                                    </button>
+                                    </Button>
                                 </div>
                             )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div className="admin-grid-2">
                             <div className="form-group">
-                                <label className="form-label">시작 일시 *</label>
+                                <label className="form-label" htmlFor="popup-start">시작 일시 *</label>
                                 <input
+                                    id="popup-start"
                                     className="admin-input"
                                     type="datetime-local"
                                     value={startDate}
@@ -737,8 +793,9 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">종료 일시 *</label>
+                                <label className="form-label" htmlFor="popup-end">종료 일시 *</label>
                                 <input
+                                    id="popup-end"
                                     className="admin-input"
                                     type="datetime-local"
                                     value={endDate}
@@ -747,44 +804,40 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                                 />
                             </div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div className="admin-grid-2">
                             <div className="form-group">
-                                <label className="form-label">표시 순서</label>
+                                <label className="form-label" htmlFor="popup-order">표시 순서</label>
                                 <input
+                                    id="popup-order"
                                     className="admin-input"
                                     type="number"
                                     value={order}
                                     onChange={(e) => setOrder(Number(e.target.value))}
                                     placeholder="0"
                                 />
-                                <small style={{ color: '#666', marginTop: 4, display: 'block' }}>
+                                <small className="form-hint">
                                     작은 숫자가 먼저 표시됩니다
                                 </small>
                             </div>
                             <div className="form-group">
-                                <label className="form-label" style={{ marginBottom: 8 }}>활성 여부</label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                                <span className="form-label">활성 여부</span>
+                                <label className="admin-checkbox-label">
                                     <input
                                         type="checkbox"
                                         checked={isActive}
                                         onChange={(e) => setIsActive(e.target.checked)}
-                                        style={{ width: 18, height: 18, cursor: 'pointer' }}
                                     />
                                     <span>활성화</span>
                                 </label>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                            <button className="admin-button button-primary" type="submit" disabled={uploading}>
+                        <div className="admin-form-actions">
+                            <Button variant="primary" type="submit" disabled={uploading}>
                                 {uploading ? '업로드 중...' : (editingPopup ? '수정' : '생성')}
-                            </button>
-                            <button
-                                className="admin-button button-secondary"
-                                type="button"
-                                onClick={resetForm}
-                            >
+                            </Button>
+                            <Button variant="default" type="button" onClick={resetForm}>
                                 취소
-                            </button>
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -792,24 +845,27 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
 
             {/* 팝업 목록 */}
             <div className="admin-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div className="card-header">
                     <h3 className="card-title">팝업 목록 ({popups.length}개)</h3>
-                    <button
-                        className="admin-button button-primary"
+                    <Button
+                        type="button"
+                        variant="primary"
+                        size="small"
                         onClick={() => setShowForm(!showForm)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                     >
-                        <Plus size={18} />
-                        새 팝업
-                    </button>
+                        <span className="admin-btn-inner">
+                            <Plus size={15} aria-hidden="true" />
+                            <span>새 팝업</span>
+                        </span>
+                    </Button>
                 </div>
 
                 {popups.length === 0 ? (
-                    <p style={{ color: '#666', textAlign: 'center', padding: '40px 0' }}>
+                    <p className="admin-empty-text">
                         등록된 팝업이 없습니다.
                     </p>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
+                    <div className="table-wrapper">
                         <table className="admin-table">
                             <thead>
                                 <tr>
@@ -826,60 +882,56 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                                     <tr key={popup.id}>
                                         <td>{popup.order}</td>
                                         <td>
-                                            <div style={{ fontWeight: 500 }}>{popup.title}</div>
-                                            <div style={{ fontSize: 13, color: '#666', marginTop: 4 }}>
-                                                {popup.content.length > 50 
-                                                    ? popup.content.slice(0, 50) + '...' 
+                                            <div className="admin-popup-title">{popup.title}</div>
+                                            <div className="admin-popup-snippet">
+                                                {popup.content.length > 50
+                                                    ? popup.content.slice(0, 50) + '...'
                                                     : popup.content
                                                 }
                                             </div>
                                         </td>
                                         <td>
-                                            <div style={{ fontSize: 13 }}>
+                                            <div className="admin-popup-date">
                                                 {new Date(popup.start_date).toLocaleString('ko-KR')}
                                             </div>
-                                            <div style={{ fontSize: 13, color: '#666' }}>
+                                            <div className="admin-popup-date-end">
                                                 ~ {new Date(popup.end_date).toLocaleString('ko-KR')}
                                             </div>
                                         </td>
                                         <td>
-                                            <span
-                                                style={{
-                                                    padding: '4px 8px',
-                                                    borderRadius: 4,
-                                                    fontSize: 12,
-                                                    fontWeight: 500,
-                                                    backgroundColor: popup.is_active ? '#e8f5e9' : '#ffebee',
-                                                    color: popup.is_active ? '#2e7d32' : '#c62828'
-                                                }}
-                                            >
+                                            <Label variant={popup.is_active ? "success" : "danger"} size="small">
                                                 {popup.is_active ? '활성' : '비활성'}
-                                            </span>
+                                            </Label>
                                         </td>
                                         <td>{popup.created_by_username || '-'}</td>
                                         <td>
-                                            <div style={{ display: 'flex', gap: 8 }}>
+                                            <div className="table-actions">
                                                 <button
+                                                    type="button"
                                                     className="admin-icon-button"
                                                     onClick={() => toggleActive(popup)}
                                                     title={popup.is_active ? '비활성화' : '활성화'}
+                                                    aria-label={popup.is_active ? '비활성화' : '활성화'}
                                                 >
-                                                    {popup.is_active ? <EyeOff size={16} /> : <Eye size={16} />}
+                                                    {popup.is_active ? <EyeOff size={15} aria-hidden="true" /> : <Eye size={15} aria-hidden="true" />}
                                                 </button>
                                                 <button
+                                                    type="button"
                                                     className="admin-icon-button"
                                                     onClick={() => handleEdit(popup)}
                                                     title="수정"
+                                                    aria-label="수정"
                                                 >
-                                                    <Edit2 size={16} />
+                                                    <Edit2 size={15} aria-hidden="true" />
                                                 </button>
                                                 <button
-                                                    className="admin-icon-button"
+                                                    type="button"
+                                                    className="admin-icon-button admin-icon-button-danger"
                                                     onClick={() => handleDelete(popup.id)}
                                                     title="삭제"
-                                                    style={{ color: '#dc2626' }}
+                                                    aria-label="삭제"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={15} aria-hidden="true" />
                                                 </button>
                                             </div>
                                         </td>
@@ -898,6 +950,7 @@ function Admin() {
     const { user, authReady, accessToken, signOutLocal } = useUser();
     const { staffAuth } = useStaffAuth();
     const { showAlert } = useAlert();
+    const { resolvedColorMode, toggleColorMode } = useColorMode();
     const navigate = useNavigate();
     const [currentPage, setCurrentPage] = useState("dashboard");
     const [authorized, setAuthorized] = useState(false);
@@ -923,10 +976,10 @@ function Admin() {
     }, [authReady, user, accessToken, navigate, signOutLocal, staffAuth, showAlert]);
 
     const adminMenus = [
-        { id: "dashboard", name: "대시보드" },
-        { id: "boards", name: "게시판 관리" },
-        { id: "settings", name: "사이트 설정" },
-        { id: "popups", name: "팝업 관리" },
+        { id: "dashboard", name: "대시보드", icon: LayoutDashboard },
+        { id: "boards", name: "게시판 관리", icon: SlidersHorizontal },
+        { id: "settings", name: "사이트 설정", icon: Settings },
+        { id: "popups", name: "팝업 관리", icon: Megaphone },
     ];
 
     const handleGoHome = () => {
@@ -948,7 +1001,7 @@ function Admin() {
             case "popups":
                 return <PopupManagement accessToken={accessToken} />;
             default:
-                return <Dashboard />;
+                return <Dashboard onSelectPage={handleMenuSelect} />;
         }
     };
 
@@ -963,23 +1016,35 @@ function Admin() {
     return (
         <div className="admin-container">
             <header className="admin-header-bar">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="admin-header-left">
                     <button
+                        type="button"
                         className="admin-menu-toggle"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                         aria-label="메뉴 토글"
+                        aria-expanded={mobileMenuOpen}
                     >
-                        {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                        {mobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
                     </button>
-                    <div className="admin-logo" onClick={handleGoHome}>
-                        JBIG Admin
-                    </div>
+                    <button type="button" className="admin-logo" onClick={handleGoHome}>
+                        <span className="admin-logo-mark" aria-hidden="true">J</span>
+                        <span>JBIG Admin</span>
+                    </button>
                 </div>
                 <div className="admin-user-info">
-                    <span>{user?.username || "관리자"}님</span>
-                    <button className="admin-button button-secondary" onClick={handleGoHome}>
-                        사이트 홈
+                    <span className="admin-user-label">{user?.username || "관리자"}님</span>
+                    <button
+                        type="button"
+                        className="admin-icon-button"
+                        onClick={toggleColorMode}
+                        aria-label={resolvedColorMode === "dark" ? "라이트 모드로 전환" : "다크 모드로 전환"}
+                        title={resolvedColorMode === "dark" ? "라이트 모드" : "다크 모드"}
+                    >
+                        {resolvedColorMode === "dark" ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
                     </button>
+                    <Button variant="default" size="small" onClick={handleGoHome}>
+                        사이트 홈
+                    </Button>
                 </div>
             </header>
 
@@ -991,17 +1056,25 @@ function Admin() {
                 />
 
                 <aside className={`admin-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
-                    <nav className="admin-menu">
+                    <nav className="admin-menu" aria-label="관리자 메뉴">
                         <ul>
-                            {adminMenus.map((menu) => (
-                                <li
-                                    key={menu.id}
-                                    className={currentPage === menu.id ? "active" : ""}
-                                    onClick={() => handleMenuSelect(menu.id)}
-                                >
-                                    {menu.name}
-                                </li>
-                            ))}
+                            {adminMenus.map((menu) => {
+                                const Icon = menu.icon;
+                                const isActive = currentPage === menu.id;
+                                return (
+                                    <li key={menu.id}>
+                                        <button
+                                            type="button"
+                                            className={`admin-menu-btn${isActive ? " active" : ""}`}
+                                            aria-current={isActive ? "page" : undefined}
+                                            onClick={() => handleMenuSelect(menu.id)}
+                                        >
+                                            <Icon size={16} aria-hidden="true" />
+                                            <span>{menu.name}</span>
+                                        </button>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </nav>
                 </aside>

@@ -176,11 +176,10 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         );
     }, [BOARD_LIST, staffAuth]);
 
-    const canUseDraft = useMemo(() => {
-        const result = !!(user && category !== undefined && !isEdit);
-        console.log('[Draft] canUseDraft:', result, { user: !!user, category, isEdit });
-        return result;
-    }, [user, category, isEdit]);
+    const canUseDraft = useMemo(
+        () => !!(user && category !== undefined && !isEdit),
+        [user, category, isEdit]
+    );
 
     const keptExistingCount = useMemo(
         () => existingAttachments.filter(a => attachments.some(att => att.path === a.path)).length,
@@ -326,22 +325,17 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
     // 초안 불러오기 (DB - 단일 버퍼)
     useEffect(() => {
-        console.log('[Draft] Load effect triggered:', { isEdit, loaded: draftLoadedRef.current, canUseDraft, hasToken: !!accessToken });
         // 수정 모드이거나 이미 불러왔으면 스킵
         if (isEdit || draftLoadedRef.current || !canUseDraft || !accessToken) {
-            console.log('[Draft] Load skipped');
             return;
         }
         
         draftLoadedRef.current = true;
-        console.log('[Draft] Attempting to load draft from server...');
 
         (async () => {
             try {
                 const draft = await fetchDraft(accessToken);
-                console.log('[Draft] Draft fetched:', draft);
                 if (!draft || (!draft.title && !draft.content_md)) {
-                    console.log('[Draft] No draft content to restore');
                     return;
                 }
 
@@ -352,7 +346,6 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     confirmText: '불러오기',
                     cancelText: '취소',
                     onConfirm: async () => {
-                        console.log('[Draft] User accepted - restoring draft');
                         if (draft.title) setTitle(draft.title);
                         if (draft.content_md) setContent(draft.content_md);
                         draft.uploaded_paths?.forEach(p => uploadedPathsRef.current.add(p));
@@ -363,7 +356,6 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         }
                     },
                     onCancel: async () => {
-                        console.log('[Draft] User rejected - deleting draft');
                         // 임시저장 거부 시 DB에서 삭제 및 업로드된 파일도 삭제
                         await deleteDraft(accessToken);
                         if (draft.uploaded_paths) {
@@ -380,9 +372,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
     // 초안 자동 저장 (2초 debounce, DB - 단일 버퍼)
     useEffect(() => {
-        console.log('[Draft] Auto-save effect triggered:', { canUseDraft, hasToken: !!accessToken });
         if (!canUseDraft || !accessToken) {
-            console.log('[Draft] Auto-save skipped - conditions not met');
             return;
         }
         
@@ -391,18 +381,15 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 try {
                     if (!title && !content && uploadedPathsRef.current.size === 0) {
                         // 비어있으면 DB에서 삭제
-                        console.log('[Draft] Deleting empty draft');
                         await deleteDraft(accessToken).catch(() => {});
                     } else {
                         // DB에 저장 (upsert) - 현재 선택된 게시판도 함께 저장
-                        console.log('[Draft] Saving draft:', { board_id: activeBoard?.id, title, content_length: content.length });
-                        const result = await saveDraft({
+                        await saveDraft({
                             board_id: activeBoard?.id || null,
                             title,
                             content_md: content,
                             uploaded_paths: Array.from(uploadedPathsRef.current)
                         }, accessToken);
-                        console.log('[Draft] Draft saved successfully:', result);
                     }
                 } catch (err) {
                     console.error('[Draft] Draft save failed:', err);
@@ -776,7 +763,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
     };
 
     return (
-        <form className="postwrite-form" onSubmit={handleSubmit} style={{ overflow: "hidden" }}>
+        <form className="postwrite-form" onSubmit={handleSubmit}>
             {!isAbsenceBoard && (
                 <div className="postwrite-row">
                     <label>게시판</label>
@@ -920,7 +907,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                                             const blobUrl = imageUrlMapRef.current.get(src.replace('media-key://', ''));
                                             if (blobUrl) imageSrc = blobUrl;
                                         }
-                                        return <img src={imageSrc} alt={alt} {...props} style={{ maxWidth: '100%' }} />;
+                                        return <img src={imageSrc} alt={alt} {...props} className="postwrite-preview-img" />;
                                     },
                                 },
                             }}
@@ -932,7 +919,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                                 alignLeftCommand, alignCenterCommand, alignRightCommand, textColorCommand,
                             ]}
                         />
-                        <input type="file" ref={imageInputRef} accept="image/*" style={{ display: 'none' }} onChange={handleImageUpload} />
+                        <input type="file" ref={imageInputRef} accept="image/*" className="postwrite-hidden-input" onChange={handleImageUpload} />
                     </div>
                 )}
             </div>
@@ -970,7 +957,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             accept="image/*"
                             disabled={remainingSlots === 0}
                             onChange={handleFileChange}
-                            style={{ display: 'none' }}
+                            className="postwrite-hidden-input"
                         />
                         <div className="postwrite-img-hint">
                             (최대 {maxFiles}장, 파일당 {MAX_FILE_SIZE / 1024 / 1024}MB 제한)

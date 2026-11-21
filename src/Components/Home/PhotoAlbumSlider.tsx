@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchPhotoAlbumPosts, PhotoPostItem } from "../../API/req";
 import { Section } from "../Utils/interfaces";
 import useInViewOnce from "../Utils/useInViewOnce";
@@ -84,55 +85,103 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
     if (!photoBoard) return null;
 
     return (
-        <div
+        <section
             ref={sliderRef}
-            className="photo-album-slider"
+            className="photo-album-card"
+            aria-label="사진첩"
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
         >
-            {current ? (
-                <>
-                    <button
-                        type="button"
-                        className="photo-album-nav prev"
-                        onClick={() => setIndex((index - 1 + slides.length) % slides.length)}
-                        aria-label="이전 사진"
-                    >
-                        ‹
-                    </button>
-                    <div
-                        className="photo-album-frame"
-                        role="button"
-                        tabIndex={0}
-                        onClick={handleOpenPost}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") handleOpenPost();
-                        }}
-                    >
-                        <img
-                            key={current.url}
-                            src={current.url}
-                            alt={current.title}
-                            className="photo-album-image"
-                            loading="lazy"
-                        />
-                        <div className="photo-album-caption">{current.title}</div>
-                    </div>
-                    <button
-                        type="button"
-                        className="photo-album-nav next"
-                        onClick={() => setIndex((index + 1) % slides.length)}
-                        aria-label="다음 사진"
-                    >
-                        ›
-                    </button>
-                </>
-            ) : (
-                <div className="photo-album-empty">
-                    아직 사진이 없습니다.
+            <div className="photo-album-card-header">
+                <div className="photo-album-card-title">
+                    <Camera size={16} aria-hidden="true" />
+                    <span>{photoBoard.name || "사진첩"}</span>
                 </div>
-            )}
-        </div>
+                <div className="photo-album-card-actions">
+                    {slides.length > 0 && (
+                        <span className="photo-album-counter">
+                            {index + 1} / {slides.length}
+                        </span>
+                    )}
+                    <button
+                        type="button"
+                        className="photo-album-more-btn"
+                        onClick={() => navigate(`/board/${photoBoard.id}`)}
+                    >
+                        전체 보기 &gt;
+                    </button>
+                </div>
+            </div>
+
+            <div className="photo-album-slider">
+                {current ? (
+                    <>
+                        <div className="photo-album-stage">
+                            {slides.length > 1 && (
+                                <button
+                                    type="button"
+                                    className="photo-album-nav prev"
+                                    onClick={() => setIndex((index - 1 + slides.length) % slides.length)}
+                                    aria-label="이전 사진"
+                                >
+                                    <ChevronLeft size={18} aria-hidden="true" />
+                                </button>
+                            )}
+                            <div
+                                className="photo-album-frame"
+                                role="button"
+                                tabIndex={0}
+                                onClick={handleOpenPost}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                        e.preventDefault();
+                                        handleOpenPost();
+                                    }
+                                }}
+                            >
+                                <img
+                                    key={current.url}
+                                    src={current.url}
+                                    alt={current.title}
+                                    className="photo-album-image"
+                                    loading="lazy"
+                                />
+                                <div className="photo-album-caption">{current.title}</div>
+                            </div>
+                            {slides.length > 1 && (
+                                <button
+                                    type="button"
+                                    className="photo-album-nav next"
+                                    onClick={() => setIndex((index + 1) % slides.length)}
+                                    aria-label="다음 사진"
+                                >
+                                    <ChevronRight size={18} aria-hidden="true" />
+                                </button>
+                            )}
+                        </div>
+                        {slides.length > 1 && (
+                            <div className="photo-album-dots" role="tablist" aria-label="사진 선택">
+                                {slides.map((slide, dotIdx) => (
+                                    <button
+                                        key={`${slide.postId}-${dotIdx}`}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={dotIdx === index}
+                                        aria-label={`${dotIdx + 1}번째 사진`}
+                                        className={`photo-album-dot${dotIdx === index ? " is-active" : ""}`}
+                                        onClick={() => setIndex(dotIdx)}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="photo-album-empty">
+                        아직 사진이 없습니다.
+                    </div>
+                )}
+            </div>
+        </section>
     );
 };
 

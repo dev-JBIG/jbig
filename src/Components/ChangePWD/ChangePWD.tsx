@@ -142,7 +142,10 @@ const ChangePWD: React.FC = () => {
         <div className="changepwd-wrapper">
             <div className="changepwd-container">
                 <div className="changepwd-title-row">
-                    <Link to="/" className="changepwd-logo">JBIG</Link>
+                    <Link to="/" className="changepwd-logo">
+                        <span className="changepwd-logo-mark" aria-hidden="true">J</span>
+                        <span>JBIG</span>
+                    </Link>
                     <h2 className="changepwd-title">비밀번호 찾기</h2>
                 </div>
 

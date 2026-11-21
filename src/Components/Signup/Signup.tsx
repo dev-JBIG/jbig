@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@primer/react";
 import { signupUser } from "../../API/req";
 import { useAlert } from "../Utils/AlertContext";
 import { useJbnuEmail } from "../Utils/useJbnuEmail";
@@ -84,7 +85,10 @@ const Signup: React.FC = () => {
         <div className="signup-wrapper">
             <div className="signup-container">
                 <div className="signin-title-row">
-                    <Link to="/" className="signin-logo">JBIG</Link>
+                    <Link to="/" className="signin-logo">
+                        <span className="signin-logo-mark" aria-hidden="true">J</span>
+                        <span>JBIG</span>
+                    </Link>
                     <h2 className="signin-title">회원가입</h2>
                 </div>
 
@@ -136,7 +140,7 @@ const Signup: React.FC = () => {
                             <label className="signup-label" htmlFor="password">
                                 비밀번호
                             </label>
-                            <div style={{position: "relative", width: "100%"}}>
+                            <div className="signup-password-row">
                                 <input
                                     className="signup-input"
                                     id="password"
@@ -148,19 +152,8 @@ const Signup: React.FC = () => {
                                 />
                                 <button
                                     type="button"
+                                    className="signup-toggle"
                                     onClick={() => setShowPassword((prev) => !prev)}
-                                    style={{
-                                        position: "absolute",
-                                        right: "8px",
-                                        top: "38%",
-                                        transform: "translateY(-50%)",
-                                        background: "rgba(255,255,255,0.7)",
-                                        border: "none",
-                                        cursor: "pointer",
-                                        color: "#3563e9",
-                                        fontSize: "12px",
-                                        zIndex: 2,
-                                    }}
                                 >
                                     {showPassword ? "숨기기" : "보이기"}
                                 </button>
@@ -178,7 +171,9 @@ const Signup: React.FC = () => {
                                 placeholder="숫자 + 영문 + !,@"
                             />
 
-                            <button className="signup-button" type="submit" disabled={loading}>인증코드 받기</button>
+                            <Button variant="primary" block className="signup-submit-btn" type="submit" disabled={loading}>
+                                인증코드 받기
+                            </Button>
                         </form>
 
                         <div className="signin-links">

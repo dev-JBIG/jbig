@@ -1,25 +1,38 @@
 .member-quick-links {
     display: grid;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 6px;
+    margin-bottom: 10px;
 }
 
 .member-quick-link {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 8px;
     width: 100%;
-    min-height: 40px;
-    padding: 8px 12px;
+    min-height: 36px;
+    padding: 7px 10px;
     border: 1px solid var(--borderColor-accent-muted, rgba(84, 174, 255, 0.4));
     border-radius: var(--borderRadius-medium, 6px);
     background-color: var(--bgColor-accent-muted, #ddf4ff);
     color: var(--fgColor-accent, #0969da);
     font-size: 13px;
     font-weight: 600;
-    text-align: center;
     text-decoration: none;
     transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.member-quick-link-icon {
+    flex-shrink: 0;
+}
+
+.member-quick-link-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.member-quick-link-ext {
+    flex-shrink: 0;
+    opacity: 0.65;
 }
 
 .member-quick-link:hover {
@@ -33,6 +46,10 @@
     border-color: var(--borderColor-default, #d1d9e0);
     background-color: var(--bgColor-muted, #f6f8fa);
     color: var(--fgColor-default, #1f2328);
+}
+
+.member-quick-link-news .member-quick-link-icon {
+    color: var(--fgColor-accent, #0969da);
 }
 
 .member-quick-link-news:hover {
