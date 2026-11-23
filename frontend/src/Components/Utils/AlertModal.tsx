@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@primer/react';
 import './AlertModal.css';
-import { useFocusTrap } from './useFocusTrap';
+import Dialog from './Dialog';
 
 interface AlertModalProps {
     show: boolean;
@@ -27,22 +27,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
     confirmText = '확인',
     cancelText = '취소'
 }) => {
-    const modalRef = useRef<HTMLDivElement>(null);
     const primaryBtnRef = useRef<HTMLButtonElement>(null);
-
-    useEffect(() => {
-        if (show) {
-            document.body.classList.add('modal-open');
-        } else {
-            document.body.classList.remove('modal-open');
-        }
-
-        return () => {
-            document.body.classList.remove('modal-open');
-        };
-    }, [show]);
-
-    useFocusTrap(modalRef, show, { onClose, initialFocusRef: primaryBtnRef });
 
     const handleConfirm = () => {
         if (isConfirm && onConfirm) {
@@ -101,60 +86,53 @@ const AlertModal: React.FC<AlertModalProps> = ({
                     : 'is-info';
 
     return (
-        <div
-            className="overlay-backdrop alert-modal-overlay"
-            onClick={onClose}
-            tabIndex={-1}
-            role="dialog"
-            aria-labelledby="alertModalLabel"
-            aria-modal="true"
-            ref={modalRef}
+        <Dialog
+            labelledBy="alertModalLabel"
+            onClose={onClose}
+            backdropClassName="alert-modal-overlay"
+            panelClassName="alert-modal-card"
+            initialFocusRef={primaryBtnRef}
         >
-            <div
-                className="overlay-panel alert-modal-card"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="alert-modal-header">
-                    <div className={`alert-modal-icon ${toneClass}`}>
-                        {getIconByType()}
-                    </div>
-                    <div className="alert-modal-title" id="alertModalLabel">{title}</div>
+            <div className="alert-modal-header">
+                <div className={`alert-modal-icon ${toneClass}`}>
+                    {getIconByType()}
                 </div>
+                <div className="alert-modal-title" id="alertModalLabel">{title}</div>
+            </div>
 
-                <div className="alert-modal-desc">{message}</div>
+            <div className="alert-modal-desc">{message}</div>
 
-                <div className="alert-modal-button-group">
-                    {isConfirm ? (
-                        <>
-                            <Button
-                                type="button"
-                                variant="default"
-                                onClick={onClose}
-                            >
-                                {cancelText}
-                            </Button>
-                            <Button
-                                ref={primaryBtnRef}
-                                type="button"
-                                variant={type === 'danger' ? 'danger' : 'primary'}
-                                onClick={handleConfirm}
-                            >
-                                {confirmText}
-                            </Button>
-                        </>
-                    ) : (
+            <div className="alert-modal-button-group">
+                {isConfirm ? (
+                    <>
+                        <Button
+                            type="button"
+                            variant="default"
+                            onClick={onClose}
+                        >
+                            {cancelText}
+                        </Button>
                         <Button
                             ref={primaryBtnRef}
                             type="button"
-                            variant="primary"
-                            onClick={onClose}
+                            variant={type === 'danger' ? 'danger' : 'primary'}
+                            onClick={handleConfirm}
                         >
-                            확인
+                            {confirmText}
                         </Button>
-                    )}
-                </div>
+                    </>
+                ) : (
+                    <Button
+                        ref={primaryBtnRef}
+                        type="button"
+                        variant="primary"
+                        onClick={onClose}
+                    >
+                        확인
+                    </Button>
+                )}
             </div>
-        </div>
+        </Dialog>
     );
 };
 

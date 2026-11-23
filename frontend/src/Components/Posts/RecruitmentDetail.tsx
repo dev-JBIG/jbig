@@ -7,6 +7,7 @@ import {
 } from '../../API/req';
 import { useUser } from '../Utils/UserContext';
 import { useAlert } from '../Utils/AlertContext';
+import Dialog from '../Utils/Dialog';
 
 interface RecruitmentDetailProps {
     recruitment: RecruitmentDetailType;
@@ -305,24 +306,28 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
 
             {/* 지원 모달 */}
             {showApplyModal && (
-                <div className="recruitment-modal-backdrop" onClick={() => setShowApplyModal(false)} role="dialog" aria-modal="true" aria-labelledby="recruitment-apply-title">
-                    <div className="recruitment-modal-card" onClick={e => e.stopPropagation()}>
-                        <h3 id="recruitment-apply-title">지원하기</h3>
-                        <textarea
-                            className="recruitment-apply-textarea"
-                            placeholder="자기소개나 지원 동기를 작성해주세요 (선택사항)"
-                            value={applyMessage}
-                            onChange={e => setApplyMessage(e.target.value)}
-                            rows={5}
-                        />
-                        <div className="recruitment-modal-actions">
-                            <Button type="button" variant="default" onClick={() => setShowApplyModal(false)}>취소</Button>
-                            <Button type="button" variant="primary" onClick={handleApply} disabled={applying}>
-                                {applying ? '지원 중...' : '지원하기'}
-                            </Button>
-                        </div>
+                <Dialog
+                    labelledBy="recruitment-apply-title"
+                    onClose={() => setShowApplyModal(false)}
+                    backdropClassName="recruitment-modal-backdrop"
+                    panelClassName="recruitment-modal-card"
+                    busy={applying}
+                >
+                    <h3 id="recruitment-apply-title">지원하기</h3>
+                    <textarea
+                        className="recruitment-apply-textarea"
+                        placeholder="자기소개나 지원 동기를 작성해주세요 (선택사항)"
+                        value={applyMessage}
+                        onChange={e => setApplyMessage(e.target.value)}
+                        rows={5}
+                    />
+                    <div className="recruitment-modal-actions">
+                        <Button type="button" variant="default" onClick={() => setShowApplyModal(false)}>취소</Button>
+                        <Button type="button" variant="primary" onClick={handleApply} disabled={applying}>
+                            {applying ? '지원 중...' : '지원하기'}
+                        </Button>
                     </div>
-                </div>
+                </Dialog>
             )}
         </section>
     );

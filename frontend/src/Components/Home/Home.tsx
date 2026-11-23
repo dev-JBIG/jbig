@@ -181,21 +181,7 @@ const Home: React.FC = () => {
         }
     }, []);
 
-    useEffect(() => {
-        if (isModalOpen || isLoginModalOpen) {
-            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-            document.body.style.paddingRight = `${scrollbarWidth}px`;
-            document.body.classList.add('modal-open');
-        } else {
-            document.body.style.paddingRight = '';
-            document.body.classList.remove('modal-open');
-        }
-
-        return () => {
-            document.body.style.paddingRight = '';
-            document.body.classList.remove('modal-open');
-        };
-    }, [isModalOpen, isLoginModalOpen]);
+    // 모달이 열린 동안 뒤 화면 스크롤 잠금은 Dialog 가 맡는다 (겹친 모달도 개수로 관리)
 
     useEffect(() => {
         if (!authReady) return;

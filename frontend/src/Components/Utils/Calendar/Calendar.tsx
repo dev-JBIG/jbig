@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@primer/react";
-import { ChevronLeft, ChevronRight, Clock, FileText, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, FileText } from "lucide-react";
 import "./Calendar.css";
 import { CalendarEvent } from "../interfaces";
 import { deleteCalendarEvent, fetchCalendarEvents } from "../../../API/req";
 import { useUser } from "../UserContext";
 import { useAlert } from "../AlertContext";
-import { useFocusTrap } from "../useFocusTrap";
+import Dialog, { DialogHeader } from "../Dialog";
 
 interface CalendarProps {
     staffAuth: boolean;
@@ -107,18 +106,10 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
 
     const savedOverridesRef = useRef<Map<string, CalendarEvent>>(new Map());
     const deletedIdsRef = useRef<Set<string>>(new Set());
-    const expandedDialogRef = useRef<HTMLDivElement>(null);
-    const detailDialogRef = useRef<HTMLDivElement>(null);
 
     const closeExpandedDay = useCallback(() => setExpandedDay(null), []);
     const closeSelectedEvent = useCallback(() => setSelectedEvent(null), []);
 
-    useFocusTrap(expandedDialogRef, Boolean(expandedDay) && !selectedEvent, {
-        onClose: closeExpandedDay,
-    });
-    useFocusTrap(detailDialogRef, Boolean(selectedEvent), {
-        onClose: closeSelectedEvent,
-    });
 
     useEffect(() => {
         let cancelled = false;
@@ -405,145 +396,111 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
             </div>
 
             {/* 하루 전체 일정 모달 */}
-            {expandedDay && ReactDOM.createPortal(
-                <div
-                    className="overlay-backdrop"
-                    onClick={closeExpandedDay}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="calendar-day-modal-title"
-                >
-                    <div ref={expandedDialogRef} className="overlay-panel primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
-                        <div className="overlay-header primer-calendar-modal-header">
-                            <h3 id="calendar-day-modal-title">{expandedDay.label} 일정</h3>
+            {expandedDay && (
+                <Dialog labelledBy="calendar-day-modal-title" onClose={closeExpandedDay} panelClassName="primer-calendar-modal">
+                    <DialogHeader onClose={closeExpandedDay} className="primer-calendar-modal-header">
+                        <h3 id="calendar-day-modal-title">{expandedDay.label} 일정</h3>
+                    </DialogHeader>
+                    <div className="primer-calendar-day-list">
+                        {expandedDay.events.map(ev => (
                             <button
+                                key={ev.id}
                                 type="button"
-                                className="overlay-close"
-                                onClick={closeExpandedDay}
-                                aria-label="닫기"
+                                className="primer-calendar-day-list-item"
+                                onClick={() => {
+                                    setExpandedDay(null);
+                                    setSelectedEvent(ev);
+                                }}
                             >
-                                <X size={16} aria-hidden="true" />
+                                <span
+                                    className="primer-calendar-color-swatch"
+                                    style={{ backgroundColor: ev.color || "#0969da" }}
+                                    aria-hidden="true"
+                                />
+                                <div className="primer-calendar-day-list-text">
+                                    <strong>{ev.title}</strong>
+                                    <span>{formatEventTimeRange(ev)}</span>
+                                </div>
                             </button>
-                        </div>
-                        <div className="primer-calendar-day-list">
-                            {expandedDay.events.map(ev => (
-                                <button
-                                    key={ev.id}
-                                    type="button"
-                                    className="primer-calendar-day-list-item"
-                                    onClick={() => {
-                                        setExpandedDay(null);
-                                        setSelectedEvent(ev);
-                                    }}
-                                >
-                                    <span
-                                        className="primer-calendar-color-swatch"
-                                        style={{ backgroundColor: ev.color || "#0969da" }}
-                                        aria-hidden="true"
-                                    />
-                                    <div className="primer-calendar-day-list-text">
-                                        <strong>{ev.title}</strong>
-                                        <span>{formatEventTimeRange(ev)}</span>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
+                        ))}
                     </div>
-                </div>,
-                document.body
+                </Dialog>
             )}
 
             {/* 일정 상세 모달 */}
-            {selectedEvent && ReactDOM.createPortal(
-                <div
-                    className="overlay-backdrop"
-                    onClick={closeSelectedEvent}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="calendar-event-modal-title"
-                >
-                    <div ref={detailDialogRef} className="overlay-panel primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
-                        <div className="overlay-header primer-calendar-modal-header">
-                            <div className="primer-calendar-modal-title-wrap">
-                                <span
-                                    className="primer-calendar-color-swatch"
-                                    style={{ backgroundColor: selectedEvent.color || "#0969da" }}
-                                    aria-hidden="true"
-                                />
-                                <h3 id="calendar-event-modal-title">{selectedEvent.title}</h3>
-                            </div>
-                            <button
-                                type="button"
-                                className="overlay-close"
-                                onClick={() => setSelectedEvent(null)}
-                                aria-label="닫기"
-                            >
-                                <X size={16} aria-hidden="true" />
-                            </button>
+            {selectedEvent && (
+                <Dialog labelledBy="calendar-event-modal-title" onClose={closeSelectedEvent} panelClassName="primer-calendar-modal">
+                    <DialogHeader onClose={closeSelectedEvent} className="primer-calendar-modal-header">
+                        <div className="primer-calendar-modal-title-wrap">
+                            <span
+                                className="primer-calendar-color-swatch"
+                                style={{ backgroundColor: selectedEvent.color || "#0969da" }}
+                                aria-hidden="true"
+                            />
+                            <h3 id="calendar-event-modal-title">{selectedEvent.title}</h3>
                         </div>
+                    </DialogHeader>
 
-                        <div className="primer-calendar-modal-body">
-                            <div className="primer-calendar-detail-row">
-                                <Clock size={15} aria-hidden="true" />
-                                <div>
-                                    <span className="primer-calendar-detail-label">시간</span>
-                                    <p>{formatEventTimeRange(selectedEvent)}</p>
-                                </div>
-                            </div>
-                            <div className="primer-calendar-detail-row">
-                                <FileText size={15} aria-hidden="true" />
-                                <div>
-                                    <span className="primer-calendar-detail-label">설명</span>
-                                    <p>{selectedEvent.description || "설명이 없습니다."}</p>
-                                </div>
+                    <div className="primer-calendar-modal-body">
+                        <div className="primer-calendar-detail-row">
+                            <Clock size={15} aria-hidden="true" />
+                            <div>
+                                <span className="primer-calendar-detail-label">시간</span>
+                                <p>{formatEventTimeRange(selectedEvent)}</p>
                             </div>
                         </div>
-
-                        <div className="primer-calendar-modal-footer">
-                            {staffAuth ? (
-                                <>
-                                    <Button
-                                        type="button"
-                                        variant="danger"
-                                        size="small"
-                                        disabled={deleting}
-                                        onClick={() => { void handleDeleteEvent(selectedEvent); }}
-                                    >
-                                        {deleting ? "삭제 중..." : "삭제"}
-                                    </Button>
-                                    <div className="primer-calendar-modal-footer-right">
-                                        <Button
-                                            type="button"
-                                            variant="default"
-                                            size="small"
-                                            onClick={() => setSelectedEvent(null)}
-                                        >
-                                            취소
-                                        </Button>
-                                        <Button
-                                            type="button"
-                                            variant="primary"
-                                            size="small"
-                                            onClick={() => handleEditEvent(selectedEvent)}
-                                        >
-                                            수정
-                                        </Button>
-                                    </div>
-                                </>
-                            ) : (
-                                <Button
-                                    type="button"
-                                    variant="primary"
-                                    size="small"
-                                    onClick={() => setSelectedEvent(null)}
-                                >
-                                    확인
-                                </Button>
-                            )}
+                        <div className="primer-calendar-detail-row">
+                            <FileText size={15} aria-hidden="true" />
+                            <div>
+                                <span className="primer-calendar-detail-label">설명</span>
+                                <p>{selectedEvent.description || "설명이 없습니다."}</p>
+                            </div>
                         </div>
                     </div>
-                </div>,
-                document.body
+
+                    <div className="primer-calendar-modal-footer">
+                        {staffAuth ? (
+                            <>
+                                <Button
+                                    type="button"
+                                    variant="danger"
+                                    size="small"
+                                    disabled={deleting}
+                                    onClick={() => { void handleDeleteEvent(selectedEvent); }}
+                                >
+                                    {deleting ? "삭제 중..." : "삭제"}
+                                </Button>
+                                <div className="primer-calendar-modal-footer-right">
+                                    <Button
+                                        type="button"
+                                        variant="default"
+                                        size="small"
+                                        onClick={() => setSelectedEvent(null)}
+                                    >
+                                        취소
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="primary"
+                                        size="small"
+                                        onClick={() => handleEditEvent(selectedEvent)}
+                                    >
+                                        수정
+                                    </Button>
+                                </div>
+                            </>
+                        ) : (
+                            <Button
+                                type="button"
+                                variant="primary"
+                                size="small"
+                                onClick={() => setSelectedEvent(null)}
+                            >
+                                확인
+                            </Button>
+                        )}
+                    </div>
+                </Dialog>
             )}
         </div>
     );

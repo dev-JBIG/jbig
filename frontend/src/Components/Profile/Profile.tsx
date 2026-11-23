@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, useSearchParams } from "react-rout
 import { useUser } from "../Utils/UserContext";
 import { fetchPublicProfile, fetchPublicProfileActivity, updateProfileBlocks, updateProfileHtml, PublicProfile, deleteAccount } from "../../API/req";
 import { useAlert } from "../Utils/AlertContext";
+import Dialog from "../Utils/Dialog";
 import { ProfileBlock, IdentityBlock } from "./types";
 import ProfileBlockRenderer from "./ProfileBlockRenderer/ProfileBlockRenderer";
 import { buildSandboxedProfileSrcDoc, sanitizeMediaUrl } from "../Utils/safeUrl";
@@ -173,6 +174,12 @@ const Profile: React.FC = () => {
 
     const handleCancelEdit = () => {
         setEditMode(false);
+    };
+
+    // 취소, ESC, 배경막 어느 쪽으로 닫아도 입력한 비밀번호를 지운다
+    const closeDeleteModal = () => {
+        setShowDeleteModal(false);
+        setDeletePassword("");
     };
 
     const handleDeleteAccount = async () => {
@@ -451,47 +458,51 @@ const Profile: React.FC = () => {
             )}
 
             {showDeleteModal && (
-                <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>회원 탈퇴</h3>
-                        <p className="modal-warning">
-                            회원 탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
-                            <br />
-                            계속하시려면 비밀번호를 입력해주세요.
-                        </p>
-                        <input
-                            type="password"
-                            value={deletePassword}
-                            onChange={(e) => setDeletePassword(e.target.value)}
-                            placeholder="비밀번호"
-                            className="modal-input"
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleDeleteAccount();
-                                }
-                            }}
-                        />
-                        <div className="modal-actions">
-                            <button
-                                className="modal-btn modal-btn-cancel"
-                                onClick={() => {
-                                    setShowDeleteModal(false);
-                                    setDeletePassword("");
-                                }}
-                                disabled={deleting}
-                            >
-                                취소
-                            </button>
-                            <button
-                                className="modal-btn modal-btn-delete"
-                                onClick={handleDeleteAccount}
-                                disabled={deleting || !deletePassword}
-                            >
-                                {deleting ? "처리 중..." : "탈퇴"}
-                            </button>
-                        </div>
+                <Dialog
+                    labelledBy="profile-delete-title"
+                    onClose={closeDeleteModal}
+                    backdropClassName="modal-overlay"
+                    panelClassName="modal-content"
+                    busy={deleting}
+                >
+                    <h3 id="profile-delete-title">회원 탈퇴</h3>
+                    <p className="modal-warning">
+                        회원 탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.
+                        <br />
+                        계속하시려면 비밀번호를 입력해주세요.
+                    </p>
+                    <input
+                        type="password"
+                        value={deletePassword}
+                        onChange={(e) => setDeletePassword(e.target.value)}
+                        placeholder="비밀번호"
+                        aria-label="비밀번호"
+                        className="modal-input"
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                                handleDeleteAccount();
+                            }
+                        }}
+                    />
+                    <div className="modal-actions">
+                        <button
+                            type="button"
+                            className="modal-btn modal-btn-cancel"
+                            onClick={closeDeleteModal}
+                            disabled={deleting}
+                        >
+                            취소
+                        </button>
+                        <button
+                            type="button"
+                            className="modal-btn modal-btn-delete"
+                            onClick={handleDeleteAccount}
+                            disabled={deleting || !deletePassword}
+                        >
+                            {deleting ? "처리 중..." : "탈퇴"}
+                        </button>
                     </div>
-                </div>
+                </Dialog>
             )}
         </div>
     );

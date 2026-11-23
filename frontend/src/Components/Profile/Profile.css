@@ -553,7 +553,8 @@
     margin: 0 0 14px 0;
     font-size: 18px;
     font-weight: 600;
-    color: var(--resume-color-text);
+    /* 모달은 프로필 영역 밖(앱 포털)에 그려지므로 프로필 전용 변수 대신 같은 값의 Primer 토큰을 쓴다 */
+    color: var(--fgColor-default);
 }
 
 .modal-warning {
@@ -566,7 +567,7 @@
 .modal-input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--resume-color-border);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);
