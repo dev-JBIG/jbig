@@ -81,6 +81,7 @@
     font-size: 14px;
     line-height: 1.72;
     word-break: keep-all;
+    overflow-wrap: anywhere;
     max-width: 56ch;
 }
 
