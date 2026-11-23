@@ -46,6 +46,8 @@ export const RULES: RuleInfo[] = [
     { id: "forbidden-library", section: "1", summary: "Bootstrap, jQuery 등 전역 CSS 라이브러리 금지" },
     { id: "pretendard", section: "4", summary: "index.html의 Pretendard 로드와 --font-sans 최우선 지정 유지" },
     { id: "hdr-limit", section: "5", summary: "전역 img { dynamic-range-limit: standard } 유지" },
+    { id: "font-size-token", section: "4.3", summary: "글자 크기는 --text-* 토큰(또는 em, %, inherit)만, px·rem·pt 직접 지정 금지" },
+    { id: "font-weight-scale", section: "4.3", summary: "글자 굵기는 400, 500, 600, 700만 (글자 로고 800은 허용 주석)" },
 ];
 
 const RULE_IDS = new Set(RULES.map(r => r.id));
@@ -145,6 +147,12 @@ export function lintDesign(frontendRoot: string): LintResult {
                 if (RAW_COLOR.test(stripped)) push("raw-color", file, line, `${prop}: ${v}`, lines);
             }
             if (/^outline$/.test(prop) && /^(none|0)\b/.test(v)) push("outline-none", file, line, `${selector}`, lines);
+            if (!isTokenBridge && prop === "font-size") {
+                const sizeStripped = v.replace(/var\([^()]*(\([^()]*\))*[^()]*\)/g, "TOKEN");
+                if (/\d(px|rem|pt)\b/.test(sizeStripped)) push("font-size-token", file, line, `${selector} → ${v}`, lines);
+            }
+            if (prop === "font-weight" && /^\d+$/.test(v) && !["400", "500", "600", "700"].includes(v))
+                push("font-weight-scale", file, line, `${selector} → ${v}`, lines);
             if (/^border-left$/.test(prop) && /^[2-9]px\s+solid\s+var\(--(fgColor|bgColor|borderColor)-(accent|success|danger|attention|done|severe)/.test(v))
                 push("accent-left-stripe", file, line, `${selector}`, lines);
         }

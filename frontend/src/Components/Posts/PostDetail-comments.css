@@ -8,7 +8,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 15px;
+    font-size: var(--text-body);
     font-weight: 600;
     color: var(--fgColor-default, var(--color-text-primary));
     margin-bottom: var(--space-md);
@@ -24,7 +24,7 @@
     border-radius: 999px;
     background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16));
     color: var(--fgColor-muted, #59636e);
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -80,7 +80,7 @@
     background: transparent;
     font-family: inherit;
     font-weight: 600;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     color: var(--fgColor-default, var(--color-text-primary));
     cursor: pointer;
     transition: color var(--transition-fast);
@@ -100,7 +100,7 @@
 
 .comment-date,
 .reply-date {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, var(--color-text-tertiary));
 }
 
@@ -108,7 +108,7 @@
     border: none;
     background: transparent;
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-accent, var(--color-primary));
     font-weight: 500;
     cursor: pointer;
@@ -171,7 +171,7 @@
     border-radius: var(--radius-sm);
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     color: var(--fgColor-default, var(--color-text-primary));
     transition: background-color var(--transition-fast);
@@ -190,7 +190,7 @@
 }
 
 .postdetail-comment-section .comment-content {
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.65;
     color: var(--fgColor-default, var(--color-text-primary));
     padding: 12px 14px;
@@ -221,7 +221,7 @@
     background: transparent;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, var(--color-text-secondary));
     cursor: pointer;
     transition: background-color var(--transition-fast), color var(--transition-fast);
@@ -237,7 +237,7 @@
 }
 
 .comment-like-count {
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -272,7 +272,7 @@
 
 .reply-content {
     padding: 10px 12px;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     line-height: 1.6;
     color: var(--fgColor-default, var(--color-text-primary));
     word-break: break-word;
@@ -301,7 +301,7 @@
     padding: 8px 12px;
     border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.5;
     font-family: inherit;
     background-color: var(--bgColor-default, var(--color-bg-primary));
@@ -330,7 +330,7 @@
     align-items: center;
     gap: 6px;
     margin-right: auto;
-    font-size: 12.5px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, #59636e);
     cursor: pointer;
 }
@@ -350,12 +350,12 @@
 }
 
 .comment-guest-hint {
-    font-size: 12.5px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, #59636e);
 }
 
 .comment-captcha-status {
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
 }
 
@@ -383,7 +383,7 @@
 }
 
 .comment-visibility-hint {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #59636e);
 }
 
@@ -392,7 +392,7 @@
     padding: 10px 12px;
     border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.5;
     font-family: inherit;
     background-color: var(--bgColor-default, var(--color-bg-primary));

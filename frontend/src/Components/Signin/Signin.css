@@ -3,7 +3,7 @@
 .signin-verify-lead {
     width: 100%;
     margin: 0 0 12px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--fgColor-default);
     text-align: center;

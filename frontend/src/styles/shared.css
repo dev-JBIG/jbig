@@ -69,7 +69,8 @@ a.auth-logo {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    font-size: 22px;
+    font-size: var(--text-title);
+    /* design-lint-allow font-weight-scale: JBIG 글자 로고는 브랜드 굵기 800 */
     font-weight: 800;
     color: var(--fgColor-default);
     text-decoration: none;
@@ -88,7 +89,7 @@ a.auth-logo:hover {
 }
 
 .auth-title {
-    font-size: 18px;
+    font-size: var(--text-title-s);
     font-weight: 600;
     color: var(--fgColor-muted);
     letter-spacing: -0.01em;
@@ -104,7 +105,7 @@ a.auth-logo:hover {
 }
 
 .auth-label {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-default);
     margin-top: 4px;
@@ -118,7 +119,7 @@ a.auth-logo:hover {
     margin-bottom: 4px;
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     background: var(--bgColor-default);
     color: var(--fgColor-default);
     box-sizing: border-box;
@@ -152,7 +153,7 @@ a.auth-logo:hover {
     border-radius: var(--radius-sm);
     background: transparent;
     font-family: inherit;
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
     color: var(--fgColor-accent);
     cursor: pointer;
@@ -180,7 +181,7 @@ a.auth-logo:hover {
 }
 
 .auth-link {
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-accent);
     text-decoration: none;
     font-weight: 500;
@@ -199,7 +200,7 @@ a.auth-logo:hover {
     border: 1px solid var(--borderColor-success-muted);
     background-color: var(--bgColor-success-muted);
     color: var(--fgColor-success);
-    font-size: 13px;
+    font-size: var(--text-label);
     line-height: 1.5;
     text-align: center;
 }
@@ -212,7 +213,7 @@ a.auth-logo:hover {
 .field-error {
     display: block;
     color: var(--fgColor-danger);
-    font-size: 12px;
+    font-size: var(--text-caption);
     margin-top: 2px;
     margin-bottom: 4px;
 }
@@ -223,7 +224,7 @@ a.auth-logo:hover {
     border: 1px solid var(--borderColor-danger-muted);
     padding: 10px 12px;
     border-radius: var(--radius-md);
-    font-size: 13px;
+    font-size: var(--text-label);
     margin: 6px 0;
     text-align: center;
 }
@@ -314,7 +315,7 @@ body .w-md-editor {
 }
 
 .loading-overlay-text {
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
 }
 

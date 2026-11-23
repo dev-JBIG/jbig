@@ -126,6 +126,29 @@
   --fontStack-sansSerifDisplay: var(--fontStack-system);
 }
 
+/* 글자 크기 단계 (DESIGN.md 4.3). 컴포넌트 CSS는 px 대신 이 토큰만 쓴다.
+ * 한 화면에서는 보통 4~5단계만 쓰고, 소수점 크기는 만들지 않는다. */
+:root {
+  --text-micro: 11px;    /* 알림 숫자 배지, 모바일 달력 칸 일정 */
+  --text-caption: 12px;  /* 날짜, 조회수, 보조 설명, 배지 */
+  --text-label: 13px;    /* 라벨, 작은 버튼, 메타 정보 */
+  --text-ui: 14px;       /* 메뉴, 입력창, 목록 본문 */
+  --text-body: 15px;     /* 읽는 본문 */
+  --text-lead: 16px;     /* 카드 제목, 강조 문장 */
+  --text-title-s: 18px;  /* 작은 섹션 제목 */
+  --text-title: 20px;    /* 화면 제목 */
+  --text-title-l: 24px;  /* 큰 제목, 숫자 강조 */
+  --text-display: 32px;  /* 프로필 이름 등 가장 큰 글자 */
+}
+
+/* 글자 크기를 따로 정하지 않은 기본 버튼, 입력창은 브라우저 기본값(13.33px) 대신 라벨 크기 */
+button,
+input,
+select,
+textarea {
+  font-size: var(--text-label);
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

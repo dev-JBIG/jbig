@@ -11,7 +11,7 @@
 
 .event-modal-header h2 {
     margin: 0;
-    font-size: 16px;
+    font-size: var(--text-lead);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
 }
@@ -30,7 +30,7 @@
 }
 
 .event-modal-field label {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
 }
@@ -47,13 +47,13 @@
     align-items: center;
     gap: 6px;
     font-weight: 500 !important;
-    font-size: 12px !important;
+    font-size: var(--text-caption) !important;
     color: var(--fgColor-muted, #59636e) !important;
     cursor: pointer;
 }
 
 .event-modal-counter {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #59636e);
 }
 
@@ -61,7 +61,7 @@
 .event-modal-textarea {
     width: 100%;
     padding: 7px 12px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-default, #d1d9e0);
     background-color: var(--bgColor-default, #ffffff);

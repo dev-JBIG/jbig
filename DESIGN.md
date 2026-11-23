@@ -209,6 +209,27 @@ components:
 
 ---
 
+### 4.3 글자 크기와 굵기 단계
+컴포넌트 CSS의 `font-size`는 아래 토큰만 씁니다(`frontend/src/index.css`). 한 화면에서는 보통 4~5단계, 많아도 7단계까지만 쓰고 소수점 크기는 만들지 않습니다. (`font-size-token`)
+
+| 토큰 | 크기 | 쓰는 곳 |
+|---|---|---|
+| `--text-micro` | 11px | 알림 숫자 배지, 모바일 달력 칸 일정 |
+| `--text-caption` | 12px | 날짜, 조회수, 보조 설명, 배지 |
+| `--text-label` | 13px | 라벨, 작은 버튼, 메타 정보, 크기를 정하지 않은 기본 버튼과 입력창 |
+| `--text-ui` | 14px | 메뉴, 입력창, 목록 본문 |
+| `--text-body` | 15px | 읽는 본문 |
+| `--text-lead` | 16px | 카드 제목, 강조 문장 |
+| `--text-title-s` | 18px | 작은 섹션 제목, 게시글 본문 h3 |
+| `--text-title` | 20px | 화면 제목, 게시글 본문 h2 |
+| `--text-title-l` | 24px | 큰 제목, 숫자 강조, 게시글 본문 h1 |
+| `--text-display` | 32px | 프로필 이름 등 가장 큰 글자 |
+
+- 본문 기본 크기는 `--font-size-base`(모바일 14px, 데스크톱 15px)를 그대로 씁니다.
+- 굵기는 400, 500, 600, 700 네 단계입니다. "JBIG" 글자 로고만 800을 씁니다. (`font-weight-scale`)
+- 예외(사유 주석 필수): 첫 화면 큰 제목의 화면 폭 비례 크기(`clamp`), 이력서 인쇄용 pt, 노션 문서 보기의 원본 비율, 이력서 전용 `--resume-fs-*` 크기, 본문 안 코드처럼 부모 기준 `em`/`%`.
+- 참고 근거(2026-11-23 실측): 당근 13·14·16·20px, velog 12·14·16·18px, Apple WWDC 12·14·17·21·28px. 모두 정수 크기이고 화면당 4~6단계입니다.
+
 ## 5. 이미지 및 미디어 최적화 규칙
 - **HDR 배경 감광 방지**: [`frontend/src/index.css`](./frontend/src/index.css)의 전역 `img { dynamic-range-limit: standard; }` 규칙을 반드시 유지합니다. (`hdr-limit`)
 - **업로드 최적화 경로 유지**: 모든 이미지 업로드는 `uploadAttachment` → [`optimizeImageForUpload`](./frontend/src/Utils/imageOptimize.ts)를 거칩니다.
@@ -267,6 +288,8 @@ components:
 | `forbidden-library` | 1 | `package.json`에 bootstrap, jquery 계열 의존성 |
 | `pretendard` | 4 | `index.html`의 Pretendard 로드, `--font-sans` 첫 글꼴, `:root`의 Primer `--fontStack-system` 첫 글꼴 지정 중 하나라도 사라짐 |
 | `hdr-limit` | 5 | `index.css`의 `img { dynamic-range-limit: standard }`가 사라짐 |
+| `font-size-token` | 4.3 | 컴포넌트 CSS의 `font-size`에 px, rem, pt 숫자를 직접 씀 (`var(--text-*)`, `var(--font-size-*)`, `em`, `%`, `inherit`만 허용) |
+| `font-weight-scale` | 4.3 | `font-weight`가 400, 500, 600, 700이 아님 |
 
 ---
 
@@ -314,12 +337,13 @@ components:
 아래는 이 기준선을 시작점으로 순서대로 정리합니다. 정리할 때마다 8절 기준선 숫자가 줄어야 합니다.
 1. **같은 기능의 중복 CSS 통합**: 인증 화면 4종(로그인, 회원가입, 비밀번호 찾기, 비밀번호 변경)의 래퍼, 입력창, 비밀번호 보기 토글, 로고, 링크 / 모달 닫기 버튼 3벌과 배경막 2벌 / 스켈레톤 반짝임 애니메이션 3~4벌 / 말줄임 텍스트 유틸.
 2. **포커스 표시**: 입력창 18곳의 `outline: none`을 토큰 기반 포커스 링으로 교체.
-3. **글자 크기와 굵기 스케일**: 소수점 크기와 450, 800 굵기를 정리하고 크기 토큰을 도입.
+3. ~~**글자 크기와 굵기 스케일**~~: 2026-11-23 완료(4.3절). 화면당 글자 크기 8~11종 → 5~7종.
 4. **dark_dimmed 대비**: 링크, 캘린더 주말 색을 4.5 이상으로.
 5. **`!important` 124곳, 기준점 밖 미디어 쿼리 12곳, 원시 색 16곳, `<div onClick>` 19곳, lazy 누락 `<img>` 14곳, 정의 안 된 변수 1곳** 축소.
 
 ---
 
 ## 10. 변경 이력
+- 2026-11-23: 글자 크기 10단계 토큰(`--text-*`)과 굵기 4단계 도입(4.3절), 소수점 크기 42곳과 450 굵기 정리, `font-size-token`, `font-weight-scale` 검사 추가.
 - 2026-11-23: Primer BaseStyles 때문에 앱 본문에 Pretendard가 적용되지 않던 문제(한글이 맑은 고딕으로 표시)를 Primer 글꼴 토큰 덮어쓰기로 해결하고 `pretendard` 검사에 추가.
 - 2026-11-23: #81 화면을 초기 디자인 기준선으로 지정. YAML 토큰 머리말, 테마별 토큰 표, 8절 자동 검사, 9절 실측 기준선, 4.2절 전북대 메일 입력 추가. 기존 1~7절 규칙은 그대로 유지하고 각 규칙에 검사 ID를 표시.

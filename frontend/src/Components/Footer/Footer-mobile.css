@@ -1,7 +1,7 @@
 @media (max-width: 767px) {
     .footer {
         padding: 16px 12px 24px;
-        font-size: 12px;
+        font-size: var(--text-caption);
         color: var(--fgColor-muted, #59636e);
     }
 

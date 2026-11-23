@@ -33,13 +33,13 @@
 
 .post-not-found h2 {
     margin: 0;
-    font-size: 20px;
+    font-size: var(--text-title);
     color: var(--fgColor-default, #1f2328);
 }
 
 .post-not-found p {
     margin: 0 0 8px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--fgColor-muted, #59636e);
 }
 
@@ -101,7 +101,7 @@
     border-radius: var(--radius-md);
     background: transparent;
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-accent, var(--color-primary));
     font-weight: 600;
     cursor: pointer;
@@ -131,7 +131,7 @@
 
 @media (min-width: 768px) {
     .postdetail-title {
-        font-size: 24px;
+        font-size: var(--text-title-l);
     }
 }
 
@@ -140,7 +140,7 @@
 }
 
 .postdetail-info-row {
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, var(--color-text-secondary));
     display: flex;
     align-items: center;
@@ -193,7 +193,7 @@
     padding: 12px 16px;
     background-color: var(--bgColor-muted, #f6f8fa);
     border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
 }
@@ -208,7 +208,7 @@
     border-radius: 999px;
     background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16));
     color: var(--fgColor-muted, #59636e);
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 600;
 }
 
@@ -231,7 +231,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 14px;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     color: var(--fgColor-accent, #0969da);
     transition: background-color var(--transition-fast);
 }
@@ -349,7 +349,7 @@
 
 .postdetail-heart-burst span::before {
     content: "❤";
-    font-size: 16px;
+    font-size: var(--text-lead);
     color: currentColor;
 }
 
@@ -396,7 +396,7 @@
     top: -10px;
     left: 50%;
     transform: translateX(-50%) translateY(0);
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 700;
     color: var(--fgColor-danger, #cf222e);
     opacity: 0;
@@ -434,7 +434,7 @@
     border: 1px solid var(--borderColor-default, var(--color-border-light));
     border-radius: 999px;
     font: inherit;
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
     cursor: pointer;
     transition: color var(--transition-fast), background-color var(--transition-fast), border-color var(--transition-fast);
@@ -472,7 +472,7 @@
 
 /* 마크다운 본문 - GitHub Markdown / Primer 스타일 */
 .postdetail-content {
-    font-size: 15px;
+    font-size: var(--text-body);
     line-height: 1.7;
     color: var(--fgColor-default, var(--color-text-primary));
     min-height: 200px;
@@ -490,7 +490,7 @@
     border-collapse: separate;
     border-spacing: 0;
     margin: 20px 0;
-    font-size: 14px;
+    font-size: var(--text-ui);
     border: 1px solid var(--borderColor-default, var(--color-border-light));
     border-radius: var(--radius-md);
     overflow: hidden;
@@ -504,7 +504,7 @@
     text-align: center;
     border-bottom: 1px solid var(--borderColor-default, var(--color-border-light));
     border-right: 1px solid var(--borderColor-default, var(--color-border-light));
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .postdetail-content th:last-child {
@@ -515,7 +515,7 @@
     padding: 8px 10px;
     text-align: left;
     line-height: 1.6;
-    font-size: 13px;
+    font-size: var(--text-label);
     border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
@@ -551,7 +551,7 @@
 @media (max-width: 480px) {
     .postdetail-content.form-style td:first-child {
         width: 100px;
-        font-size: 12px;
+        font-size: var(--text-caption);
     }
 }
 
@@ -592,7 +592,7 @@
     overflow-x: auto;
     margin: 16px 0;
     line-height: 1.5;
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .postdetail-content pre code {
@@ -604,7 +604,7 @@
 }
 
 .postdetail-content h1 {
-    font-size: 1.85em;
+    font-size: var(--text-title-l);
     font-weight: 600;
     border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
     padding-bottom: 0.3em;
@@ -615,7 +615,7 @@
 }
 
 .postdetail-content h2 {
-    font-size: 1.45em;
+    font-size: var(--text-title);
     font-weight: 600;
     border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
     padding-bottom: 0.3em;
@@ -626,7 +626,7 @@
 }
 
 .postdetail-content h3 {
-    font-size: 1.2em;
+    font-size: var(--text-title-s);
     font-weight: 600;
     margin-top: 20px;
     margin-bottom: 10px;
@@ -668,7 +668,7 @@
     color: var(--fgColor-default, var(--color-text-primary));
     border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 500;
     cursor: pointer;
     transition: background-color var(--transition-fast);
@@ -682,7 +682,7 @@
     color: var(--fgColor-accent, var(--color-primary));
     font-weight: 600;
     margin-left: 4px;
-    font-size: 12px;
+    font-size: var(--text-caption);
 }
 
 /* --- 모집 정보 카드 (RecruitmentDetail) --- */
@@ -706,7 +706,7 @@
     display: grid;
     grid-template-columns: 96px 1fr;
     gap: 8px 12px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     margin: 0;
 }
 
@@ -747,7 +747,7 @@
 }
 
 .recruitment-status-label {
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, var(--color-text-secondary));
     font-weight: 500;
 }
@@ -775,7 +775,7 @@
     border: 1px solid transparent;
     background: transparent;
     color: var(--fgColor-muted, var(--color-text-secondary));
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
 }
@@ -796,7 +796,7 @@
     text-align: center;
     padding: 20px 12px;
     color: var(--fgColor-muted, var(--color-text-secondary));
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .recruitment-app-list {
@@ -818,7 +818,7 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 6px;
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, var(--color-text-secondary));
 }
 
@@ -827,14 +827,14 @@
 }
 
 .recruitment-app-message {
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--fgColor-default, var(--color-text-primary));
     margin-bottom: 6px;
     white-space: pre-wrap;
 }
 
 .recruitment-app-resume {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, var(--color-text-secondary));
     margin-bottom: 8px;
 }
@@ -867,7 +867,7 @@
 
 .recruitment-modal-card h3 {
     margin: 0 0 12px;
-    font-size: 16px;
+    font-size: var(--text-lead);
     font-weight: 600;
     color: var(--fgColor-default, var(--color-text-primary));
 }
@@ -879,7 +879,7 @@
     border-radius: var(--radius-md);
     background: var(--bgColor-default, var(--color-bg-primary));
     color: var(--fgColor-default, var(--color-text-primary));
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-family: inherit;
     resize: vertical;
     margin-bottom: 14px;

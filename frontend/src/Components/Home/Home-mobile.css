@@ -16,7 +16,7 @@
     }
 
     .logo {
-        font-size: 17px;
+        font-size: var(--text-lead);
         padding: 4px 6px 4px 2px;
         gap: 6px;
     }
@@ -55,7 +55,7 @@
     }
 
     .user-info-name {
-        font-size: 12px;
+        font-size: var(--text-caption);
         overflow: hidden;
         text-overflow: ellipsis;
     }

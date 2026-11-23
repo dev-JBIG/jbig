@@ -4,7 +4,7 @@
     background-color: var(--bgColor-inset, #f6f8fa);
     border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
     margin-top: auto;
-    font-size: 12px;
+    font-size: var(--text-caption);
 }
 
 .footer-inner {
@@ -87,6 +87,6 @@ a.footer-social-link:hover,
     .footer-inner {
         flex-direction: row;
         padding: 20px 24px 28px;
-        font-size: 12.5px;
+        font-size: var(--text-label);
     }
 }

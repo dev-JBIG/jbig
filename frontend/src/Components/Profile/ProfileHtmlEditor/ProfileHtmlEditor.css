@@ -14,7 +14,7 @@
 }
 
 .phe-hint {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #656d76);
     flex: 1 1 240px;
     line-height: 1.5;
@@ -25,11 +25,11 @@
     color: var(--fgColor-default, #1f2328);
     padding: 1px 5px;
     border-radius: var(--radius-sm);
-    font-size: 11px;
+    font-size: var(--text-caption);
 }
 
 .phe-size {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #656d76);
     white-space: nowrap;
 }
@@ -42,7 +42,7 @@
 .phe-error {
     margin: 0;
     color: var(--fgColor-danger, #cf222e);
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .phe-split {
@@ -69,7 +69,7 @@
 
 .phe-pane-label {
     padding: 8px 12px;
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
     color: var(--fgColor-muted, #656d76);
     background: var(--bgColor-muted, #f6f8fa);
@@ -83,7 +83,7 @@
     resize: none;
     padding: 12px;
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
-    font-size: 12.5px;
+    font-size: var(--text-label);
     line-height: 1.6;
     background: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);
@@ -114,7 +114,7 @@
     border: 1px solid var(--borderColor-default, #d0d7de);
     border-radius: var(--radius-md);
     padding: 7px 16px;
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
     transition: background-color var(--transition-fast);

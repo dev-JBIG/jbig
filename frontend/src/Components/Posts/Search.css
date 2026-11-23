@@ -20,7 +20,7 @@
 .search-form select,
 .search-form input {
     height: 36px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     padding: 0 10px;
     box-sizing: border-box;
     border: 1px solid var(--borderColor-default, var(--color-border-medium));

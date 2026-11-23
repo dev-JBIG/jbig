@@ -51,7 +51,7 @@
 
 .postwrite-row label,
 .postwrite-label-bold {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-default, var(--color-text-primary));
 }
@@ -60,7 +60,7 @@
 .postwrite-content-input,
 .board-select,
 .category-select {
-    font-size: 14px;
+    font-size: var(--text-ui);
     padding: 8px 12px;
     border: 1px solid var(--borderColor-default, var(--color-border-medium));
     border-radius: var(--radius-md);
@@ -98,7 +98,7 @@
     border-radius: var(--radius-md);
     background-color: var(--bgColor-muted, var(--color-bg-secondary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, var(--color-text-secondary));
 }
 
@@ -115,7 +115,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     font-weight: 500;
     color: var(--fgColor-default, var(--color-text-primary));
     cursor: pointer;
@@ -123,7 +123,7 @@
 
 .postwrite-checkbox-hint,
 .postwrite-inline-hint {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, var(--color-text-secondary));
     margin-left: 4px;
     font-weight: 400;
@@ -162,7 +162,7 @@
     background-color: var(--bgColor-accent-muted, #ddf4ff);
     color: var(--fgColor-accent, #0969da);
     border: 1px solid var(--borderColor-accent-muted, #54aeff);
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 500;
 }
 
@@ -170,7 +170,7 @@
     background: transparent;
     border: none;
     color: inherit;
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1;
     cursor: pointer;
     padding: 0 2px;
@@ -216,12 +216,12 @@
     color: var(--fgColor-onEmphasis, #ffffff);
     border-radius: var(--radius-sm);
     padding: 2px 6px;
-    font-size: 12px;
+    font-size: var(--text-caption);
     cursor: pointer;
 }
 
 .postwrite-img-hint {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, var(--color-text-secondary));
     margin-top: 4px;
 }
@@ -232,7 +232,7 @@
     background: var(--bgColor-muted, var(--color-bg-secondary));
     border: 1px dashed var(--borderColor-default, var(--color-border-medium));
     color: var(--fgColor-muted, var(--color-text-secondary));
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     line-height: 1.5;
 }
 
@@ -277,13 +277,13 @@
     border-radius: var(--radius-sm);
     background: rgba(27, 31, 36, 0.78);
     color: var(--fgColor-onEmphasis, #ffffff);
-    font-size: 12px;
+    font-size: var(--text-caption);
     padding: 4px 8px;
     cursor: pointer;
 }
 
 .postwrite-file-input {
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-default, var(--color-text-primary));
 }
 
@@ -313,12 +313,12 @@
 }
 
 .postwrite-file-icon {
-    font-size: 18px;
+    font-size: var(--text-title-s);
     flex-shrink: 0;
 }
 
 .file-name {
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     color: var(--fgColor-default, var(--color-text-primary));
     margin-right: auto;
     word-break: break-all;
@@ -326,7 +326,7 @@
 
 .file-size {
     color: var(--fgColor-muted, var(--color-text-secondary));
-    font-size: 12px;
+    font-size: var(--text-caption);
     flex-shrink: 0;
 }
 
@@ -374,14 +374,14 @@
 }
 
 .w-md-editor .w-md-editor-text-input {
-    font-size: 14px !important;
+    font-size: var(--text-ui) !important;
     line-height: 18px !important;
     letter-spacing: 0 !important;
 }
 
 /* 사유서 폼 안내 문구 스타일 */
 .absence-form-notice {
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, var(--color-text-secondary));
     background-color: var(--bgColor-muted, var(--color-bg-secondary));
     border: 1px solid var(--borderColor-default, var(--color-border-light));

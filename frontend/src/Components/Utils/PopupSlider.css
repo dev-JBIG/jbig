@@ -19,7 +19,7 @@
 }
 
 .popup-title {
-    font-size: 16px;
+    font-size: var(--text-lead);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
     margin: 0;
@@ -58,7 +58,7 @@
     padding: 16px 18px;
     line-height: 1.65;
     color: var(--fgColor-default, #1f2328);
-    font-size: 14px;
+    font-size: var(--text-ui);
 }
 
 .popup-text p {
@@ -70,7 +70,7 @@
 }
 
 .popup-post-title {
-    font-size: 15px;
+    font-size: var(--text-body);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
     margin: 0 0 10px;
@@ -79,12 +79,12 @@
 
 .popup-content-loading {
     margin: 0;
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, #59636e);
 }
 
 .popup-post-body {
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.65;
     color: var(--fgColor-default, #1f2328);
 }
@@ -119,14 +119,14 @@
     border: 1px solid var(--borderColor-default, #d1d9e0);
     border-radius: var(--radius-md);
     padding: 7px 10px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     background-color: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);
 }
 
 .popup-congrats-error {
     margin: 0;
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-danger, #d1242f);
 }
 
@@ -137,7 +137,7 @@
     color: var(--button-primary-fgColor-rest, #ffffff);
     border: 1px solid var(--button-primary-borderColor-rest, rgba(31, 35, 40, 0.15));
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
     cursor: pointer;
 }
@@ -176,7 +176,7 @@
 }
 
 .popup-indicator {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     color: var(--fgColor-muted, #59636e);
     min-width: 56px;

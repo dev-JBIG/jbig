@@ -37,7 +37,7 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-muted);
     font-variant-numeric: tabular-nums;

@@ -46,7 +46,8 @@
     padding: 4px 8px 4px 4px;
     border-radius: var(--radius-md);
     color: var(--fgColor-default, #1f2328);
-    font-size: 18px;
+    font-size: var(--text-title-s);
+    /* design-lint-allow font-weight-scale: JBIG 글자 로고는 브랜드 굵기 800 */
     font-weight: 800;
     letter-spacing: -0.03em;
     cursor: pointer;
@@ -126,7 +127,7 @@
 
 .theme-dropdown-header {
     padding: 4px 8px 6px;
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 600;
     color: var(--fgColor-muted, #59636e);
     letter-spacing: 0.02em;
@@ -143,7 +144,7 @@
     background: transparent;
     color: var(--fgColor-default, #1f2328);
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     text-align: left;
     cursor: pointer;
@@ -172,7 +173,7 @@
 }
 
 .theme-option-desc {
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 400;
     color: var(--fgColor-muted, #59636e);
     line-height: 1.25;
@@ -287,7 +288,7 @@
 
 .photo-album-card-title {
     margin: 0;
-    font-size: 14.5px;
+    font-size: var(--text-ui);
     font-weight: 600;
     letter-spacing: -0.015em;
     color: var(--fgColor-default, #1f2328);
@@ -300,7 +301,7 @@
 }
 
 .photo-album-counter {
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 500;
     color: var(--fgColor-muted, #59636e);
     font-variant-numeric: tabular-nums;
@@ -312,7 +313,7 @@
     padding: 4px 8px;
     border-radius: var(--radius-md);
     color: var(--fgColor-muted, #59636e);
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
     transition: background-color var(--transition-fast), color var(--transition-fast);
@@ -366,7 +367,7 @@
     padding: 28px 18px 14px;
     background: linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.78));
     color: var(--fgColor-onEmphasis, #ffffff);
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 500;
     letter-spacing: -0.01em;
 }
@@ -423,7 +424,7 @@
 
 .photo-album-empty {
     color: var(--fgColor-muted, #59636e);
-    font-size: 13px;
+    font-size: var(--text-label);
     padding: 36px 16px;
     width: 100%;
     text-align: center;
@@ -466,20 +467,20 @@
     border-radius: 50%;
     background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.2));
     color: var(--fgColor-default, #1f2328);
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 700;
     flex-shrink: 0;
 }
 
 .user-info-name {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
     white-space: nowrap;
 }
 
 .user-semester-tag {
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 500;
     color: var(--fgColor-muted, #59636e);
 }
@@ -513,13 +514,13 @@
 }
 
 .dropdown-user-name {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
 }
 
 .dropdown-user-email {
-    font-size: 11.5px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #59636e);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -535,7 +536,7 @@
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     color: var(--fgColor-default, #1f2328);
     text-align: left;
@@ -572,7 +573,7 @@
     right: -5px;
     background-color: var(--bgColor-danger-emphasis, #cf222e);
     color: var(--fgColor-onEmphasis, #ffffff);
-    font-size: 10px;
+    font-size: var(--text-micro);
     font-weight: 700;
     min-width: 18px;
     height: 18px;
@@ -609,7 +610,7 @@
 
 .notification-title {
     font-weight: 600;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     color: var(--fgColor-default, #1f2328);
 }
 
@@ -617,7 +618,7 @@
     background: none;
     border: none;
     color: var(--fgColor-accent, #0969da);
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
     cursor: pointer;
     padding: 4px 8px;
@@ -642,7 +643,7 @@
     gap: 8px;
     text-align: center;
     color: var(--fgColor-muted, #59636e);
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .notification-empty-icon {
@@ -675,7 +676,7 @@
 }
 
 .notification-content {
-    font-size: 13px;
+    font-size: var(--text-label);
     line-height: 1.45;
     margin-bottom: 4px;
 }
@@ -690,14 +691,14 @@
 }
 
 .notification-post-title {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-accent, #0969da);
     margin-bottom: 4px;
     font-weight: 500;
 }
 
 .notification-comment {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #59636e);
     background-color: var(--bgColor-muted, #f6f8fa);
     border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
@@ -707,7 +708,7 @@
 }
 
 .notification-time {
-    font-size: 11px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #59636e);
 }
 
@@ -747,7 +748,7 @@
     }
 
     .logo {
-        font-size: 19px;
+        font-size: var(--text-title-s);
     }
 
     .header-search-form {
@@ -775,7 +776,7 @@
         border-radius: var(--radius-md);
         background-color: var(--bgColor-inset, #f6f8fa);
         color: var(--fgColor-default, #1f2328);
-        font-size: 13px;
+        font-size: var(--text-label);
         transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
     }
 
@@ -799,7 +800,7 @@
         background-color: var(--bgColor-default, #ffffff);
         color: var(--fgColor-muted, #59636e);
         font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
-        font-size: 11px;
+        font-size: var(--text-caption);
         line-height: 1;
         pointer-events: none;
     }
@@ -859,7 +860,7 @@
 
 .sidebar-section-heading {
     padding: 4px 10px 3px;
-    font-size: 11.5px;
+    font-size: var(--text-caption);
     font-weight: 600;
     color: var(--fgColor-muted, #59636e);
     letter-spacing: -0.005em;
@@ -896,7 +897,7 @@ a.sidebar-nav-btn,
     border-radius: var(--radius-md);
     background: transparent;
     font-family: inherit;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     font-weight: 400;
     color: var(--fgColor-default, #1f2328);
     text-align: left;
@@ -973,8 +974,8 @@ a.sidebar-external-link,
     border: none;
     background: transparent;
     color: var(--fgColor-muted, #59636e);
-    font-size: 13px;
-    font-weight: 450;
+    font-size: var(--text-label);
+    font-weight: 500;
     text-decoration: none;
     transition: background-color var(--transition-fast), color var(--transition-fast);
 }

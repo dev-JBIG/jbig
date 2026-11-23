@@ -20,7 +20,7 @@
 }
 
 .signup-desc {
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     line-height: 1.55;
     color: var(--fgColor-muted);
     background-color: var(--bgColor-muted);

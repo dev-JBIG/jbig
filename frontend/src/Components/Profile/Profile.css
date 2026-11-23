@@ -45,6 +45,7 @@
 }
 
 .profile-error h2 {
+    /* design-lint-allow font-size-token: 오류 화면의 큰 상태 숫자 표시 */
     font-size: 48px;
     margin-bottom: 16px;
     color: var(--fgColor-default, #1f2328);
@@ -58,7 +59,7 @@
     border: 1px solid rgba(31, 35, 40, 0.15);
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 500;
 }
 
@@ -83,7 +84,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
+    font-size: var(--text-display);
     font-weight: 600;
     color: var(--fgColor-onEmphasis, #ffffff);
     flex-shrink: 0;
@@ -114,7 +115,7 @@
 }
 
 .profile-username {
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 500;
     color: var(--resume-color-meta);
 }
@@ -141,12 +142,12 @@
     border: 1px solid var(--borderColor-accent-muted, #54aeff);
     padding: 2px 10px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 600;
 }
 
 .profile-location {
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--resume-color-muted);
 }
 
@@ -158,7 +159,7 @@
 
 .profile-id {
     color: var(--resume-color-meta);
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .profile-joined {
@@ -186,7 +187,7 @@
 .btn-delete-account {
     padding: 7px 16px;
     border-radius: var(--radius-md);
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
     transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
@@ -262,7 +263,7 @@
     border: none;
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 500;
     color: var(--resume-color-meta);
     cursor: pointer;
@@ -326,7 +327,7 @@
     padding: 16px;
     border: 1px solid var(--resume-color-border);
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.6;
     resize: vertical;
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -340,7 +341,7 @@
 
 .editor-hint {
     margin-top: 8px;
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--resume-color-meta);
 }
 
@@ -357,9 +358,9 @@
     color: var(--resume-color-text);
 }
 
-.resume-content h1 { font-size: 24px; }
-.resume-content h2 { font-size: 20px; }
-.resume-content h3 { font-size: 16px; }
+.resume-content h1 { font-size: var(--text-title-l); }
+.resume-content h2 { font-size: var(--text-title); }
+.resume-content h3 { font-size: var(--text-lead); }
 
 .resume-content p {
     margin-bottom: 12px;
@@ -376,7 +377,7 @@
     color: var(--fgColor-default, #1f2328);
     padding: 2px 6px;
     border-radius: var(--radius-sm);
-    font-size: 13px;
+    font-size: var(--text-label);
 }
 
 .resume-content pre {
@@ -401,7 +402,7 @@
 
 .empty-text {
     color: var(--resume-color-meta);
-    font-size: 14px;
+    font-size: var(--text-ui);
     text-align: center;
     padding: 20px;
 }
@@ -434,7 +435,7 @@
 }
 
 .item-title {
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--resume-color-text);
     font-weight: 500;
     flex: 1;
@@ -445,7 +446,7 @@
 }
 
 .item-content {
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--resume-color-text);
     font-weight: 500;
     flex: 1;
@@ -456,7 +457,7 @@
 }
 
 .item-meta {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--resume-color-meta);
     flex-shrink: 0;
 }
@@ -477,7 +478,7 @@
 }
 
 .comment-post-title {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--resume-color-muted);
     width: 100%;
@@ -491,7 +492,7 @@
 }
 
 .comment-content {
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--resume-color-text);
     flex: 1;
     overflow: hidden;
@@ -500,7 +501,7 @@
 }
 
 .comment-date {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--resume-color-meta);
     flex-shrink: 0;
 }
@@ -509,7 +510,7 @@
     text-align: center;
     padding: 64px 20px;
     color: var(--resume-color-meta);
-    font-size: 14px;
+    font-size: var(--text-ui);
 }
 
 /* ============================================================
@@ -541,7 +542,7 @@
 
 .modal-content h3 {
     margin: 0 0 14px 0;
-    font-size: 18px;
+    font-size: var(--text-title-s);
     font-weight: 600;
     /* 모달은 프로필 영역 밖(앱 포털)에 그려지므로 프로필 전용 변수 대신 같은 값의 Primer 토큰을 쓴다 */
     color: var(--fgColor-default);
@@ -549,7 +550,7 @@
 
 .modal-warning {
     color: var(--fgColor-danger, #cf222e);
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.6;
     margin-bottom: 18px;
 }
@@ -561,7 +562,7 @@
     border-radius: var(--radius-md);
     background: var(--bgColor-default, #ffffff);
     color: var(--fgColor-default, #1f2328);
-    font-size: 14px;
+    font-size: var(--text-ui);
     margin-bottom: 18px;
     box-sizing: border-box;
 }
@@ -581,7 +582,7 @@
     flex: 1;
     padding: 9px 16px;
     border-radius: var(--radius-md);
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
     cursor: pointer;
     transition: background-color var(--transition-fast);
@@ -629,11 +630,11 @@
     .profile-avatar {
         width: 80px;
         height: 80px;
-        font-size: 32px;
+        font-size: var(--text-display);
     }
 
     .profile-name {
-        font-size: 24px;
+        font-size: var(--text-title-l);
     }
 
     .profile-actions {
@@ -658,7 +659,7 @@
     }
 
     .item-meta {
-        font-size: 11px;
+        font-size: var(--text-caption);
     }
 }
 
@@ -678,7 +679,7 @@
     background: transparent;
     padding: 6px 16px;
     border-radius: var(--radius-sm);
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     font-weight: 500;
     color: var(--fgColor-muted, #656d76);
     cursor: pointer;
@@ -764,21 +765,24 @@
     .profile-avatar {
         width: 72px;
         height: 72px;
-        font-size: 28px;
+        font-size: var(--text-title-l);
         background: var(--bgColor-muted, #e2e8f0) !important;
         color: var(--fgColor-default, #0f172a) !important;
     }
 
     .profile-name {
+        /* design-lint-allow font-size-token: 이력서 인쇄(PDF) 크기는 pt 단위 */
         font-size: 22pt;
     }
 
     .profile-headline {
+        /* design-lint-allow font-size-token: 이력서 인쇄(PDF) 크기는 pt 단위 */
         font-size: 11pt;
     }
 
     .profile-meta,
     .profile-joined {
+        /* design-lint-allow font-size-token: 이력서 인쇄(PDF) 크기는 pt 단위 */
         font-size: 9pt;
     }
 
@@ -812,6 +816,7 @@
     }
 
     .section-title {
+        /* design-lint-allow font-size-token: 이력서 인쇄(PDF) 크기는 pt 단위 */
         font-size: 12pt;
     }
 

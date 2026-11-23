@@ -45,7 +45,7 @@
 
 .primer-calendar-month {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--text-ui);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
     letter-spacing: -0.015em;
@@ -60,7 +60,7 @@
 
 .primer-calendar-nav-btn {
     padding: 3px 9px;
-    font-size: 12px;
+    font-size: var(--text-caption);
     font-weight: 500;
     border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-default, #d1d9e0);
@@ -115,7 +115,7 @@
 .primer-calendar-weekday {
     text-align: center;
     padding: 6px 2px;
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 600;
     color: var(--fgColor-muted, #59636e);
 }
@@ -177,7 +177,7 @@
     min-width: 20px;
     height: 20px;
     padding: 0 4px;
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 500;
     border-radius: 999px;
     color: var(--fgColor-default, #1f2328);
@@ -216,7 +216,7 @@
     background-color: var(--bgColor-muted, #f6f8fa);
     background-color: color-mix(in srgb, var(--event-color, #0969da) 10%, var(--bgColor-muted, #f6f8fa));
     color: var(--fgColor-default, #1f2328);
-    font-size: 11px;
+    font-size: var(--text-caption);
     line-height: 1.3;
     text-align: left;
     cursor: pointer;
@@ -254,7 +254,7 @@
     border: none;
     background: transparent;
     padding: 1px 3px;
-    font-size: 10px;
+    font-size: var(--text-micro);
     font-weight: 600;
     color: var(--fgColor-accent, #0969da);
     text-align: left;
@@ -287,7 +287,7 @@
 
 .primer-calendar-modal-header h3 {
     margin: 0;
-    font-size: 15px;
+    font-size: var(--text-body);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
     overflow: hidden;
@@ -323,7 +323,7 @@
 
 .primer-calendar-detail-label {
     display: block;
-    font-size: 11px;
+    font-size: var(--text-caption);
     font-weight: 600;
     color: var(--fgColor-muted, #59636e);
     margin-bottom: 2px;
@@ -331,7 +331,7 @@
 
 .primer-calendar-detail-row p {
     margin: 0;
-    font-size: 14px;
+    font-size: var(--text-ui);
     color: var(--fgColor-default, #1f2328);
     line-height: 1.5;
     word-break: break-word;
@@ -391,13 +391,13 @@
 }
 
 .primer-calendar-day-list-text strong {
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
 }
 
 .primer-calendar-day-list-text span {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, #59636e);
 }
 
@@ -408,7 +408,7 @@
     }
 
     .primer-calendar-event {
-        font-size: 10px;
+        font-size: var(--text-micro);
         padding: 1px 3px;
     }
 }

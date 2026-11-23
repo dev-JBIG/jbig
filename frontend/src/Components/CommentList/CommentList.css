@@ -34,7 +34,7 @@
     font-weight: 600;
     margin-bottom: 4px;
     color: var(--fgColor-default, var(--color-text-primary));
-    font-size: 14px;
+    font-size: var(--text-ui);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -43,14 +43,14 @@
 .user-comment-item .user-comment-content {
     color: var(--fgColor-muted, var(--color-text-secondary));
     margin-bottom: 4px;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .user-comment-item .user-comment-date {
-    font-size: 12px;
+    font-size: var(--text-caption);
     color: var(--fgColor-muted, var(--color-text-tertiary));
 }
 
@@ -59,6 +59,6 @@
     text-align: center;
     padding: 14px;
     color: var(--fgColor-muted, var(--color-text-secondary));
-    font-size: 13px;
+    font-size: var(--text-label);
     border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
