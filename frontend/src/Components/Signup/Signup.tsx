@@ -5,14 +5,14 @@ import { signupUser } from "../../API/req";
 import { useAlert } from "../Utils/AlertContext";
 import { useJbnuEmail } from "../Utils/useJbnuEmail";
 import JbnuEmailInput from "../Utils/JbnuEmailInput";
+import { EMAIL_DOMAIN_MESSAGE, PASSWORD_RULE_MESSAGE, isValidEmailDomain, isValidPassword } from "../Utils/authValidation";
+import AuthLayout from "../Utils/AuthLayout";
+import PasswordInput from "../Utils/PasswordInput";
+import LoadingOverlay from "../Utils/LoadingOverlay";
 import "./Signup.css";
 import EmailVerification from "./EmailVerification";
 
-const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
 const isValidSemester = (n: number) => Number.isInteger(n) && n >= 1 && n < 100;
-// 8~16자, 영문/숫자 각 1개 이상, 특수문자 ! 또는 @ 최소 1개 포함
-const isValidPassword = (pwd: string) =>
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const Signup: React.FC = () => {
     // 단계: 1) 정보 입력/회원가입 요청(인증코드 발송) -> 2) 이메일 인증 코드 검증
@@ -44,7 +44,7 @@ const Signup: React.FC = () => {
 
         // 검증
         if (!isValidEmailDomain(trimmedEmail)) {
-            showAlert({ message: "전북대 이메일(@jbnu.ac.kr)만 사용할 수 있습니다.", type: 'warning' });
+            showAlert({ message: EMAIL_DOMAIN_MESSAGE, type: 'warning' });
             return;
         }
         if (!trimmedUserId) {
@@ -56,7 +56,7 @@ const Signup: React.FC = () => {
             return;
         }
         if (!isValidPassword(trimmedPwd)) {
-            showAlert({ message: "비밀번호는 8~16자이며, 영문/숫자 각 1개 이상과 특수문자(!,@)를 포함해야 합니다.", type: 'warning' });
+            showAlert({ message: PASSWORD_RULE_MESSAGE, type: 'warning' });
             return;
         }
         if (password !== confirmPassword) {
@@ -83,120 +83,99 @@ const Signup: React.FC = () => {
     };
 
     return (
-        <div className="auth-page">
-            <div className="auth-card signup-container">
-                <div className="auth-title-row">
-                    <Link to="/" className="auth-logo">
-                        <img src="/JBIG-logo-192.png" alt="" className="brand-mark" aria-hidden="true" decoding="async" />
-                        <span>JBIG</span>
-                    </Link>
-                    <h2 className="auth-title">회원가입</h2>
-                </div>
+        <AuthLayout title="회원가입" cardClassName="signup-container">
+            {step === 1 && (
+                <>
+                    <form className="auth-form signup-form" onSubmit={handleSignupRequest}>
+                        <label className="auth-label signup-label" htmlFor="email">이메일</label>
+                        <JbnuEmailInput
+                            className="auth-input signup-input"
+                            id="email"
+                            value={emailLocal}
+                            onChange={onEmailChange}
+                            required
+                            placeholder="학교메일"
+                        />
 
-                {step === 1 && (
-                    <>
-                        <form className="auth-form signup-form" onSubmit={handleSignupRequest}>
-                            <label className="auth-label signup-label" htmlFor="email">이메일</label>
-                            <JbnuEmailInput
-                                className="auth-input signup-input"
-                                id="email"
-                                value={emailLocal}
-                                onChange={onEmailChange}
-                                required
-                                placeholder="학교메일"
-                            />
+                        <label className="auth-label signup-label" htmlFor="userId">이름</label>
+                        <input
+                            className="auth-input signup-input"
+                            id="userId"
+                            type="text"
+                            value={userId}
+                            placeholder="예: 홍길동"
+                            onChange={(e) => setUserId(e.target.value)}
+                            required
+                        />
 
-                            <label className="auth-label signup-label" htmlFor="userId">이름</label>
-                            <input
-                                className="auth-input signup-input"
-                                id="userId"
-                                type="text"
-                                value={userId}
-                                placeholder="예: 홍길동"
-                                onChange={(e) => setUserId(e.target.value)}
-                                required
-                            />
+                        <label className="auth-label signup-label" htmlFor="semester">기수 (숫자)</label>
+                        <input
+                            className="auth-input signup-input"
+                            id="semester"
+                            type="number"
+                            min={1}
+                            max={99}
+                            value={semester ?? ""}
+                            onChange={(e) => {
+                                const v = e.target.value;
+                                setSemester(v === "" ? null : Number(v));
+                            }}
+                            required
+                        />
 
-                            <label className="auth-label signup-label" htmlFor="semester">기수 (숫자)</label>
-                            <input
-                                className="auth-input signup-input"
-                                id="semester"
-                                type="number"
-                                min={1}
-                                max={99}
-                                value={semester ?? ""}
-                                onChange={(e) => {
-                                    const v = e.target.value;
-                                    setSemester(v === "" ? null : Number(v));
-                                }}
-                                required
-                            />
+                        <label className="auth-label signup-label" htmlFor="password">
+                            비밀번호
+                        </label>
+                        {/* 보이기를 누르면 아래 비밀번호 확인 칸도 함께 보인다 */}
+                        <PasswordInput
+                            rowClassName="auth-input-row"
+                            toggleClassName="auth-toggle"
+                            visible={showPassword}
+                            onVisibleChange={setShowPassword}
+                            className="auth-input signup-input"
+                            id="password"
+                            value={password}
+                            placeholder="숫자 + 영문 + !,@"
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <label className="auth-label signup-label" htmlFor="confirmPassword">
+                            비밀번호 확인
+                        </label>
+                        <input
+                            className="auth-input signup-input"
+                            id="confirmPassword"
+                            type={showPassword ? "text" : "password"}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            required
+                            placeholder="숫자 + 영문 + !,@"
+                        />
 
-                            <label className="auth-label signup-label" htmlFor="password">
-                                비밀번호
-                            </label>
-                            <div className="auth-input-row">
-                                <input
-                                    className="auth-input signup-input"
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    placeholder="숫자 + 영문 + !,@"
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    className="auth-toggle"
-                                    onClick={() => setShowPassword((prev) => !prev)}
-                                >
-                                    {showPassword ? "숨기기" : "보이기"}
-                                </button>
-                            </div>
-                            <label className="auth-label signup-label" htmlFor="confirmPassword">
-                                비밀번호 확인
-                            </label>
-                            <input
-                                className="auth-input signup-input"
-                                id="confirmPassword"
-                                type={showPassword ? "text" : "password"}
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                required
-                                placeholder="숫자 + 영문 + !,@"
-                            />
+                        <Button variant="primary" block className="auth-submit" type="submit" disabled={loading}>
+                            인증코드 받기
+                        </Button>
+                    </form>
 
-                            <Button variant="primary" block className="auth-submit" type="submit" disabled={loading}>
-                                인증코드 받기
-                            </Button>
-                        </form>
-
-                        <div className="auth-links">
-                            <Link to="/signin" className="auth-link">이미 가입을 시도하셨나요? 로그인하여 이메일 인증을 이어가세요.</Link>
-                        </div>
-                    </>
-                )}
-
-                {step === 2 && (
-                    <EmailVerification
-                        email={email.trim()}
-                        initialExpiresAt={expiresAt}
-                        onVerified={() => showAlert({
-                            message: "회원가입이 완료되었습니다. 로그인해주세요.",
-                            type: 'success',
-                            onClose: () => navigate("/signin")
-                        })}
-                    />
-                )}
-            </div>
-            {loading && (
-                <div className="loading-overlay">
-                    <div className="loading-spinner" />
-                    <div className="loading-text">처리 중...</div>
-                </div>
+                    <div className="auth-links">
+                        <Link to="/signin" className="auth-link">이미 가입을 시도하셨나요? 로그인하여 이메일 인증을 이어가세요.</Link>
+                    </div>
+                </>
             )}
 
-        </div>
+            {step === 2 && (
+                <EmailVerification
+                    email={email.trim()}
+                    initialExpiresAt={expiresAt}
+                    onVerified={() => showAlert({
+                        message: "회원가입이 완료되었습니다. 로그인해주세요.",
+                        type: 'success',
+                        onClose: () => navigate("/signin")
+                    })}
+                />
+            )}
+            {loading && <LoadingOverlay label="처리 중..." />}
+        </AuthLayout>
     );
 };
 

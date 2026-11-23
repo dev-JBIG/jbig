@@ -23,13 +23,10 @@
     "src/Components/Competitions/Arena.tsx": 2
   },
   "img-lazy": {
-    "src/Components/Admin/Admin.tsx": 2,
-    "src/Components/ChangePWD/ChangePWD.tsx": 1,
-    "src/Components/Home/Home.tsx": 2,
+    "src/Components/Admin/Admin.tsx": 1,
+    "src/Components/Home/Home.tsx": 1,
     "src/Components/Posts/PostWrite.tsx": 5,
     "src/Components/Profile/Profile.tsx": 1,
-    "src/Components/Signin/Signin.tsx": 1,
-    "src/Components/Signup/Signup.tsx": 1,
     "src/Components/Utils/PopupSlider.tsx": 1
   },
   "important": {
@@ -61,7 +58,6 @@
     "src/Components/Profile/Profile.css": 2,
     "src/Components/Profile/ProfileBlockEditor/ProfileBlockEditor.css": 1,
     "src/Components/Profile/ProfileHtmlEditor/ProfileHtmlEditor.css": 1,
-    "src/Components/User-changePWD/User-changePWD.css": 1,
     "src/Components/Utils/LoginModal.css": 1
   },
   "raw-color": {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspens
 import { useParams, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useUser } from "../Utils/UserContext";
 import { fetchPublicProfile, fetchPublicProfileActivity, updateProfileBlocks, updateProfileHtml, PublicProfile, deleteAccount } from "../../API/req";
+import { Spinner } from "@primer/react";
 import { useAlert } from "../Utils/AlertContext";
 import Dialog from "../Utils/Dialog";
 import { ProfileBlock, IdentityBlock } from "./types";
@@ -230,7 +231,7 @@ const Profile: React.FC = () => {
         return (
             <div className="profile-container">
                 <div className="profile-loading">
-                    <div className="loading-spinner" />
+                    <Spinner size="medium" className="profile-loading-spinner" />
                     <p>로딩 중...</p>
                 </div>
             </div>
@@ -344,7 +345,7 @@ const Profile: React.FC = () => {
                             HTML 업로드
                         </button>
                     </div>
-                    <Suspense fallback={<div className="profile-loading"><div className="loading-spinner" /><p>에디터 로딩 중...</p></div>}>
+                    <Suspense fallback={<div className="profile-loading"><Spinner size="medium" className="profile-loading-spinner" /><p>에디터 로딩 중...</p></div>}>
                         {editTab === 'blocks' ? (
                             <ProfileBlockEditor
                                 blocks={blocks}

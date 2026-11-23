@@ -9,6 +9,7 @@
  *  3. 오버레이      .overlay-backdrop, .overlay-panel, .overlay-header, .overlay-close
  *  4. 스켈레톤      .skeleton-shimmer
  *  5. 마크다운 에디터 글꼴  .w-md-editor
+ *  6. 처리 중 표시   .loading-overlay
  */
 
 /* 1. 브랜드 마크: 실제 JBIG 마스코트(/JBIG-logo-192.png). 크기와 라운드는 쓰는 곳에서 정한다 */
@@ -285,6 +286,36 @@ a.auth-logo:hover {
 body .w-md-editor {
     --md-editor-font-family: var(--fontStack-system);
     font-family: var(--fontStack-system);
+}
+
+/* 6. 화면 전체를 덮는 처리 중 표시 (LoadingOverlay: 회원가입 인증코드 요청 등) */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--overlay-backdrop-bgColor);
+}
+
+/* 배경막은 테마마다 밝기가 달라 글자를 바로 올리면 안 읽힌다. 작은 오버레이 패널 안에 둔다 */
+.loading-overlay-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 28px;
+    background-color: var(--overlay-bgColor);
+    color: var(--fgColor-default);
+    border: 1px solid var(--borderColor-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-floating-large);
+}
+
+.loading-overlay-text {
+    font-size: 14px;
+    font-weight: 600;
 }
 
 /* 4. 스켈레톤(불러오는 중 자리 표시) -------------------------------------- */

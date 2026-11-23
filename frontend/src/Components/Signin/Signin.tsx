@@ -7,15 +7,14 @@ import {signin} from "../../API/req";
 import {useUser} from "../Utils/UserContext";
 import {useJbnuEmail} from "../Utils/useJbnuEmail";
 import JbnuEmailInput from "../Utils/JbnuEmailInput";
+import { getEmailError, getPasswordError } from "../Utils/authValidation";
+import AuthLayout from "../Utils/AuthLayout";
+import PasswordInput from "../Utils/PasswordInput";
 
-const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
-const isValidPassword = (pwd: string) =>
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const Signin: React.FC = () => {
     const { email: userId, value: userIdLocal, onChange: onUserIdChange } = useJbnuEmail();
     const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
     const [loading, setLoading] = useState(false);
@@ -25,17 +24,8 @@ const Signin: React.FC = () => {
     const navigate = useNavigate();
     const { setAuth } = useUser();
 
-    const validateEmail = (value: string) => {
-        if (!value.trim()) return "이메일을 입력해주세요.";
-        if (!isValidEmailDomain(value)) return "전북대 이메일(@jbnu.ac.kr)만 사용할 수 있습니다.";
-        return undefined;
-    };
-
-    const validatePassword = (value: string) => {
-        if (!value) return "비밀번호를 입력해주세요.";
-        if (!isValidPassword(value)) return "8~16자, 영문/숫자 각 1개 이상, 특수문자(!,@) 포함";
-        return undefined;
-    };
+    const validateEmail = getEmailError;
+    const validatePassword = getPasswordError;
 
     const handleEmailBlur = () => {
         const err = validateEmail(userId);
@@ -78,7 +68,7 @@ const Signin: React.FC = () => {
                 navigate("/");
             } else if (result.status === 401 && result.errorCode === "ACCOUNT_NOT_VERIFIED") {
                 setPassword("");
-                setShowPassword(false);
+                // 인증 화면으로 바뀌며 비밀번호 칸이 내려가므로, 돌아오면 보임 상태도 처음(가림)부터 시작한다
                 setFieldErrors({});
                 setVerificationEmail(userId.trim());
             } else {
@@ -92,87 +82,70 @@ const Signin: React.FC = () => {
     };
 
     return (
-        <div className="auth-page">
-            <div className="auth-card">
-                <div className="auth-title-row">
-                    <Link to="/" className="auth-logo">
-                        <img src="/JBIG-logo-192.png" alt="" className="brand-mark" aria-hidden="true" decoding="async" />
-                        <span>JBIG</span>
-                    </Link>
-                    <h2 className="auth-title">로그인</h2>
-                </div>
-                {verificationEmail !== null ? (
-                    <>
-                        <p className="signin-verify-lead">이메일 인증을 마저 완료해주세요</p>
-                        <EmailVerification
-                            email={verificationEmail}
-                            onVerified={() => {
-                                setVerificationEmail(null);
-                                setNotice("이메일 인증이 완료되었습니다. 비밀번호를 입력하여 로그인해주세요.");
+        <AuthLayout title="로그인">
+            {verificationEmail !== null ? (
+                <>
+                    <p className="signin-verify-lead">이메일 인증을 마저 완료해주세요</p>
+                    <EmailVerification
+                        email={verificationEmail}
+                        onVerified={() => {
+                            setVerificationEmail(null);
+                            setNotice("이메일 인증이 완료되었습니다. 비밀번호를 입력하여 로그인해주세요.");
+                        }}
+                        onBack={() => setVerificationEmail(null)}
+                    />
+                </>
+            ) : (
+                <>
+                    {notice && <p className="auth-status-banner" role="status">{notice}</p>}
+                    <form className="auth-form" onSubmit={handleSubmit}>
+                        <label className="auth-label" htmlFor="userid">
+                            아이디 (이메일)
+                        </label>
+                        <JbnuEmailInput
+                            className="auth-input"
+                            placeholder="학교메일"
+                            invalid={!!fieldErrors.email}
+                            id="userid"
+                            value={userIdLocal}
+                            onChange={(e) => {
+                                onUserIdChange(e);
+                                if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
                             }}
-                            onBack={() => setVerificationEmail(null)}
+                            onBlur={handleEmailBlur}
                         />
-                    </>
-                ) : (
-                    <>
-                        {notice && <p className="auth-status-banner" role="status">{notice}</p>}
-                        <form className="auth-form" onSubmit={handleSubmit}>
-                            <label className="auth-label" htmlFor="userid">
-                                아이디 (이메일)
-                            </label>
-                            <JbnuEmailInput
-                                className="auth-input"
-                                placeholder="학교메일"
-                                invalid={!!fieldErrors.email}
-                                id="userid"
-                                value={userIdLocal}
-                                onChange={(e) => {
-                                    onUserIdChange(e);
-                                    if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
-                                }}
-                                onBlur={handleEmailBlur}
-                            />
-                            {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
+                        {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
 
-                            <label className="auth-label" htmlFor="password">
-                                비밀번호
-                            </label>
-                            <div className="auth-input-row">
-                                <input
-                                    className={`auth-input ${fieldErrors.password ? "input-error" : ""}`}
-                                    id="password"
-                                    type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    onChange={(e) => {
-                                        setPassword(e.target.value);
-                                        if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
-                                    }}
-                                    onBlur={handlePasswordBlur}
-                                />
-                                <button
-                                    type="button"
-                                    className="auth-toggle"
-                                    onClick={() => setShowPassword((prev) => !prev)}
-                                >
-                                    {showPassword ? "숨기기" : "보이기"}
-                                </button>
-                            </div>
-                            {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+                        <label className="auth-label" htmlFor="password">
+                            비밀번호
+                        </label>
+                        <PasswordInput
+                            rowClassName="auth-input-row"
+                            toggleClassName="auth-toggle"
+                            className={`auth-input ${fieldErrors.password ? "input-error" : ""}`}
+                            id="password"
+                            value={password}
+                            onChange={(e) => {
+                                setPassword(e.target.value);
+                                if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
+                            }}
+                            onBlur={handlePasswordBlur}
+                        />
+                        {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
 
-                            {error && <div className="form-error" role="alert">{error}</div>}
+                        {error && <div className="form-error" role="alert">{error}</div>}
 
-                            <Button variant="primary" block className="auth-submit signin-submit-btn" type="submit" disabled={loading}>
-                                {loading ? "로그인 중..." : "로그인"}
-                            </Button>
-                        </form>
-                        <div className="auth-links">
-                            <Link to="/signup" className="auth-link">가입하기</Link>
-                            <Link to="/changepwd" className="auth-link">비밀번호를 잊어버리셨나요?</Link>
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
+                        <Button variant="primary" block className="auth-submit signin-submit-btn" type="submit" disabled={loading}>
+                            {loading ? "로그인 중..." : "로그인"}
+                        </Button>
+                    </form>
+                    <div className="auth-links">
+                        <Link to="/signup" className="auth-link">가입하기</Link>
+                        <Link to="/changepwd" className="auth-link">비밀번호를 잊어버리셨나요?</Link>
+                    </div>
+                </>
+            )}
+        </AuthLayout>
     );
 };
 

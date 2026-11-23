@@ -7,12 +7,10 @@ import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
 import { useJbnuEmail } from "../Utils/useJbnuEmail";
 import JbnuEmailInput from "../Utils/JbnuEmailInput";
+import { EMAIL_DOMAIN_MESSAGE, PASSWORD_RULE_MESSAGE, isValidEmailDomain, isValidPassword } from "../Utils/authValidation";
+import AuthLayout from "../Utils/AuthLayout";
 
 // 이메일 도메인 유효성 검사
-const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
-// 8~16자, 영문/숫자 각 1개 이상, 특수문자 ! 또는 @ 최소 1개 포함
-const isValidPassword = (pwd: string) =>
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const ChangePWD: React.FC = () => {
     const { email, value: emailLocal, onChange: onEmailChange } = useJbnuEmail();
@@ -55,7 +53,7 @@ const ChangePWD: React.FC = () => {
     const handleRequestCode = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!isValidEmailDomain(email.trim())) {
-            showAlert({ message: "전북대 이메일(@jbnu.ac.kr)만 사용할 수 있습니다.", type: 'warning' });
+            showAlert({ message: EMAIL_DOMAIN_MESSAGE, type: 'warning' });
             return;
         }
 
@@ -104,7 +102,7 @@ const ChangePWD: React.FC = () => {
     const handleSubmitNewPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!isValidPassword(newPassword)) {
-            showAlert({ message: "비밀번호는 8~16자이며, 영문/숫자 각 1개 이상과 특수문자(!,@)를 포함해야 합니다.", type: 'warning' });
+            showAlert({ message: PASSWORD_RULE_MESSAGE, type: 'warning' });
             return;
         }
         if (newPassword !== confirmPassword) {
@@ -140,101 +138,91 @@ const ChangePWD: React.FC = () => {
     };
 
     return (
-        <div className="auth-page">
-            <div className="auth-card changepwd-container">
-                <div className="auth-title-row">
-                    <Link to="/" className="auth-logo">
-                        <img src="/JBIG-logo-192.png" alt="" className="brand-mark" aria-hidden="true" decoding="async" />
-                        <span>JBIG</span>
-                    </Link>
-                    <h2 className="auth-title changepwd-title">비밀번호 찾기</h2>
-                </div>
+        <AuthLayout title="비밀번호 찾기" cardClassName="changepwd-container" titleClassName="changepwd-title">
+            {/* 1단계: 이메일 입력 */}
+            {!isCodeSent && (
+                <form className="auth-form" onSubmit={handleRequestCode}>
+                    <label className="auth-label" htmlFor="email">
+                        아이디
+                    </label>
+                    <JbnuEmailInput
+                        className="auth-input changepwd-input"
+                        id="email"
+                        value={emailLocal}
+                        onChange={onEmailChange}
+                        placeholder="학교메일"
+                        disabled={isLoading}
+                    />
+                    <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
+                        {isLoading ? "전송 중..." : "인증코드 받기"}
+                    </Button>
+                </form>
+            )}
 
-                {/* 1단계: 이메일 입력 */}
-                {!isCodeSent && (
-                    <form className="auth-form" onSubmit={handleRequestCode}>
-                        <label className="auth-label" htmlFor="email">
-                            아이디
-                        </label>
-                        <JbnuEmailInput
-                            className="auth-input changepwd-input"
-                            id="email"
-                            value={emailLocal}
-                            onChange={onEmailChange}
-                            placeholder="학교메일"
-                            disabled={isLoading}
-                        />
-                        <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
-                            {isLoading ? "전송 중..." : "인증코드 받기"}
-                        </Button>
-                    </form>
-                )}
-
-                {/* 2단계: 인증코드 입력 */}
-                {isCodeSent && !isCodeVerified && (
-                    <form className="auth-form" onSubmit={handleVerifyCode}>
-                        <label className="auth-label" htmlFor="verificationCode">
-                            인증코드
-                        </label>
-                        <div className="changepwd-code-row">
-                            <input
-                                className="auth-input changepwd-input"
-                                id="verificationCode"
-                                type="text"
-                                value={verificationCode}
-                                onChange={(e) => setVerificationCode(e.target.value)}
-                                placeholder="이메일로 받은 인증코드를 입력하세요"
-                                disabled={isLoading}
-                            />
-                            <span className={`changepwd-timer${timer <= 60 ? " is-expiring" : ""}`}>
-                                {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
-                            </span>
-                        </div>
-
-                        <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
-                            {isLoading ? "확인 중..." : "인증코드 확인"}
-                        </Button>
-                    </form>
-                )}
-
-                {/* 3단계: 새 비밀번호 입력 */}
-                {isCodeVerified && (
-                    <form className="auth-form" onSubmit={handleSubmitNewPassword}>
-                        <label className="auth-label" htmlFor="newPassword">
-                            새 비밀번호
-                        </label>
+            {/* 2단계: 인증코드 입력 */}
+            {isCodeSent && !isCodeVerified && (
+                <form className="auth-form" onSubmit={handleVerifyCode}>
+                    <label className="auth-label" htmlFor="verificationCode">
+                        인증코드
+                    </label>
+                    <div className="changepwd-code-row">
                         <input
                             className="auth-input changepwd-input"
-                            id="newPassword"
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="영문, 숫자, 특수문자(!@) 포함 8~16자"
+                            id="verificationCode"
+                            type="text"
+                            value={verificationCode}
+                            onChange={(e) => setVerificationCode(e.target.value)}
+                            placeholder="이메일로 받은 인증코드를 입력하세요"
                             disabled={isLoading}
                         />
-                        <label className="auth-label" htmlFor="confirmPassword">
-                            새 비밀번호 확인
-                        </label>
-                        <input
-                            className="auth-input changepwd-input"
-                            id="confirmPassword"
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="비밀번호를 다시 한번 입력하세요"
-                            disabled={isLoading}
-                        />
-                        <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
-                            {isLoading ? "변경 중..." : "비밀번호 변경"}
-                        </Button>
-                    </form>
-                )}
+                        <span className={`changepwd-timer${timer <= 60 ? " is-expiring" : ""}`}>
+                            {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
+                        </span>
+                    </div>
 
-                <div className="auth-links changepwd-links">
-                    <Link to="/signin" className="auth-link">로그인하기</Link>
-                </div>
+                    <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
+                        {isLoading ? "확인 중..." : "인증코드 확인"}
+                    </Button>
+                </form>
+            )}
+
+            {/* 3단계: 새 비밀번호 입력 */}
+            {isCodeVerified && (
+                <form className="auth-form" onSubmit={handleSubmitNewPassword}>
+                    <label className="auth-label" htmlFor="newPassword">
+                        새 비밀번호
+                    </label>
+                    <input
+                        className="auth-input changepwd-input"
+                        id="newPassword"
+                        type="password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="영문, 숫자, 특수문자(!@) 포함 8~16자"
+                        disabled={isLoading}
+                    />
+                    <label className="auth-label" htmlFor="confirmPassword">
+                        새 비밀번호 확인
+                    </label>
+                    <input
+                        className="auth-input changepwd-input"
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="비밀번호를 다시 한번 입력하세요"
+                        disabled={isLoading}
+                    />
+                    <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
+                        {isLoading ? "변경 중..." : "비밀번호 변경"}
+                    </Button>
+                </form>
+            )}
+
+            <div className="auth-links changepwd-links">
+                <Link to="/signin" className="auth-link">로그인하기</Link>
             </div>
-        </div>
+        </AuthLayout>
     );
 };
 

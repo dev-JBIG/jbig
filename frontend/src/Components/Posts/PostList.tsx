@@ -11,6 +11,7 @@ import {useUser} from "../Utils/UserContext";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
 import RecruitmentBadge from "./RecruitmentBadge";
+import Skeleton from "../Utils/Skeleton";
 
 const BOARD_DESCRIPTIONS: Record<string, string> = {
     "전체 글 보기": "JBIG의 모든 소식을 한눈에 확인하세요!",
@@ -478,10 +479,10 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                     <div className="skeleton-container" aria-hidden="true">
                         {[...Array(5)].map((_, i) => (
                             <div key={i} className="skeleton-row">
-                                <div className="skeleton-shimmer skeleton skeleton-id" />
-                                <div className="skeleton-shimmer skeleton skeleton-title" />
-                                <div className="skeleton-shimmer skeleton skeleton-author" />
-                                <div className="skeleton-shimmer skeleton skeleton-date" />
+                                <Skeleton className="skeleton skeleton-id" />
+                                <Skeleton className="skeleton skeleton-title" />
+                                <Skeleton className="skeleton skeleton-author" />
+                                <Skeleton className="skeleton skeleton-date" />
                             </div>
                         ))}
                     </div>

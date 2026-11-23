@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 import { useJbnuEmail } from "./useJbnuEmail";
 import JbnuEmailInput from "./JbnuEmailInput";
 import Dialog from "./Dialog";
+import { getEmailError, getPasswordError } from "./authValidation";
+import PasswordInput from "./PasswordInput";
 import { sanitizeInternalPath } from "./safeUrl";
 
 interface LoginModalProps {
@@ -14,15 +16,11 @@ interface LoginModalProps {
     redirectTo?: string;
 }
 
-const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
-const isValidPassword = (pwd: string) =>
-    /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) => {
     const { email: userId, value: userIdLocal, onChange: onUserIdChange } = useJbnuEmail();
     const userIdRef = useRef<HTMLInputElement | null>(null);
     const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
     const [loading, setLoading] = useState(false);
@@ -30,17 +28,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
     const navigate = useNavigate();
     const { setAuth } = useUser();
 
-    const validateEmail = (value: string) => {
-        if (!value.trim()) return "이메일을 입력해주세요.";
-        if (!isValidEmailDomain(value)) return "전북대 이메일(@jbnu.ac.kr)만 사용할 수 있습니다.";
-        return undefined;
-    };
-
-    const validatePassword = (value: string) => {
-        if (!value) return "비밀번호를 입력해주세요.";
-        if (!isValidPassword(value)) return "8~16자, 영문/숫자 각 1개 이상, 특수문자(!,@) 포함";
-        return undefined;
-    };
+    const validateEmail = getEmailError;
+    const validatePassword = getPasswordError;
 
     const handleEmailBlur = () => {
         const err = validateEmail(userId);
@@ -144,26 +133,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                 <label className="login-modal-label" htmlFor="modal-password">
                     비밀번호
                 </label>
-                <div className="login-modal-password-row">
-                    <input
-                        className={`login-modal-input ${fieldErrors.password ? "input-error" : ""}`}
-                        id="modal-password"
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => {
-                            setPassword(e.target.value);
-                            if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
-                        }}
-                        onBlur={handlePasswordBlur}
-                    />
-                    <button
-                        type="button"
-                        className="login-modal-toggle"
-                        onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                        {showPassword ? "숨기기" : "보이기"}
-                    </button>
-                </div>
+                <PasswordInput
+                    rowClassName="login-modal-password-row"
+                    toggleClassName="login-modal-toggle"
+                    className={`login-modal-input ${fieldErrors.password ? "input-error" : ""}`}
+                    id="modal-password"
+                    value={password}
+                    onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
+                    }}
+                    onBlur={handlePasswordBlur}
+                />
                 {fieldErrors.password && <span className="login-modal-field-error">{fieldErrors.password}</span>}
 
                 {error && <div className="login-modal-error" role="alert">{error}</div>}
