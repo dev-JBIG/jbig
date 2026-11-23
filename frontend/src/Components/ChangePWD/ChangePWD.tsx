@@ -140,31 +140,31 @@ const ChangePWD: React.FC = () => {
     };
 
     return (
-        <div className="changepwd-wrapper">
-            <div className="changepwd-container">
-                <div className="changepwd-title-row">
-                    <Link to="/" className="changepwd-logo">
-                        <img src="/JBIG-logo-192.png" alt="" className="changepwd-logo-mark" aria-hidden="true" decoding="async" />
+        <div className="auth-page">
+            <div className="auth-card changepwd-container">
+                <div className="auth-title-row">
+                    <Link to="/" className="auth-logo">
+                        <img src="/JBIG-logo-192.png" alt="" className="brand-mark" aria-hidden="true" decoding="async" />
                         <span>JBIG</span>
                     </Link>
-                    <h2 className="changepwd-title">비밀번호 찾기</h2>
+                    <h2 className="auth-title changepwd-title">비밀번호 찾기</h2>
                 </div>
 
                 {/* 1단계: 이메일 입력 */}
                 {!isCodeSent && (
-                    <form className="changepwd-form" onSubmit={handleRequestCode}>
-                        <label className="changepwd-label" htmlFor="email">
+                    <form className="auth-form" onSubmit={handleRequestCode}>
+                        <label className="auth-label" htmlFor="email">
                             아이디
                         </label>
                         <JbnuEmailInput
-                            className="changepwd-input"
+                            className="auth-input changepwd-input"
                             id="email"
                             value={emailLocal}
                             onChange={onEmailChange}
                             placeholder="학교메일"
                             disabled={isLoading}
                         />
-                        <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
+                        <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
                             {isLoading ? "전송 중..." : "인증코드 받기"}
                         </Button>
                     </form>
@@ -172,13 +172,13 @@ const ChangePWD: React.FC = () => {
 
                 {/* 2단계: 인증코드 입력 */}
                 {isCodeSent && !isCodeVerified && (
-                    <form className="changepwd-form" onSubmit={handleVerifyCode}>
-                        <label className="changepwd-label" htmlFor="verificationCode">
+                    <form className="auth-form" onSubmit={handleVerifyCode}>
+                        <label className="auth-label" htmlFor="verificationCode">
                             인증코드
                         </label>
                         <div className="changepwd-code-row">
                             <input
-                                className="changepwd-input"
+                                className="auth-input changepwd-input"
                                 id="verificationCode"
                                 type="text"
                                 value={verificationCode}
@@ -191,7 +191,7 @@ const ChangePWD: React.FC = () => {
                             </span>
                         </div>
 
-                        <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
+                        <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
                             {isLoading ? "확인 중..." : "인증코드 확인"}
                         </Button>
                     </form>
@@ -199,12 +199,12 @@ const ChangePWD: React.FC = () => {
 
                 {/* 3단계: 새 비밀번호 입력 */}
                 {isCodeVerified && (
-                    <form className="changepwd-form" onSubmit={handleSubmitNewPassword}>
-                        <label className="changepwd-label" htmlFor="newPassword">
+                    <form className="auth-form" onSubmit={handleSubmitNewPassword}>
+                        <label className="auth-label" htmlFor="newPassword">
                             새 비밀번호
                         </label>
                         <input
-                            className="changepwd-input"
+                            className="auth-input changepwd-input"
                             id="newPassword"
                             type="password"
                             value={newPassword}
@@ -212,11 +212,11 @@ const ChangePWD: React.FC = () => {
                             placeholder="영문, 숫자, 특수문자(!@) 포함 8~16자"
                             disabled={isLoading}
                         />
-                        <label className="changepwd-label" htmlFor="confirmPassword">
+                        <label className="auth-label" htmlFor="confirmPassword">
                             새 비밀번호 확인
                         </label>
                         <input
-                            className="changepwd-input"
+                            className="auth-input changepwd-input"
                             id="confirmPassword"
                             type="password"
                             value={confirmPassword}
@@ -224,14 +224,14 @@ const ChangePWD: React.FC = () => {
                             placeholder="비밀번호를 다시 한번 입력하세요"
                             disabled={isLoading}
                         />
-                        <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
+                        <Button variant="primary" block className="auth-submit" type="submit" disabled={isLoading}>
                             {isLoading ? "변경 중..." : "비밀번호 변경"}
                         </Button>
                     </form>
                 )}
 
-                <div className="changepwd-links">
-                    <Link to="/signin" className="changepwd-link">로그인하기</Link>
+                <div className="auth-links changepwd-links">
+                    <Link to="/signin" className="auth-link">로그인하기</Link>
                 </div>
             </div>
         </div>

@@ -92,14 +92,14 @@ const Signin: React.FC = () => {
     };
 
     return (
-        <div className="signin-wrapper">
-            <div className="signin-container">
-                <div className="signin-title-row">
-                    <Link to="/" className="signin-logo">
-                        <img src="/JBIG-logo-192.png" alt="" className="signin-logo-mark" aria-hidden="true" decoding="async" />
+        <div className="auth-page">
+            <div className="auth-card">
+                <div className="auth-title-row">
+                    <Link to="/" className="auth-logo">
+                        <img src="/JBIG-logo-192.png" alt="" className="brand-mark" aria-hidden="true" decoding="async" />
                         <span>JBIG</span>
                     </Link>
-                    <h2 className="signin-title">로그인</h2>
+                    <h2 className="auth-title">로그인</h2>
                 </div>
                 {verificationEmail !== null ? (
                     <>
@@ -116,12 +116,12 @@ const Signin: React.FC = () => {
                 ) : (
                     <>
                         {notice && <p className="auth-status-banner" role="status">{notice}</p>}
-                        <form className="signin-form" onSubmit={handleSubmit}>
-                            <label className="signin-label" htmlFor="userid">
+                        <form className="auth-form" onSubmit={handleSubmit}>
+                            <label className="auth-label" htmlFor="userid">
                                 아이디 (이메일)
                             </label>
                             <JbnuEmailInput
-                                className="signin-input"
+                                className="auth-input"
                                 placeholder="학교메일"
                                 invalid={!!fieldErrors.email}
                                 id="userid"
@@ -134,12 +134,12 @@ const Signin: React.FC = () => {
                             />
                             {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
 
-                            <label className="signin-label" htmlFor="password">
+                            <label className="auth-label" htmlFor="password">
                                 비밀번호
                             </label>
-                            <div className="signin-password-row">
+                            <div className="auth-input-row">
                                 <input
-                                    className={`signin-input ${fieldErrors.password ? "input-error" : ""}`}
+                                    className={`auth-input ${fieldErrors.password ? "input-error" : ""}`}
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
@@ -151,7 +151,7 @@ const Signin: React.FC = () => {
                                 />
                                 <button
                                     type="button"
-                                    className="signin-toggle"
+                                    className="auth-toggle"
                                     onClick={() => setShowPassword((prev) => !prev)}
                                 >
                                     {showPassword ? "숨기기" : "보이기"}
@@ -161,13 +161,13 @@ const Signin: React.FC = () => {
 
                             {error && <div className="form-error" role="alert">{error}</div>}
 
-                            <Button variant="primary" block className="signin-submit-btn" type="submit" disabled={loading}>
+                            <Button variant="primary" block className="auth-submit signin-submit-btn" type="submit" disabled={loading}>
                                 {loading ? "로그인 중..." : "로그인"}
                             </Button>
                         </form>
-                        <div className="signin-links">
-                            <Link to="/signup" className="signin-link">가입하기</Link>
-                            <Link to="/changepwd" className="signin-link">비밀번호를 잊어버리셨나요?</Link>
+                        <div className="auth-links">
+                            <Link to="/signup" className="auth-link">가입하기</Link>
+                            <Link to="/changepwd" className="auth-link">비밀번호를 잊어버리셨나요?</Link>
                         </div>
                     </>
                 )}

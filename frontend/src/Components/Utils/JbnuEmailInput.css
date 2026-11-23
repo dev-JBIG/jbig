@@ -1,6 +1,6 @@
 /* 전북대 메일 입력창
  * - 바깥 상자(.jbnu-email-field)가 입력창처럼 보인다. 테두리, 높이, 여백, 라운드는 각 폼의 기존
- *   입력 클래스(signin-input 등)가 그대로 담당하고, 포커스 링은 상자에 그린다.
+ *   입력 클래스(auth-input, login-modal-input)가 그대로 담당하고, 포커스 링은 상자에 그린다.
  * - 안쪽 실제 input은 친 글자 폭만큼만 넓어지고(.jbnu-email-sizer), 바로 뒤에 고정 도메인이 붙는다.
  */
 .jbnu-email-field {

@@ -10,7 +10,7 @@ const Harness: React.FC<{ initial?: string }> = ({ initial }) => {
     return (
         <div>
             <label htmlFor="mail">아이디</label>
-            <JbnuEmailInput id="mail" className="signin-input" value={value} onChange={onChange} />
+            <JbnuEmailInput id="mail" className="auth-input" value={value} onChange={onChange} />
             <output data-testid="email">{email}</output>
             <button type="button" onClick={() => setEmail("reset@jbnu.ac.kr")}>reset</button>
         </div>
@@ -169,11 +169,11 @@ describe("JbnuEmailInput", () => {
     });
 
     test("기존 폼 클래스와 오류 상태는 바깥 상자에 붙는다", () => {
-        const { rerender } = render(<JbnuEmailInput id="x" aria-label="x" className="signin-input" value="" onChange={() => {}} />);
+        const { rerender } = render(<JbnuEmailInput id="x" aria-label="x" className="auth-input" value="" onChange={() => {}} />);
         const box = screen.getByLabelText("x").closest(".jbnu-email-field")!;
-        expect(box).toHaveClass("jbnu-email-field", "signin-input");
+        expect(box).toHaveClass("jbnu-email-field", "auth-input");
         expect(box).not.toHaveClass("input-error");
-        rerender(<JbnuEmailInput id="x" aria-label="x" className="signin-input" value="" invalid onChange={() => {}} />);
+        rerender(<JbnuEmailInput id="x" aria-label="x" className="auth-input" value="" invalid onChange={() => {}} />);
         expect(box).toHaveClass("input-error");
         expect(screen.getByLabelText("x")).toHaveAttribute("aria-invalid", "true");
     });

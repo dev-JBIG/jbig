@@ -52,14 +52,7 @@
 
 .postdetail-skeleton-line {
     border-radius: var(--radius-sm);
-    background: linear-gradient(
-        90deg,
-        var(--bgColor-muted, #f6f8fa) 25%,
-        var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16)) 50%,
-        var(--bgColor-muted, #f6f8fa) 75%
-    );
-    background-size: 200% 100%;
-    animation: postdetailShimmer 1.4s infinite;
+    /* 반짝임은 shared.css 의 .skeleton-shimmer */
 }
 
 .postdetail-skeleton-crumb { width: 110px; height: 18px; }
@@ -67,11 +60,6 @@
 .postdetail-skeleton-meta { width: 42%; height: 16px; }
 .postdetail-skeleton-body { width: 100%; height: 18px; }
 .postdetail-skeleton-body.short { width: 76%; }
-
-@keyframes postdetailShimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
 
 .postdetail-header {
     display: flex;

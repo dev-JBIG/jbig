@@ -52,9 +52,9 @@ const Arena = lazy(() => import("../Competitions/Arena"));
 const routeFallback = (
     <div className="route-loading-fallback">
         <span className="sr-only" role="status">페이지를 불러오는 중입니다.</span>
-        <div aria-hidden="true" className="route-loading-bar route-loading-bar-lg" />
-        <div aria-hidden="true" className="route-loading-bar route-loading-bar-md" />
-        <div aria-hidden="true" className="route-loading-bar route-loading-bar-sm" />
+        <div aria-hidden="true" className="skeleton-shimmer route-loading-bar route-loading-bar-lg" />
+        <div aria-hidden="true" className="skeleton-shimmer route-loading-bar route-loading-bar-md" />
+        <div aria-hidden="true" className="skeleton-shimmer route-loading-bar route-loading-bar-sm" />
     </div>
 );
 
@@ -564,7 +564,7 @@ const Home: React.FC = () => {
                             staffAuth={staffAuth}
                         />
                         <button type="button" className="logo" onClick={() => navigate('/')}>
-                            <img src="/JBIG-logo-192.png" alt="" className="logo-mark" aria-hidden="true" decoding="async" />
+                            <img src="/JBIG-logo-192.png" alt="" className="brand-mark logo-mark" aria-hidden="true" decoding="async" />
                             <span className="logo-text">JBIG</span>
                         </button>
                     </div>

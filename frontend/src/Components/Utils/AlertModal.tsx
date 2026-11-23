@@ -102,7 +102,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
 
     return (
         <div
-            className="alert-modal-overlay"
+            className="overlay-backdrop alert-modal-overlay"
             onClick={onClose}
             tabIndex={-1}
             role="dialog"
@@ -111,7 +111,7 @@ const AlertModal: React.FC<AlertModalProps> = ({
             ref={modalRef}
         >
             <div
-                className="alert-modal-card"
+                className="overlay-panel alert-modal-card"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="alert-modal-header">

@@ -4,7 +4,7 @@ import "./JbnuEmailInput.css";
 
 type Props = Omit<React.InputHTMLAttributes<HTMLInputElement>, "type" | "value"> & {
     value: string;
-    /** 입력창 자체에 붙던 기존 클래스(예: signin-input). 테두리와 크기는 바깥 상자가 대신 받는다 */
+    /** 입력창 자체에 붙던 기존 클래스(예: auth-input). 테두리와 크기는 바깥 상자가 대신 받는다 */
     className?: string;
     invalid?: boolean;
 };

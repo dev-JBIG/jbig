@@ -1044,7 +1044,7 @@ function Admin() {
                         {mobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
                     </button>
                     <button type="button" className="admin-logo" onClick={handleGoHome}>
-                        <img src="/JBIG-logo-192.png" alt="" className="admin-logo-mark" aria-hidden="true" decoding="async" />
+                        <img src="/JBIG-logo-192.png" alt="" className="brand-mark admin-logo-mark" aria-hidden="true" decoding="async" />
                         <span>JBIG Admin</span>
                     </button>
                 </div>

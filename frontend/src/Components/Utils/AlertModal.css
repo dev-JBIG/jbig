@@ -1,23 +1,10 @@
+/* 배경막, 패널 공통 모양은 shared.css 의 .overlay-*. 알림은 다른 모달 위에 뜬다 */
 .alert-modal-overlay {
-    position: fixed;
-    inset: 0;
-    background-color: var(--overlay-backdrop-bgColor, rgba(31, 35, 40, 0.5));
-    display: flex;
-    align-items: center;
-    justify-content: center;
     z-index: 10000;
-    padding: 16px;
 }
 
 .alert-modal-card {
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    color: var(--fgColor-default, #1f2328);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.2));
-    width: 100%;
     max-width: 420px;
-    overflow: hidden;
     animation: alertModalIn 140ms cubic-bezier(0.3, 0, 0.5, 1);
 }
 

@@ -11,7 +11,7 @@ const Footer: React.FC = () => (
     <footer className="footer">
         <div className="footer-inner">
             <div className="footer-brand">
-                <img src="/JBIG-logo-192.png" alt="" className="footer-brand-mark" aria-hidden="true" loading="lazy" decoding="async" />
+                <img src="/JBIG-logo-192.png" alt="" className="brand-mark footer-brand-mark" aria-hidden="true" loading="lazy" decoding="async" />
                 <span className="footer-brand-name">JBIG</span>
                 <span className="footer-brand-desc">JBNU Big Data &amp; AI Group</span>
             </div>

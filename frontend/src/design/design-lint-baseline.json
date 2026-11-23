@@ -49,7 +49,6 @@
     "src/Components/Posts/PostWrite.css": 13,
     "src/Components/Profile/Profile.css": 14,
     "src/Components/Profile/ProfileBlockEditor/ProfileBlockEditor.css": 4,
-    "src/Components/Signin/Signin.css": 1,
     "src/Components/Utils/Calendar/EventModal.css": 16
   },
   "inline-style-static": {
@@ -59,7 +58,6 @@
   },
   "outline-none": {
     "src/Components/Admin/Admin.css": 1,
-    "src/Components/ChangePWD/ChangePWD.css": 1,
     "src/Components/global-adaptive.css": 1,
     "src/Components/Posts/PostDetail-comments.css": 2,
     "src/Components/Posts/PostDetail.css": 1,
@@ -69,8 +67,6 @@
     "src/Components/Profile/Profile.css": 2,
     "src/Components/Profile/ProfileBlockEditor/ProfileBlockEditor.css": 1,
     "src/Components/Profile/ProfileHtmlEditor/ProfileHtmlEditor.css": 1,
-    "src/Components/Signin/Signin.css": 1,
-    "src/Components/Signup/Signup.css": 1,
     "src/Components/User-changePWD/User-changePWD.css": 1,
     "src/Components/Utils/LoginModal.css": 1
   },

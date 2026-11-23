@@ -86,11 +86,11 @@ const EventModal: React.FC<EventModalProps> = ({ mode, initial, onClose, onSave 
     };
 
     return ReactDOM.createPortal(
-        <div className="event-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="event-modal-heading">
-            <div ref={dialogRef} className="event-modal-card" onClick={(e) => e.stopPropagation()} tabIndex={-1}>
-                <div className="event-modal-header">
+        <div className="overlay-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="event-modal-heading">
+            <div ref={dialogRef} className="overlay-panel event-modal-card" onClick={(e) => e.stopPropagation()} tabIndex={-1}>
+                <div className="overlay-header event-modal-header">
                     <h2 id="event-modal-heading">{mode === 'edit' ? '일정 수정' : '새 일정 추가'}</h2>
-                    <button type="button" className="event-modal-close" onClick={onClose} aria-label="닫기">
+                    <button type="button" className="overlay-close" onClick={onClose} aria-label="닫기">
                         <X size={16} aria-hidden="true" />
                     </button>
                 </div>

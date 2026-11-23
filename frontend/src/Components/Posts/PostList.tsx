@@ -478,10 +478,10 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                     <div className="skeleton-container" aria-hidden="true">
                         {[...Array(5)].map((_, i) => (
                             <div key={i} className="skeleton-row">
-                                <div className="skeleton skeleton-id" />
-                                <div className="skeleton skeleton-title" />
-                                <div className="skeleton skeleton-author" />
-                                <div className="skeleton skeleton-date" />
+                                <div className="skeleton-shimmer skeleton skeleton-id" />
+                                <div className="skeleton-shimmer skeleton skeleton-title" />
+                                <div className="skeleton-shimmer skeleton skeleton-author" />
+                                <div className="skeleton-shimmer skeleton skeleton-date" />
                             </div>
                         ))}
                     </div>

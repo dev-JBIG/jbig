@@ -1,56 +1,18 @@
-.event-modal-backdrop {
-    position: fixed;
-    inset: 0;
-    background-color: var(--overlay-backdrop-bgColor, rgba(31, 35, 40, 0.5));
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-    z-index: 9999;
-}
 
+
+/* 배경막, 패널, 머리, 닫기 버튼 공통 모양은 shared.css 의 .overlay-* */
 .event-modal-card {
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    color: var(--fgColor-default, #1f2328);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-floating-large, 0 8px 24px rgba(31, 35, 40, 0.2));
-    width: 100%;
     max-width: 440px;
-    overflow: hidden;
 }
 
 .event-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     padding: 14px 20px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
 }
 
 .event-modal-header h2 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
-}
-
-.event-modal-close {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    border: none;
-    border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--fgColor-muted, #59636e);
-    cursor: pointer;
-}
-
-.event-modal-close:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
     color: var(--fgColor-default, #1f2328);
 }
 

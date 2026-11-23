@@ -407,18 +407,18 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
             {/* 하루 전체 일정 모달 */}
             {expandedDay && ReactDOM.createPortal(
                 <div
-                    className="primer-calendar-modal-backdrop"
+                    className="overlay-backdrop"
                     onClick={closeExpandedDay}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="calendar-day-modal-title"
                 >
-                    <div ref={expandedDialogRef} className="primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
-                        <div className="primer-calendar-modal-header">
+                    <div ref={expandedDialogRef} className="overlay-panel primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
+                        <div className="overlay-header primer-calendar-modal-header">
                             <h3 id="calendar-day-modal-title">{expandedDay.label} 일정</h3>
                             <button
                                 type="button"
-                                className="primer-calendar-modal-close"
+                                className="overlay-close"
                                 onClick={closeExpandedDay}
                                 aria-label="닫기"
                             >
@@ -456,14 +456,14 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
             {/* 일정 상세 모달 */}
             {selectedEvent && ReactDOM.createPortal(
                 <div
-                    className="primer-calendar-modal-backdrop"
+                    className="overlay-backdrop"
                     onClick={closeSelectedEvent}
                     role="dialog"
                     aria-modal="true"
                     aria-labelledby="calendar-event-modal-title"
                 >
-                    <div ref={detailDialogRef} className="primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
-                        <div className="primer-calendar-modal-header">
+                    <div ref={detailDialogRef} className="overlay-panel primer-calendar-modal" onClick={e => e.stopPropagation()} tabIndex={-1}>
+                        <div className="overlay-header primer-calendar-modal-header">
                             <div className="primer-calendar-modal-title-wrap">
                                 <span
                                     className="primer-calendar-color-swatch"
@@ -474,7 +474,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
                             </div>
                             <button
                                 type="button"
-                                className="primer-calendar-modal-close"
+                                className="overlay-close"
                                 onClick={() => setSelectedEvent(null)}
                                 aria-label="닫기"
                             >

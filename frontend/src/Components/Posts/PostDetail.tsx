@@ -882,12 +882,12 @@ const PostDetail: React.FC = () => {
             <div className="postdetail-container">
                 <span className="sr-only" role="status">게시글을 불러오는 중입니다.</span>
                 <div className="postdetail-skeleton" aria-hidden="true">
-                    <div className="postdetail-skeleton-line postdetail-skeleton-crumb" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-title" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-meta" />
+                    <div className="skeleton-shimmer postdetail-skeleton-line postdetail-skeleton-crumb" />
+                    <div className="skeleton-shimmer postdetail-skeleton-line postdetail-skeleton-title" />
+                    <div className="skeleton-shimmer postdetail-skeleton-line postdetail-skeleton-meta" />
                     <div className="postdetail-divider" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-body" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-body short" />
+                    <div className="skeleton-shimmer postdetail-skeleton-line postdetail-skeleton-body" />
+                    <div className="skeleton-shimmer postdetail-skeleton-line postdetail-skeleton-body short" />
                 </div>
             </div>
         );

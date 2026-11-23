@@ -57,12 +57,12 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => 
             <div className="jbig-info-container">
                 <span className="sr-only" role="status">JBIG 소개를 불러오는 중입니다.</span>
                 <div className="jbig-cover jbig-cover-skeleton" aria-hidden="true">
-                    <div className="jbig-skeleton-bar jbig-skeleton-kicker" />
-                    <div className="jbig-skeleton-bar jbig-skeleton-title" />
-                    <div className="jbig-skeleton-bar jbig-skeleton-desc" />
+                    <div className="skeleton-shimmer jbig-skeleton-bar jbig-skeleton-kicker" />
+                    <div className="skeleton-shimmer jbig-skeleton-bar jbig-skeleton-title" />
+                    <div className="skeleton-shimmer jbig-skeleton-bar jbig-skeleton-desc" />
                     <div className="jbig-skeleton-grid">
-                        <div className="jbig-skeleton-box" />
-                        <div className="jbig-skeleton-box" />
+                        <div className="skeleton-shimmer jbig-skeleton-box" />
+                        <div className="skeleton-shimmer jbig-skeleton-box" />
                     </div>
                 </div>
             </div>

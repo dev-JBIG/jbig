@@ -58,16 +58,10 @@
     background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
 }
 
+/* 공통 모양은 shared.css 의 .brand-mark */
 .admin-logo-mark {
-    display: block;
     width: 26px;
     height: 26px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    background-color: var(--bgColor-white, #ffffff);
-    object-fit: cover;
-    object-position: center 14%;
-    flex-shrink: 0;
 }
 
 .admin-user-info {

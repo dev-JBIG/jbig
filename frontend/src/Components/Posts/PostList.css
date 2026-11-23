@@ -554,14 +554,8 @@
 }
 
 .skeleton {
-    background: linear-gradient(
-        90deg,
-        var(--bgColor-muted, #f6f8fa) 25%,
-        var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16)) 50%,
-        var(--bgColor-muted, #f6f8fa) 75%
-    );
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
+    /* 반짝임은 shared.css 의 .skeleton-shimmer */
+    animation-duration: 1.5s; /* 기존 값 유지 */
     border-radius: var(--radius-sm);
 }
 
@@ -584,11 +578,6 @@
 .skeleton-date {
     width: 70px;
     height: 16px;
-}
-
-@keyframes skeleton-loading {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
 }
 
 /* 작성자 링크 스타일 */

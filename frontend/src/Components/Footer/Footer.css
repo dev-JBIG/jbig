@@ -24,17 +24,11 @@
     gap: 6px;
 }
 
-/* 헤더 로고(.logo-mark)와 같은 마스코트 이미지를 작게 쓴다 */
+/* 공통 모양은 shared.css 의 .brand-mark. 작은 크기라 라운드도 작게 */
 .footer-brand-mark {
-    display: block;
     width: 18px;
     height: 18px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--borderColor-muted);
-    background-color: var(--bgColor-white, #ffffff);
-    object-fit: cover;
-    object-position: center 14%;
-    flex-shrink: 0;
 }
 
 .footer-brand-name {
