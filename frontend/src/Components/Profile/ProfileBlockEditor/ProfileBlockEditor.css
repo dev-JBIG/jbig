@@ -34,7 +34,7 @@
 
 .profile-block-editor-empty p {
   margin-bottom: 16px;
-  font-size: 0.95em;
+  font-size: var(--text-ui);
 }
 
 /* Buttons */
