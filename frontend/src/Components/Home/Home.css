@@ -59,27 +59,19 @@
 }
 
 .logo-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     width: 26px;
     height: 26px;
     border-radius: var(--radius-md);
-    background-color: var(--fgColor-default, #1f2328);
-    color: var(--bgColor-default, #ffffff);
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: -0.04em;
+    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background-color: var(--bgColor-white, #ffffff);
+    object-fit: cover;
+    object-position: center 14%;
     flex-shrink: 0;
 }
 
 .logo-text {
     line-height: 1;
-}
-
-.header-brand-divider,
-.header-brand-context {
-    display: none;
 }
 
 /* 데스크톱 전역 빠른 검색바 (GitHub Primer 스타일) */
@@ -91,7 +83,7 @@
 .header-right-section {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-shrink: 0;
 }
 
@@ -105,9 +97,9 @@
     width: 32px;
     height: 32px;
     padding: 0;
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: transparent;
     color: var(--fgColor-muted, #59636e);
     cursor: pointer;
     transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
@@ -115,9 +107,8 @@
 
 .theme-toggle-btn:hover,
 .notification-icon-wrapper:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
     color: var(--fgColor-default, #1f2328);
-    border-color: var(--borderColor-emphasis, #818b98);
 }
 
 .theme-menu-wrapper {
@@ -307,17 +298,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 16px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+    padding: 14px 18px;
+    background-color: var(--bgColor-default, #ffffff);
+    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
 }
 
 .photo-album-card-title {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
+    margin: 0;
+    font-size: 14.5px;
     font-weight: 600;
+    letter-spacing: -0.015em;
     color: var(--fgColor-default, #1f2328);
 }
 
@@ -339,15 +329,16 @@
     border: none;
     padding: 4px 8px;
     border-radius: var(--radius-md);
-    color: var(--fgColor-accent, #0969da);
-    font-size: 12px;
-    font-weight: 600;
+    color: var(--fgColor-muted, #59636e);
+    font-size: 12.5px;
+    font-weight: 500;
     cursor: pointer;
-    transition: background-color var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .photo-album-more-btn:hover {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
 }
 
 .photo-album-slider {
@@ -356,7 +347,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 16px;
+    padding: 0;
 }
 
 .photo-album-stage {
@@ -370,21 +361,16 @@
 .photo-album-frame {
     width: 100%;
     position: relative;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-radius: 0;
+    border: none;
     overflow: hidden;
     background-color: var(--bgColor-muted, #f6f8fa);
     cursor: pointer;
-    transition: border-color var(--transition-fast);
-}
-
-.photo-album-frame:hover {
-    border-color: var(--borderColor-accent-emphasis, #0969da);
 }
 
 .photo-album-image {
     width: 100%;
-    height: 320px;
+    height: 340px;
     object-fit: cover;
     display: block;
     animation: photoFadeIn 0.35s ease;
@@ -395,11 +381,12 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 20px 16px 12px;
-    background: linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.84));
+    padding: 28px 18px 14px;
+    background: linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.78));
     color: var(--fgColor-onEmphasis, #ffffff);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 500;
+    letter-spacing: -0.01em;
 }
 
 .photo-album-nav {
@@ -410,18 +397,18 @@
     height: 34px;
     border-radius: 50%;
     border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(13, 17, 23, 0.65);
+    background: rgba(13, 17, 23, 0.58);
     color: var(--fgColor-onEmphasis, #ffffff);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    transition: background-color var(--transition-fast);
     z-index: 2;
 }
 
 .photo-album-nav:hover {
-    background: rgba(13, 17, 23, 0.88);
+    background: rgba(13, 17, 23, 0.85);
 }
 
 .photo-album-nav.prev { left: 12px; }
@@ -432,13 +419,13 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    margin-top: 12px;
+    padding: 10px 12px;
     flex-wrap: wrap;
 }
 
 .photo-album-dot {
-    width: 7px;
-    height: 7px;
+    width: 6px;
+    height: 6px;
     padding: 0;
     border: none;
     border-radius: 999px;
@@ -448,16 +435,14 @@
 }
 
 .photo-album-dot.is-active {
-    width: 20px;
-    background-color: var(--bgColor-accent-emphasis, #0969da);
+    width: 18px;
+    background-color: var(--fgColor-default, #1f2328);
 }
 
 .photo-album-empty {
     color: var(--fgColor-muted, #59636e);
     font-size: 13px;
     padding: 36px 16px;
-    border: 1px dashed var(--borderColor-default, #d1d9e0);
-    border-radius: var(--radius-md);
     width: 100%;
     text-align: center;
 }
@@ -478,17 +463,16 @@
     gap: 6px;
     height: 32px;
     padding: 0 8px 0 5px;
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border: 1px solid transparent;
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: transparent;
     color: var(--fgColor-default, #1f2328);
     cursor: pointer;
     transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .user-info-clickable:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
-    border-color: var(--borderColor-emphasis, #818b98);
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
 }
 
 .user-avatar-chip {
@@ -498,8 +482,8 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background-color: var(--bgColor-accent-emphasis, #0969da);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.2));
+    color: var(--fgColor-default, #1f2328);
     font-size: 11px;
     font-weight: 700;
     flex-shrink: 0;
@@ -784,22 +768,6 @@
         font-size: 19px;
     }
 
-    .header-brand-divider {
-        display: inline;
-        color: var(--borderColor-default, #d1d9e0);
-        font-size: 16px;
-        font-weight: 300;
-        user-select: none;
-    }
-
-    .header-brand-context {
-        display: inline;
-        font-size: 13px;
-        font-weight: 500;
-        color: var(--fgColor-muted, #59636e);
-        white-space: nowrap;
-    }
-
     .header-search-form {
         position: relative;
         display: flex;
@@ -909,11 +877,10 @@
 
 .sidebar-section-heading {
     padding: 4px 10px 3px;
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--fgColor-muted, #59636e);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
+    letter-spacing: -0.005em;
 }
 
 .sidebar-signup-wrap {
@@ -996,15 +963,19 @@ a.sidebar-nav-btn.is-active,
     white-space: nowrap;
 }
 
-.sidebar-new-badge {
+.sidebar-new-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--bgColor-accent-emphasis, #0969da);
     flex-shrink: 0;
 }
 
 .sidebar-external-links {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-top: 4px;
+    gap: 1px;
+    margin-top: 2px;
 }
 
 a.sidebar-external-link,
@@ -1014,23 +985,43 @@ a.sidebar-external-link,
     justify-content: flex-start;
     gap: 8px;
     width: 100%;
-    padding: 6px 10px;
+    min-height: 30px;
+    padding: 5px 10px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
-    background-color: var(--bgColor-muted, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
+    border: none;
+    background: transparent;
+    color: var(--fgColor-muted, #59636e);
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 450;
     text-decoration: none;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 a.sidebar-external-link:hover,
 .sidebar-external-link:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
-    border-color: var(--borderColor-emphasis, #818b98);
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
     color: var(--fgColor-default, #1f2328);
     text-decoration: none;
+}
+
+.sidebar-external-text {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sidebar-external-arrow {
+    flex-shrink: 0;
+    opacity: 0.4;
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+a.sidebar-external-link:hover .sidebar-external-arrow,
+.sidebar-external-link:hover .sidebar-external-arrow {
+    opacity: 0.9;
+    transform: translate(1px, -1px);
 }
 
 .sidebar-discord-icon {
@@ -1038,4 +1029,9 @@ a.sidebar-external-link:hover,
     height: 15px;
     flex-shrink: 0;
     color: var(--fgColor-muted, #59636e);
+}
+
+a.sidebar-external-link:hover .sidebar-discord-icon,
+.sidebar-external-link:hover .sidebar-discord-icon {
+    color: var(--fgColor-default, #1f2328);
 }

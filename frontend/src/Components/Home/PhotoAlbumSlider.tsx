@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { fetchPhotoAlbumPosts, PhotoPostItem } from "../../API/req";
 import { Section } from "../Utils/interfaces";
 import useInViewOnce from "../Utils/useInViewOnce";
@@ -93,10 +93,9 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
             onMouseLeave={() => setIsPaused(false)}
         >
             <div className="photo-album-card-header">
-                <div className="photo-album-card-title">
-                    <Camera size={16} aria-hidden="true" />
-                    <span>{photoBoard.name || "사진첩"}</span>
-                </div>
+                <h2 className="photo-album-card-title">
+                    {photoBoard.name || "사진첩"}
+                </h2>
                 <div className="photo-album-card-actions">
                     {slides.length > 0 && (
                         <span className="photo-album-counter">
@@ -108,7 +107,7 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
                         className="photo-album-more-btn"
                         onClick={() => navigate(`/board/${photoBoard.id}`)}
                     >
-                        전체 보기 &gt;
+                        전체 보기
                     </button>
                 </div>
             </div>
@@ -145,6 +144,7 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
                                     alt={current.title}
                                     className="photo-album-image"
                                     loading="lazy"
+                                    decoding="async"
                                 />
                                 <div className="photo-album-caption">{current.title}</div>
                             </div>
@@ -159,7 +159,7 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
                                 </button>
                             )}
                         </div>
-                        {slides.length > 1 && (
+                        {slides.length > 1 && slides.length <= 8 && (
                             <div className="photo-album-dots" role="group" aria-label="사진 선택">
                                 {slides.map((slide, dotIdx) => (
                                     <button

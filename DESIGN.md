@@ -67,6 +67,8 @@
 ---
 
 ## 4. 레이아웃·타이포그래피·반응형
+- **웹폰트**: [`frontend/public/index.html`](./frontend/public/index.html)에서 **`Pretendard Variable`** (dynamic subset)을 로드하고 [`frontend/src/index.css`](./frontend/src/index.css)의 `--font-sans` 최우선 순위로 지정해 Windows/macOS/Linux 전역에서 일관된 한글 에디토리얼 가독성을 유지합니다.
+- **브랜드 마크**: 헤더·인증·관리자 영역의 로고는 임의 검정 사각형 `J` 모노그램을 만들지 않고 실제 JBIG 마스코트(`/JBIG-logo-192.png`)를 사용합니다.
 - **모바일 퍼스트**: 기본 스타일은 모바일, `@media (min-width: 768px)` 이상에서 데스크톱 확장
 - **핵심 레이아웃 토큰**:
   - `--max-content-width: 1280px`
@@ -75,6 +77,13 @@
 - **그림자**: 기본 카드 `var(--shadow-sm)`, 드롭다운/모달 등 플로팅 오버레이 `var(--shadow-md)` ~ `var(--shadow-lg)`
 - **숫자 정렬**: 카운터·날짜·순위·통계·페이지 번호에는 `font-variant-numeric: tabular-nums` 적용
 - **긴 텍스트 보호**: 닉네임·제목·URL 등은 `min-width: 0`, `overflow-wrap: anywhere` 또는 `text-overflow: ellipsis`로 모바일 가로 넘침 방지
+
+### 4.1 안티-슬롭(Anti-Slop) 및 에디토리얼 절제 원칙
+전형적인 AI 생성 SaaS 템플릿 느낌을 피하기 위해 다음 패턴을 금지합니다.
+- **중첩 박스(Card-in-Card) 금지**: 카드 내부에 또 다른 회색 테두리 미니 카드(약어 타일, 운영진 박스, 이중 테두리 캘린더 등)를 쌓지 않고, 1px 헤어라인 구분선(`--borderColor-muted`)과 타이포그래피 위계로 정보를 정리합니다.
+- **장식용 좌측 컬러 강조선·문장 내 필 하이라이트 금지**: 소개 문단이나 공지 행에 `border-left: 3px solid accent` 강조선이나 본문 중간의 파란 둥근 알약(`border-radius: 999px`) 강조를 남발하지 않습니다.
+- **아이콘·영문 대문자 라벨 남발 금지**: `Sparkles` 등 AI 클리셰 아이콘이나 한국어 인터페이스 사이에 어색하게 섞인 영문 대문자 마이크로 라벨(`CONTACT`, `CALENDAR` 등)을 지양하고, 한국어 중심의 담백한 라벨을 사용합니다.
+- **배지 색채 절제**: 일반 게시판 구분 배지는 중립(`secondary`) 톤을 기본으로 두고, 유채색(`danger`/`success`/`accent`)은 공지·모집 상태·핵심 CTA 등 실제 의미가 있는 신호에만 제한합니다.
 
 ---
 
@@ -98,6 +107,7 @@
 
 ## 7. PR 전 UI 셀프 체크리스트
 - [ ] 신규/수정 CSS에 하드코딩 `border-radius` px가 없는가? (일반 카드 `var(--radius-md)`, 모달/오버레이만 `var(--radius-lg)`)
+- [ ] 중첩 카드(Card-in-Card), 좌측 컬러 강조선, 문장 내 알약 배지, 불필요한 장식 아이콘이 없는가?
 - [ ] 라이트 모드와 다크 모드 모두 텍스트·보더·배경 대비가 자연스러운가?
 - [ ] 모바일(`375px`)과 데스크톱(`1280px+`)에서 가로 스크롤이나 요소 겹침이 없는가?
 - [ ] 새로 추가한 이미지 렌더링에 `loading="lazy" decoding="async"`가 적용되었는가?

@@ -7,14 +7,40 @@
     color: var(--fgColor-default, #1f2328);
 }
 
+.primer-calendar-embedded {
+    border: none;
+    border-radius: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
 .primer-calendar-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 11px 14px;
     background-color: var(--bgColor-muted, #f6f8fa);
     border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+}
+
+.primer-calendar-embedded .primer-calendar-toolbar {
+    background-color: transparent;
+    border-bottom-color: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+}
+
+.primer-calendar-embedded .primer-calendar-weekdays {
+    background-color: transparent;
+    border-bottom-color: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+}
+
+.primer-calendar-embedded .primer-calendar-grid {
+    flex: 1;
+}
+
+.primer-calendar-embedded .primer-calendar-cell:nth-last-child(-n + 7) {
+    border-bottom: none;
 }
 
 .primer-calendar-month {
@@ -22,7 +48,8 @@
     font-size: 14px;
     font-weight: 600;
     color: var(--fgColor-default, #1f2328);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
 }
 
 .primer-calendar-controls {

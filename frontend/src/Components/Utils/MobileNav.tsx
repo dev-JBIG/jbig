@@ -228,6 +228,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
               ))}
 
               <div className="mobile-nav-divider" />
+              <div className="mobile-nav-section-heading">외부 채널</div>
 
               <div className="mobile-nav-external-links">
                 <a
@@ -238,7 +239,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   onClick={() => setIsOpen(false)}
                 >
                   <FontAwesomeIcon icon={faInstagram as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
-                  <span>JBIG 인스타그램</span>
+                  <span className="sidebar-external-text">JBIG 인스타그램</span>
                 </a>
 
                 <a
@@ -249,7 +250,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   onClick={() => setIsOpen(false)}
                 >
                   <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
-                  <span>비밀 게임 소모임</span>
+                  <span className="sidebar-external-text">비밀 게임 소모임</span>
                 </a>
 
                 <a
@@ -260,7 +261,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   onClick={() => setIsOpen(false)}
                 >
                   <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
-                  <span>BigTech AI News</span>
+                  <span className="sidebar-external-text">BigTech AI News</span>
                 </a>
               </div>
             </div>

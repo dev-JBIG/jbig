@@ -1,75 +1,66 @@
 .member-quick-links {
-    display: grid;
-    gap: 6px;
-    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-bottom: 6px;
 }
 
-/* 60-30-10 절제 원칙: 중립 서피스 위 컬러 아이콘으로 두 퀵링크의 시각적 균형을 맞춤 */
+/* 사이드바 내비게이션과 리듬을 맞춘 보더리스 퀵링크 */
 a.member-quick-link,
 .member-quick-link {
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
-    min-height: 36px;
-    padding: 7px 10px;
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    min-height: 31px;
+    padding: 5px 10px;
+    border: none;
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background: transparent;
     color: var(--fgColor-default, #1f2328);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 13.5px;
+    font-weight: 500;
     text-decoration: none;
-    transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .member-quick-link-icon {
     flex-shrink: 0;
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-muted, #59636e);
     transition: color var(--transition-fast);
-}
-
-.member-quick-link-news .member-quick-link-icon {
-    color: var(--fgColor-attention, #9a6700);
 }
 
 .member-quick-link-text {
     flex: 1;
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .member-quick-link-ext {
     flex-shrink: 0;
     color: var(--fgColor-muted, #59636e);
-    opacity: 0.72;
-    transition: opacity var(--transition-fast), color var(--transition-fast);
+    opacity: 0.45;
+    transition: opacity var(--transition-fast), transform var(--transition-fast), color var(--transition-fast);
 }
 
 a.member-quick-link:hover,
 .member-quick-link:hover {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    border-color: var(--borderColor-accent-muted, rgba(84, 174, 255, 0.4));
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    color: var(--fgColor-default, #1f2328);
     text-decoration: none;
+}
+
+a.member-quick-link:hover .member-quick-link-icon,
+.member-quick-link:hover .member-quick-link-icon {
+    color: var(--fgColor-default, #1f2328);
 }
 
 a.member-quick-link:hover .member-quick-link-ext,
 .member-quick-link:hover .member-quick-link-ext {
-    color: var(--fgColor-accent, #0969da);
-    opacity: 1;
-}
-
-a.member-quick-link.member-quick-link-news:hover,
-.member-quick-link-news:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
-    border-color: var(--borderColor-emphasis, #818b98);
-    color: var(--fgColor-default, #1f2328);
-}
-
-a.member-quick-link.member-quick-link-news:hover .member-quick-link-ext,
-.member-quick-link-news:hover .member-quick-link-ext {
-    color: var(--fgColor-default, #1f2328);
-    opacity: 1;
+    opacity: 0.9;
+    transform: translate(1px, -1px);
 }
 
 .member-quick-link:focus-visible {

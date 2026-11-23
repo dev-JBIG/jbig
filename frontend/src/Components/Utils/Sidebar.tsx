@@ -1,9 +1,9 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Button, CounterLabel, Label } from "@primer/react";
+import { Button, CounterLabel } from "@primer/react";
 import "../Home/Home.css";
 import { SidebarProps, Board } from "./interfaces";
-import { FileText, SquareCheckBig, Lock } from "lucide-react";
+import { FileText, SquareCheckBig, Lock, ArrowUpRight } from "lucide-react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { faDiscord, faGithub, faInstagram } from '@fortawesome/free-brands-svg-icons';
@@ -143,7 +143,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                                                 )}
                                             </span>
                                             {hasNewPost && (
-                                                <Label variant="danger" size="small" className="sidebar-new-badge">N</Label>
+                                                <span
+                                                    className="sidebar-new-dot"
+                                                    aria-label="새 글 있음"
+                                                    title="24시간 이내 새 글"
+                                                />
                                             )}
                                         </Link>
                                     </li>
@@ -155,6 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 ))}
 
                 <div className="sidebar-top-divider" />
+                <div className="sidebar-section-heading">외부 채널</div>
 
                 <div className="sidebar-external-links">
                     <a
@@ -164,7 +169,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         className="sidebar-external-link"
                     >
                         <FontAwesomeIcon icon={faInstagram as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
-                        <span>JBIG 인스타그램</span>
+                        <span className="sidebar-external-text">JBIG 인스타그램</span>
+                        <ArrowUpRight size={13} className="sidebar-external-arrow" aria-hidden="true" />
                     </a>
 
                     <a
@@ -174,7 +180,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         className="sidebar-external-link"
                     >
                         <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
-                        <span>비밀 게임 소모임</span>
+                        <span className="sidebar-external-text">비밀 게임 소모임</span>
+                        <ArrowUpRight size={13} className="sidebar-external-arrow" aria-hidden="true" />
                     </a>
 
                     <a
@@ -184,7 +191,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                         className="sidebar-external-link"
                     >
                         <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
-                        <span>BigTech AI News</span>
+                        <span className="sidebar-external-text">BigTech AI News</span>
+                        <ArrowUpRight size={13} className="sidebar-external-arrow" aria-hidden="true" />
                     </a>
                 </div>
             </div>

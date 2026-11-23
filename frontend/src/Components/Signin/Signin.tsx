@@ -95,7 +95,7 @@ const Signin: React.FC = () => {
             <div className="signin-container">
                 <div className="signin-title-row">
                     <Link to="/" className="signin-logo">
-                        <span className="signin-logo-mark" aria-hidden="true">J</span>
+                        <img src="/JBIG-logo-192.png" alt="" className="signin-logo-mark" aria-hidden="true" decoding="async" />
                         <span>JBIG</span>
                     </Link>
                     <h2 className="signin-title">로그인</h2>

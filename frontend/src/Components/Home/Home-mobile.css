@@ -24,7 +24,6 @@
     .logo-mark {
         width: 24px;
         height: 24px;
-        font-size: 13px;
     }
 
     .home-banner-wrap {
@@ -85,11 +84,11 @@
     }
 
     .photo-album-slider {
-        padding: 12px;
+        padding: 0;
     }
 
     .photo-album-image {
-        height: 210px;
+        height: 220px;
     }
 
     .photo-album-nav {
