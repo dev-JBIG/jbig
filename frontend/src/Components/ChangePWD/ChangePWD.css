@@ -1,135 +1,26 @@
-/* GitHub Primer styled ChangePWD */
+/* 비밀번호 찾기 화면 전용. 공통 인증 화면 스타일은 src/styles/shared.css 의 .auth-* */
 
-.changepwd-wrapper {
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 24px 16px;
-    background-color: var(--bgColor-inset, var(--color-bg-secondary));
+/* 기존 값 유지: 데스크톱에서도 안쪽 여백 28px 24px (다른 인증 화면은 32px) */
+@media (min-width: 768px) {
+    .changepwd-container {
+        padding: 28px 24px;
+    }
 }
 
-.changepwd-container {
-    width: 100%;
-    max-width: 400px;
-    padding: 28px 24px;
-    background: var(--bgColor-default, var(--color-bg-primary));
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.changepwd-title-row {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 22px;
-    padding-bottom: 14px;
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
-}
-
-.changepwd-logo {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--fgColor-default, var(--color-text-primary));
-    text-decoration: none;
-    user-select: none;
-    letter-spacing: -0.03em;
-}
-
-.changepwd-logo-mark {
-    display: block;
-    width: 28px;
-    height: 28px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    background-color: var(--bgColor-white, #ffffff);
-    object-fit: cover;
-    object-position: center 14%;
-    flex-shrink: 0;
-}
-
-.changepwd-logo:hover {
-    color: var(--fgColor-accent, var(--color-primary));
-}
-
+/* 기존 값 유지: 제목 자간 기본값 */
 .changepwd-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--fgColor-muted, var(--color-text-secondary));
-    margin: 0;
-}
-
-.changepwd-form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.changepwd-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--fgColor-default, var(--color-text-primary));
-    margin-top: 4px;
+    letter-spacing: normal;
 }
 
 .changepwd-input {
-    width: 100%;
-    padding: 8px 12px;
-    margin-bottom: 4px;
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
-    border-radius: var(--radius-md);
-    font-size: 14px;
-    background: var(--bgColor-default, var(--color-bg-primary));
-    color: var(--fgColor-default, var(--color-text-primary));
-    box-sizing: border-box;
-    outline: none;
-}
-
-.changepwd-input:focus {
-    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
-}
-
-.changepwd-input:disabled {
-    background-color: var(--bgColor-disabled, var(--color-bg-tertiary));
-    cursor: not-allowed;
-}
-
-.changepwd-button {
-    margin-top: 8px;
+    transition: none;
 }
 
 .changepwd-links {
-    width: 100%;
-    display: flex;
     justify-content: center;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
 }
 
-.changepwd-link {
-    font-size: 13px;
-    color: var(--fgColor-accent, var(--color-primary));
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.changepwd-link:hover {
-    text-decoration: underline;
-}
-
+/* 인증코드 입력 + 남은 시간: 비밀번호 보기 토글(.auth-input-row)과 비슷하지만 블록 흐름이라 따로 둔다 */
 .changepwd-code-row {
     position: relative;
     width: 100%;
@@ -146,12 +37,12 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 600;
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-variant-numeric: tabular-nums;
 }
 
 .changepwd-timer.is-expiring {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
 }

@@ -31,6 +31,7 @@ import { useColorMode } from "../Utils/ThemeContext";
 import { Turnstile, TurnstileInstance } from '@marsidev/react-turnstile';
 import RecruitmentDetailSection from './RecruitmentDetail';
 import { safeSanitizeSchema as sanitizeSchema } from '../Utils/safeMarkdown';
+import Skeleton from "../Utils/Skeleton";
 
 // HeartBurst 애니메이션 컴포넌트 (분리하여 리렌더링 최적화)
 const HeartBurst = memo(({ triggerKey }: { triggerKey: number }) => {
@@ -882,12 +883,12 @@ const PostDetail: React.FC = () => {
             <div className="postdetail-container">
                 <span className="sr-only" role="status">게시글을 불러오는 중입니다.</span>
                 <div className="postdetail-skeleton" aria-hidden="true">
-                    <div className="postdetail-skeleton-line postdetail-skeleton-crumb" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-title" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-meta" />
+                    <Skeleton className="postdetail-skeleton-line postdetail-skeleton-crumb" />
+                    <Skeleton className="postdetail-skeleton-line postdetail-skeleton-title" />
+                    <Skeleton className="postdetail-skeleton-line postdetail-skeleton-meta" />
                     <div className="postdetail-divider" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-body" />
-                    <div className="postdetail-skeleton-line postdetail-skeleton-body short" />
+                    <Skeleton className="postdetail-skeleton-line postdetail-skeleton-body" />
+                    <Skeleton className="postdetail-skeleton-line postdetail-skeleton-body short" />
                 </div>
             </div>
         );

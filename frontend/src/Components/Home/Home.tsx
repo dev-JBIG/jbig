@@ -43,6 +43,8 @@ import JbigInfo from "./JbigInfo";
 import PopupSlider from "../Utils/PopupSlider";
 import PhotoAlbumSlider from "./PhotoAlbumSlider";
 import scheduleIdleTask from "../Utils/scheduleIdleTask";
+import BrandMark from "../Utils/BrandMark";
+import Skeleton from "../Utils/Skeleton";
 
 const PostDetail = lazy(() => import("../Posts/PostDetail"));
 const PostWrite = lazy(() => import("../Posts/PostWrite"));
@@ -52,9 +54,9 @@ const Arena = lazy(() => import("../Competitions/Arena"));
 const routeFallback = (
     <div className="route-loading-fallback">
         <span className="sr-only" role="status">페이지를 불러오는 중입니다.</span>
-        <div aria-hidden="true" className="route-loading-bar route-loading-bar-lg" />
-        <div aria-hidden="true" className="route-loading-bar route-loading-bar-md" />
-        <div aria-hidden="true" className="route-loading-bar route-loading-bar-sm" />
+        <Skeleton className="route-loading-bar route-loading-bar-lg" />
+        <Skeleton className="route-loading-bar route-loading-bar-md" />
+        <Skeleton className="route-loading-bar route-loading-bar-sm" />
     </div>
 );
 
@@ -181,21 +183,7 @@ const Home: React.FC = () => {
         }
     }, []);
 
-    useEffect(() => {
-        if (isModalOpen || isLoginModalOpen) {
-            const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-            document.body.style.paddingRight = `${scrollbarWidth}px`;
-            document.body.classList.add('modal-open');
-        } else {
-            document.body.style.paddingRight = '';
-            document.body.classList.remove('modal-open');
-        }
-
-        return () => {
-            document.body.style.paddingRight = '';
-            document.body.classList.remove('modal-open');
-        };
-    }, [isModalOpen, isLoginModalOpen]);
+    // 모달이 열린 동안 뒤 화면 스크롤 잠금은 Dialog 가 맡는다 (겹친 모달도 개수로 관리)
 
     useEffect(() => {
         if (!authReady) return;
@@ -564,7 +552,7 @@ const Home: React.FC = () => {
                             staffAuth={staffAuth}
                         />
                         <button type="button" className="logo" onClick={() => navigate('/')}>
-                            <img src="/JBIG-logo-192.png" alt="" className="logo-mark" aria-hidden="true" decoding="async" />
+                            <BrandMark className="logo-mark" />
                             <span className="logo-text">JBIG</span>
                         </button>
                     </div>

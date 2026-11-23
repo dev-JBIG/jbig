@@ -203,11 +203,11 @@ const PopupSlider: React.FC = () => {
         : sanitizeMediaUrl(rawImageSrc);
 
     return (
-        <div className="popup-container">
-            <div className="popup-header">
+        <div className="overlay-panel popup-container">
+            <div className="overlay-header popup-header">
                 <h3 className="popup-title">{requiresCongrats ? "축하해주세요!" : currentPopup.title}</h3>
                 <button
-                    className="popup-close-btn"
+                    className="overlay-close"
                     onClick={handleClose}
                     aria-label="닫기"
                     disabled={isClosing}

@@ -47,7 +47,7 @@
 
     .list-search-input {
         height: 36px;
-        font-size: 14px;
+        font-size: var(--text-ui);
     }
 
     .write-button {
@@ -122,7 +122,7 @@
     }
 
     .postlist-table tbody .title-cell {
-        font-size: 15px;
+        font-size: var(--text-body);
         font-weight: 600;
         color: var(--fgColor-default, var(--color-text-primary));
         line-height: 1.45;
@@ -133,7 +133,7 @@
 
     .postlist-table tbody .author-cell {
         display: inline-block !important;
-        font-size: 12.5px;
+        font-size: var(--text-label);
         color: var(--fgColor-accent, var(--color-primary));
         font-weight: 500;
         margin-right: 12px;
@@ -142,7 +142,7 @@
 
     .postlist-table td.th-date {
         display: inline-block !important;
-        font-size: 12px;
+        font-size: var(--text-caption);
         color: var(--fgColor-muted, var(--color-text-secondary));
         margin-right: 12px;
     }
@@ -150,7 +150,7 @@
     .postlist-table td.th-views,
     .postlist-table td.th-likes {
         display: inline-block !important;
-        font-size: 12px;
+        font-size: var(--text-caption);
         color: var(--fgColor-muted, var(--color-text-secondary));
         margin-right: 10px;
         font-weight: 400;
@@ -190,6 +190,6 @@
     }
 
     .board-description {
-        font-size: 12.5px;
+        font-size: var(--text-label);
     }
 }

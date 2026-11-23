@@ -2,6 +2,7 @@ import React, { ReactNode, useEffect, useMemo, useState } from "react";
 import "./JbigInfo.css";
 import { fetchSiteSettings, SiteSettings } from "../../API/req";
 import { sanitizeMailto } from "../Utils/safeUrl";
+import Skeleton from "../Utils/Skeleton";
 
 interface JbigInfoProps {
     calendarSlot?: ReactNode;
@@ -57,12 +58,12 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => 
             <div className="jbig-info-container">
                 <span className="sr-only" role="status">JBIG 소개를 불러오는 중입니다.</span>
                 <div className="jbig-cover jbig-cover-skeleton" aria-hidden="true">
-                    <div className="jbig-skeleton-bar jbig-skeleton-kicker" />
-                    <div className="jbig-skeleton-bar jbig-skeleton-title" />
-                    <div className="jbig-skeleton-bar jbig-skeleton-desc" />
+                    <Skeleton className="jbig-skeleton-bar jbig-skeleton-kicker" />
+                    <Skeleton className="jbig-skeleton-bar jbig-skeleton-title" />
+                    <Skeleton className="jbig-skeleton-bar jbig-skeleton-desc" />
                     <div className="jbig-skeleton-grid">
-                        <div className="jbig-skeleton-box" />
-                        <div className="jbig-skeleton-box" />
+                        <Skeleton className="jbig-skeleton-box" />
+                        <Skeleton className="jbig-skeleton-box" />
                     </div>
                 </div>
             </div>

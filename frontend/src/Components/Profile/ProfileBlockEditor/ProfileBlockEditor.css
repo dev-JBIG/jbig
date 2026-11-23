@@ -34,7 +34,7 @@
 
 .profile-block-editor-empty p {
   margin-bottom: 16px;
-  font-size: 0.95em;
+  font-size: var(--text-ui);
 }
 
 /* Buttons */
@@ -46,7 +46,7 @@
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--text-label);
 }
 .profile-block-editor .btn-save:hover { filter: brightness(0.95); }
 .profile-block-editor .btn-save:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -59,7 +59,7 @@
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--text-label);
 }
 .profile-block-editor .btn-cancel:hover { background: var(--bgColor-neutral-muted, #eaeef2); }
 
@@ -78,7 +78,7 @@
   border-radius: var(--radius-md);
   color: var(--fgColor-default, #1f2328);
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--text-label);
   font-weight: 500;
 }
 .block-toolbar-add:hover {
@@ -115,11 +115,11 @@
 
 .block-toolbar-menu-label {
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--text-label);
   color: var(--fgColor-default, #1f2328);
 }
 .block-toolbar-menu-desc {
-  font-size: 12px;
+  font-size: var(--text-caption);
   color: var(--fgColor-muted, #656d76);
   margin-top: 2px;
 }
@@ -158,7 +158,7 @@
 .sortable-block-drag:active { cursor: grabbing; }
 
 .sortable-block-type {
-  font-size: 12px;
+  font-size: var(--text-caption);
   color: var(--fgColor-muted, #656d76);
   font-weight: 600;
   flex: 1;
@@ -187,11 +187,11 @@
 }
 .confirm-yes {
   color: var(--fgColor-danger, #cf222e) !important;
-  font-size: 12px;
+  font-size: var(--text-caption);
   font-weight: 600;
 }
 .confirm-no {
-  font-size: 12px;
+  font-size: var(--text-caption);
 }
 
 .sortable-block-content {
@@ -248,7 +248,7 @@
   background: var(--bgColor-muted, #f6f8fa);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--text-caption);
   color: var(--fgColor-default, #1f2328);
   white-space: nowrap;
 }
@@ -264,7 +264,7 @@
   padding: 7px 10px;
   border: 1px solid var(--borderColor-default, #d0d7de);
   border-radius: var(--radius-md);
-  font-size: 13.5px;
+  font-size: var(--text-ui);
   background: var(--bgColor-default, #ffffff);
   color: var(--fgColor-default, #1f2328);
   margin-bottom: 8px;
@@ -359,7 +359,7 @@
   border: 1px solid var(--borderColor-default, #d0d7de);
   border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: var(--text-label);
   color: var(--fgColor-default, #1f2328);
   margin-top: 4px;
 }
@@ -367,19 +367,19 @@
 
 /* Divider Editor */
 .block-divider-editor { display: flex; align-items: center; gap: 8px; }
-.block-divider-editor label { font-size: 13px; color: var(--fgColor-muted, #656d76); white-space: nowrap; }
+.block-divider-editor label { font-size: var(--text-label); color: var(--fgColor-muted, #656d76); white-space: nowrap; }
 .block-divider-editor select { width: auto; margin-bottom: 0; }
 
 /* Experience Editor */
 .block-experience-dates { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .block-experience-dates input[type="text"] { width: auto; flex: 1; margin-bottom: 0; }
 .block-experience-dates span { color: var(--fgColor-muted, #656d76); }
-.block-experience-current { color: var(--fgColor-accent, #0969da); font-weight: 500; font-size: 13px; }
+.block-experience-current { color: var(--fgColor-accent, #0969da); font-weight: 500; font-size: var(--text-label); }
 .block-experience-check {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--text-label);
   color: var(--fgColor-muted, #656d76);
   white-space: nowrap;
   cursor: pointer;
@@ -403,12 +403,12 @@
 
 /* Skills Editor */
 .block-skills-layout-select { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.block-skills-layout-select label { font-size: 13px; color: var(--fgColor-muted, #656d76); white-space: nowrap; }
+.block-skills-layout-select label { font-size: var(--text-label); color: var(--fgColor-muted, #656d76); white-space: nowrap; }
 .block-skills-layout-select select { width: auto; margin-bottom: 0; }
 .block-skill-edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .block-skill-edit-row input[type="text"] { flex: 1; margin-bottom: 0; }
 .block-skill-edit-row input[type="range"] { flex: 1; max-width: 120px; }
-.block-skill-level { font-size: 12px; color: var(--fgColor-muted, #656d76); width: 28px; text-align: center; }
+.block-skill-level { font-size: var(--text-caption); color: var(--fgColor-muted, #656d76); width: 28px; text-align: center; }
 .block-skill-remove {
   display: flex;
   padding: 4px;

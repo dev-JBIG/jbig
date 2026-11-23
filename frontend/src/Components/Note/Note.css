@@ -24,7 +24,7 @@
 }
 
 .note-logo {
-    font-size: 20px;
+    font-size: var(--text-title);
     font-weight: 700;
     text-decoration: none;
     color: var(--fgColor-default, #1f2328);
@@ -52,7 +52,7 @@
     background-color: var(--bgColor-default, #ffffff);
     border: 1px solid var(--borderColor-default, #d0d7de);
     border-radius: var(--radius-md);
-    font-size: 15px;
+    font-size: var(--text-body);
     color: var(--fgColor-muted, #656d76);
     gap: 12px;
 }
@@ -71,6 +71,7 @@
 }
 
 .notion-title {
+    /* design-lint-allow font-size-token: 노션 문서 보기는 노션 원본 제목 비율을 따른다 */
     font-size: 2rem !important;
     font-weight: 700 !important;
     letter-spacing: -0.02em !important;
@@ -78,17 +79,20 @@
 }
 
 .notion-h1 {
+    /* design-lint-allow font-size-token: 노션 문서 보기는 노션 원본 제목 비율을 따른다 */
     font-size: 1.6rem !important;
     font-weight: 600 !important;
     margin-top: 1.75rem !important;
 }
 
 .notion-h2 {
+    /* design-lint-allow font-size-token: 노션 문서 보기는 노션 원본 제목 비율을 따른다 */
     font-size: 1.35rem !important;
     font-weight: 600 !important;
 }
 
 .notion-h3 {
+    /* design-lint-allow font-size-token: 노션 문서 보기는 노션 원본 제목 비율을 따른다 */
     font-size: 1.15rem !important;
     font-weight: 600 !important;
 }
@@ -100,7 +104,7 @@
 
 .notion-code {
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
-    font-size: 13.5px;
+    font-size: var(--text-ui);
 }
 
 .notion-link {

@@ -6,6 +6,7 @@ import '@primer/primitives/dist/css/functional/themes/dark.css';
 import '@primer/primitives/dist/css/functional/themes/dark-dimmed.css';
 import './index.css';
 import './Components/global-adaptive.css';
+import './styles/shared.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from 'react-router-dom';

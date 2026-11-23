@@ -4,6 +4,7 @@ import type { IconProp } from "@fortawesome/fontawesome-svg-core";
 import { faInstagram } from "@fortawesome/free-brands-svg-icons";
 import "./Footer.css";
 import "./Footer-mobile.css";
+import BrandMark from "../Utils/BrandMark";
 
 const JBIG_INSTAGRAM_URL = "https://www.instagram.com/jbig.jbnu/";
 
@@ -11,7 +12,7 @@ const Footer: React.FC = () => (
     <footer className="footer">
         <div className="footer-inner">
             <div className="footer-brand">
-                <span className="footer-brand-mark" aria-hidden="true">J</span>
+                <BrandMark className="footer-brand-mark" loading="lazy" />
                 <span className="footer-brand-name">JBIG</span>
                 <span className="footer-brand-desc">JBNU Big Data &amp; AI Group</span>
             </div>

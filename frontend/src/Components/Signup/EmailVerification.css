@@ -10,7 +10,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--space-md);
-    font-size: 13px;
+    font-size: var(--text-label);
     color: var(--fgColor-muted, var(--color-text-secondary));
 }
 
@@ -20,7 +20,7 @@
 }
 
 .verification-expired-hint {
-    font-size: 12.5px;
+    font-size: var(--text-label);
     color: var(--fgColor-attention, #9a6700);
     background-color: var(--bgColor-attention-muted, #fff8c5);
     border: 1px solid var(--borderColor-attention-muted, #d4a72c);
@@ -36,7 +36,7 @@
     cursor: pointer;
     text-decoration: underline;
     font-family: inherit;
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     padding: 0;
 }

@@ -4,7 +4,7 @@
     background-color: var(--bgColor-inset, #f6f8fa);
     border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
     margin-top: auto;
-    font-size: 12px;
+    font-size: var(--text-caption);
 }
 
 .footer-inner {
@@ -24,17 +24,11 @@
     gap: 6px;
 }
 
+/* 공통 모양은 shared.css 의 .brand-mark. 작은 크기라 라운드도 작게 */
 .footer-brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     width: 18px;
     height: 18px;
     border-radius: var(--radius-sm);
-    background-color: var(--fgColor-muted, #59636e);
-    color: var(--bgColor-default, #ffffff);
-    font-size: 10px;
-    font-weight: 800;
 }
 
 .footer-brand-name {
@@ -93,6 +87,6 @@ a.footer-social-link:hover,
     .footer-inner {
         flex-direction: row;
         padding: 20px 24px 28px;
-        font-size: 12.5px;
+        font-size: var(--text-label);
     }
 }

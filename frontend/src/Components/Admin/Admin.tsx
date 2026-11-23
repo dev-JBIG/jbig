@@ -39,6 +39,7 @@ import {
     Megaphone,
 } from "lucide-react";
 import "./Admin.css";
+import BrandMark from "../Utils/BrandMark";
 
 function SettingsManagement({ accessToken }: { accessToken: string }) {
     const [notionPageId, setNotionPageId] = useState("");
@@ -1044,7 +1045,7 @@ function Admin() {
                         {mobileMenuOpen ? <X size={20} aria-hidden="true" /> : <Menu size={20} aria-hidden="true" />}
                     </button>
                     <button type="button" className="admin-logo" onClick={handleGoHome}>
-                        <img src="/JBIG-logo-192.png" alt="" className="admin-logo-mark" aria-hidden="true" decoding="async" />
+                        <BrandMark className="admin-logo-mark" />
                         <span>JBIG Admin</span>
                     </button>
                 </div>

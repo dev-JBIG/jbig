@@ -66,7 +66,7 @@ const EmailVerification: React.FC<Props> = ({ email, initialExpiresAt = null, on
     };
 
     return (
-        <form className="signup-form email-verification" onSubmit={e => { e.preventDefault(); void request(false); }}>
+        <form className="auth-form signup-form email-verification" onSubmit={e => { e.preventDefault(); void request(false); }}>
             <div className="signup-desc">
                 이메일(<strong>{email}</strong>)로 받은 인증코드를 입력하세요.
                 메일을 받지 못했거나 코드가 만료되었다면 재전송해주세요.
@@ -88,10 +88,10 @@ const EmailVerification: React.FC<Props> = ({ email, initialExpiresAt = null, on
                     안내 시간이 지났습니다. 코드가 만료되었다면 재전송해주세요.
                 </div>
             )}
-            <label className="signup-label" htmlFor="verification-code">인증코드</label>
+            <label className="auth-label signup-label" htmlFor="verification-code">인증코드</label>
             <input
                 id="verification-code"
-                className="signup-input"
+                className="auth-input signup-input"
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -103,7 +103,7 @@ const EmailVerification: React.FC<Props> = ({ email, initialExpiresAt = null, on
             />
             {error && <div className="form-error" role="alert">{error}</div>}
             {notice && <div className="auth-status-banner" role="status">{notice}</div>}
-            <Button variant="primary" block className="signup-submit-btn" type="submit" disabled={disabled}>
+            <Button variant="primary" block className="auth-submit" type="submit" disabled={disabled}>
                 {busy ? "처리 중..." : "이메일 인증하기"}
             </Button>
             {onBack && (

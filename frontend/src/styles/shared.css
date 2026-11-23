@@ -1,0 +1,363 @@
+/* 여러 화면이 같은 기능으로 쓰는 공용 스타일 (DESIGN.md 1절 토큰만 사용)
+ *
+ * index.tsx에서 index.css, global-adaptive.css 바로 다음에 불러온다.
+ * 그래서 컴포넌트 CSS보다 항상 먼저 적용되고, 화면마다 다른 값(폭, 여백 등)은
+ * 각 컴포넌트 CSS의 전용 클래스가 덮어쓴다.
+ *
+ *  1. 브랜드 마크   .brand-mark
+ *  2. 인증 화면     .auth-*  (로그인, 회원가입, 비밀번호 찾기)
+ *  3. 오버레이      .overlay-backdrop, .overlay-panel, .overlay-header, .overlay-close
+ *  4. 스켈레톤      .skeleton-shimmer
+ *  5. 마크다운 에디터 글꼴  .w-md-editor
+ *  6. 처리 중 표시   .loading-overlay
+ *  7. 모바일 터치 대상 최소 크기
+ */
+
+/* 1. 브랜드 마크: 실제 JBIG 마스코트(/JBIG-logo-192.png). 크기와 라운드는 쓰는 곳에서 정한다 */
+.brand-mark {
+    display: block;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--borderColor-muted);
+    background-color: var(--bgColor-white, #ffffff);
+    object-fit: cover;
+    object-position: center 14%;
+    flex-shrink: 0;
+}
+
+/* 2. 인증 화면 ------------------------------------------------------------ */
+.auth-page {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px 16px;
+    background-color: var(--bgColor-inset);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 28px 24px;
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (min-width: 768px) {
+    .auth-card {
+        padding: 32px;
+    }
+}
+
+.auth-title-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* a.를 붙인 이유: Primer BaseStyles의 링크 색 규칙(:where(a))이 shared.css보다 늦게 로드되어 같은 강도면 이긴다 */
+a.auth-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: var(--text-title);
+    /* design-lint-allow font-weight-scale: JBIG 글자 로고는 브랜드 굵기 800 */
+    font-weight: 800;
+    color: var(--fgColor-default);
+    text-decoration: none;
+    user-select: none;
+    letter-spacing: -0.03em;
+    transition: color var(--transition-fast);
+}
+
+a.auth-logo:hover {
+    color: var(--fgColor-accent);
+}
+
+.auth-logo .brand-mark {
+    width: 28px;
+    height: 28px;
+}
+
+.auth-title {
+    font-size: var(--text-title-s);
+    font-weight: 600;
+    color: var(--fgColor-muted);
+    letter-spacing: -0.01em;
+    margin: 0;
+    text-align: left;
+}
+
+.auth-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.auth-label {
+    font-size: var(--text-label);
+    font-weight: 600;
+    color: var(--fgColor-default);
+    margin-top: 4px;
+}
+
+/* input과 JbnuEmailInput 바깥 상자(div)가 같이 쓴다.
+ * 실제 input의 배경, 글자색, 포커스 테두리는 global-adaptive.css의 전역 입력 규칙이 정한다. */
+.auth-input {
+    width: 100%;
+    padding: 8px 12px;
+    margin-bottom: 4px;
+    border: 1px solid var(--borderColor-default);
+    border-radius: var(--radius-md);
+    font-size: var(--text-ui);
+    background: var(--bgColor-default);
+    color: var(--fgColor-default);
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.auth-input:disabled {
+    background-color: var(--bgColor-disabled);
+    cursor: not-allowed;
+}
+
+/* 비밀번호 보기 토글이나 타이머가 오른쪽에 붙는 입력 줄 */
+.auth-input-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.auth-input-row .auth-input {
+    flex: 1;
+    padding-right: 60px;
+    margin-bottom: 0;
+}
+
+.auth-toggle {
+    position: absolute;
+    right: 8px;
+    padding: 3px 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    font-family: inherit;
+    font-size: var(--text-caption);
+    font-weight: 600;
+    color: var(--fgColor-accent);
+    cursor: pointer;
+    user-select: none;
+}
+
+.auth-toggle:hover {
+    background-color: var(--bgColor-accent-muted);
+}
+
+.auth-submit {
+    margin-top: 8px;
+}
+
+.auth-links {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--borderColor-muted);
+    flex-wrap: wrap;
+}
+
+.auth-link {
+    font-size: var(--text-label);
+    color: var(--fgColor-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-link:hover {
+    text-decoration: underline;
+}
+
+/* 폼 안내와 오류: 인증 화면, 로그인 모달, 메일 인증이 같이 쓴다 */
+.auth-status-banner {
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--borderColor-success-muted);
+    background-color: var(--bgColor-success-muted);
+    color: var(--fgColor-success);
+    font-size: var(--text-label);
+    line-height: 1.5;
+    text-align: center;
+}
+
+.input-error {
+    /* design-lint-allow important: 포커스 상태의 전역 입력 테두리(global-adaptive.css)보다 오류 테두리가 우선이어야 한다 */
+    border-color: var(--borderColor-danger-emphasis) !important;
+}
+
+.field-error {
+    display: block;
+    color: var(--fgColor-danger);
+    font-size: var(--text-caption);
+    margin-top: 2px;
+    margin-bottom: 4px;
+}
+
+.form-error {
+    background: var(--bgColor-danger-muted);
+    color: var(--fgColor-danger);
+    border: 1px solid var(--borderColor-danger-muted);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    font-size: var(--text-label);
+    margin: 6px 0;
+    text-align: center;
+}
+
+/* 3. 오버레이(모달, 다이얼로그) ------------------------------------------- */
+.overlay-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: var(--overlay-backdrop-bgColor);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 9999;
+}
+
+.overlay-panel {
+    width: 100%;
+    background-color: var(--overlay-bgColor);
+    color: var(--fgColor-default);
+    border: 1px solid var(--borderColor-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-floating-large);
+    overflow: hidden;
+}
+
+.overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bgColor-muted);
+    border-bottom: 1px solid var(--borderColor-default);
+}
+
+.overlay-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--fgColor-muted);
+    cursor: pointer;
+}
+
+.overlay-close:hover {
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
+}
+
+.overlay-close:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+/* 5. 마크다운 에디터(@uiw/react-md-editor): 라이브러리가 자체 글꼴(Helvetica Neue)을 지정하므로 앱 글꼴로 맞춘다.
+ *    body를 붙인 이유: 라이브러리 CSS가 글쓰기 화면에서 나중에 로드되어 같은 강도면 이긴다 */
+body .w-md-editor {
+    --md-editor-font-family: var(--fontStack-system);
+    font-family: var(--fontStack-system);
+}
+
+/* 6. 화면 전체를 덮는 처리 중 표시 (LoadingOverlay: 회원가입 인증코드 요청 등) */
+.loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--overlay-backdrop-bgColor);
+}
+
+/* 배경막은 테마마다 밝기가 달라 글자를 바로 올리면 안 읽힌다. 작은 오버레이 패널 안에 둔다 */
+.loading-overlay-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 28px;
+    background-color: var(--overlay-bgColor);
+    color: var(--fgColor-default);
+    border: 1px solid var(--borderColor-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-floating-large);
+}
+
+.loading-overlay-text {
+    font-size: var(--text-ui);
+    font-weight: 600;
+}
+
+/* 4. 스켈레톤(불러오는 중 자리 표시) -------------------------------------- */
+.skeleton-shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--bgColor-muted) 25%,
+        var(--bgColor-neutral-muted) 50%,
+        var(--bgColor-muted) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s infinite;
+}
+
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* 7. 모바일 터치 대상 최소 24px (WCAG 2.2 2.5.8, ego lite 점검에서 22~23px로 확인된 곳)
+ *    모양은 그대로 두고 높이(탭 메뉴는 폭)만 24px 이상 확보한다 */
+@media (max-width: 767px) {
+    .primer-calendar-nav-btn,
+    .more-link,
+    .postdetail-category-link,
+    .postdetail-author,
+    .auth-toggle {
+        min-height: 24px;
+    }
+
+    .jbig-cover-contact-email,
+    .arena-section-heading a,
+    .auth-link {
+        display: inline-flex;
+        align-items: center;
+        min-height: 24px;
+    }
+
+    .arena-tabs a {
+        min-width: 24px;
+        text-align: center;
+    }
+}

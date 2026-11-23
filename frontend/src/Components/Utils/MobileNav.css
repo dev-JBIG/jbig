@@ -68,7 +68,7 @@
 }
 
 .mobile-nav-title {
-  font-size: 16px;
+  font-size: var(--text-lead);
   font-weight: 600;
   color: var(--fgColor-default, #1f2328);
   margin: 0;
@@ -117,7 +117,7 @@
   padding: 4px 10px;
   border: 1px solid var(--borderColor-default, #d1d9e0);
   border-radius: var(--radius-md);
-  font-size: 14px;
+  font-size: var(--text-ui);
   background-color: var(--bgColor-default, #ffffff);
   color: var(--fgColor-default, #1f2328);
 }
@@ -130,7 +130,7 @@
 
 .mobile-nav-section-heading {
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: var(--text-caption);
   font-weight: 600;
   color: var(--fgColor-muted, #59636e);
 }
@@ -164,7 +164,7 @@
   align-items: center;
   gap: 8px;
   color: var(--fgColor-default, #1f2328);
-  font-size: 14px;
+  font-size: var(--text-ui);
 }
 
 .mobile-nav-section {

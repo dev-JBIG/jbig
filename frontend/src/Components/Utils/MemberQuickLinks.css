@@ -18,7 +18,7 @@ a.member-quick-link,
     border-radius: var(--radius-md);
     background: transparent;
     color: var(--fgColor-default, #1f2328);
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     font-weight: 500;
     text-decoration: none;
     transition: background-color var(--transition-fast), color var(--transition-fast);

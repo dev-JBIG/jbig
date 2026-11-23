@@ -42,7 +42,7 @@
 .jbig-cover-eyebrow {
     margin: 0;
     color: var(--fgColor-muted, #59636e);
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 500;
     letter-spacing: -0.01em;
 }
@@ -57,15 +57,17 @@
 .jbig-cover-title {
     margin: 0;
     color: var(--fgColor-default, #1f2328);
+    /* design-lint-allow font-size-token: 첫 화면 큰 제목은 화면 폭에 따라 커지는 크기라 단계 토큰 밖 */
     font-size: clamp(1.75rem, 3vw, 2.125rem);
     line-height: 1.1;
+    /* design-lint-allow font-weight-scale: JBIG 글자 로고는 브랜드 굵기 800 */
     font-weight: 800;
     letter-spacing: -0.035em;
 }
 
 .jbig-cover-acronym-inline {
     color: var(--fgColor-muted, #59636e);
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 400;
     letter-spacing: -0.005em;
 }
@@ -78,7 +80,7 @@
 .jbig-cover-description {
     margin: 6px 0 0;
     color: var(--fgColor-muted, #59636e);
-    font-size: 14px;
+    font-size: var(--text-ui);
     line-height: 1.72;
     word-break: keep-all;
     overflow-wrap: anywhere;
@@ -93,7 +95,7 @@
 .jbig-cover-focus {
     margin: 4px 0 0;
     color: var(--fgColor-muted, #59636e);
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 500;
     letter-spacing: -0.01em;
 }
@@ -121,7 +123,7 @@
 
 .jbig-meta-row dt {
     color: var(--fgColor-muted, #59636e);
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 500;
     white-space: nowrap;
 }
@@ -137,21 +139,21 @@
 
 .jbig-meta-primary {
     color: var(--fgColor-default, #1f2328);
-    font-size: 13.5px;
+    font-size: var(--text-ui);
     font-weight: 600;
     overflow-wrap: anywhere;
 }
 
 .jbig-meta-secondary {
     color: var(--fgColor-muted, #59636e);
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 400;
     overflow-wrap: anywhere;
 }
 
 .jbig-cover-contact-email {
     color: var(--fgColor-accent, #0969da);
-    font-size: 13px;
+    font-size: var(--text-label);
     font-weight: 500;
     overflow-wrap: anywhere;
 }
@@ -179,7 +181,7 @@
 }
 
 .jbig-cover-calendar-label {
-    font-size: 12.5px;
+    font-size: var(--text-label);
     font-weight: 600;
     color: var(--fgColor-muted, #59636e);
 }
@@ -195,14 +197,7 @@
 .jbig-skeleton-bar,
 .jbig-skeleton-box {
     border-radius: var(--radius-md);
-    background: linear-gradient(
-        90deg,
-        var(--bgColor-muted, #f6f8fa) 25%,
-        var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16)) 50%,
-        var(--bgColor-muted, #f6f8fa) 75%
-    );
-    background-size: 200% 100%;
-    animation: jbigSkeletonShimmer 1.4s infinite;
+    /* 반짝임은 shared.css 의 .skeleton-shimmer */
 }
 
 .jbig-skeleton-kicker { width: 160px; height: 14px; }
@@ -214,11 +209,6 @@
     gap: 16px;
 }
 .jbig-skeleton-box { height: 220px; }
-
-@keyframes jbigSkeletonShimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-}
 
 @media (max-width: 960px) {
     .jbig-cover-layout.has-calendar,

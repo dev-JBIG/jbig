@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { BaseStyles, ThemeProvider } from "@primer/react";
+import { DIALOG_ROOT_ID } from "./Dialog";
 
 export type AppColorMode = "light" | "dark" | "auto";
 export type DarkThemeVariant = "dark_dimmed" | "dark";
@@ -132,7 +133,11 @@ export const ColorModeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return (
         <ColorModeContext.Provider value={value}>
             <ThemeProvider colorMode={colorMode} dayScheme="light" nightScheme={darkTheme}>
-                <BaseStyles>{children}</BaseStyles>
+                <BaseStyles>
+                    {children}
+                    {/* Dialog 포털 자리: BaseStyles 안이라 모달도 앱 본문과 같은 글꼴, 색 상속을 받는다 */}
+                    <div id={DIALOG_ROOT_ID} />
+                </BaseStyles>
             </ThemeProvider>
         </ColorModeContext.Provider>
     );
