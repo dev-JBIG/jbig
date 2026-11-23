@@ -564,11 +564,9 @@ const Home: React.FC = () => {
                             staffAuth={staffAuth}
                         />
                         <button type="button" className="logo" onClick={() => navigate('/')}>
-                            <span className="logo-mark" aria-hidden="true">J</span>
+                            <img src="/JBIG-logo-192.png" alt="" className="logo-mark" aria-hidden="true" decoding="async" />
                             <span className="logo-text">JBIG</span>
                         </button>
-                        <span className="header-brand-divider" aria-hidden="true">/</span>
-                        <span className="header-brand-context">Big Data &amp; AI</span>
                     </div>
 
                     <form className="header-search-form" onSubmit={handleHeaderSearchSubmit} role="search">
@@ -834,18 +832,24 @@ const Home: React.FC = () => {
                     <Route path="/" element={
                         <MainLayout sidebarProps={sidebarProps}>
                             <JbigInfo
-                                calendarAction={staffAuth ? (
-                                    <Button
-                                        size="small"
-                                        variant="default"
-                                        leadingVisual={() => <Plus size={13} aria-hidden="true" />}
-                                        onClick={handleAddEvent}
-                                        className="add-event-btn-home"
-                                    >
-                                        일정 추가
-                                    </Button>
-                                ) : undefined}
-                                calendarSlot={<Calendar staffAuth={staffAuth} compact />}
+                                calendarSlot={
+                                    <Calendar
+                                        staffAuth={staffAuth}
+                                        compact
+                                        embedded
+                                        toolbarAction={staffAuth ? (
+                                            <Button
+                                                size="small"
+                                                variant="default"
+                                                leadingVisual={() => <Plus size={13} aria-hidden="true" />}
+                                                onClick={handleAddEvent}
+                                                className="add-event-btn-home"
+                                            >
+                                                일정 추가
+                                            </Button>
+                                        ) : undefined}
+                                    />
+                                }
                             />
                             <PostList boards={boards} isHome={true}/>
                             <PhotoAlbumSlider boards={boards} />

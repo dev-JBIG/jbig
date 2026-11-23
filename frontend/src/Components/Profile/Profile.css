@@ -399,7 +399,7 @@
 }
 
 .resume-content blockquote {
-    border-left: 3px solid var(--resume-color-accent);
+    border-left: 2px solid var(--borderColor-default, #d0d7de);
     padding-left: 16px;
     margin: 16px 0;
     color: var(--resume-color-muted);

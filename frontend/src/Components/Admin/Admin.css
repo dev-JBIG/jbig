@@ -59,16 +59,15 @@
 }
 
 .admin-logo-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
+    display: block;
+    width: 26px;
+    height: 26px;
     border-radius: var(--radius-md);
-    background-color: var(--fgColor-default, #1f2328);
-    color: var(--bgColor-default, #ffffff);
-    font-size: 13px;
-    font-weight: 800;
+    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background-color: var(--bgColor-white, #ffffff);
+    object-fit: cover;
+    object-position: center 14%;
+    flex-shrink: 0;
 }
 
 .admin-user-info {

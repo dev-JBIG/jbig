@@ -442,7 +442,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                     className="more-link"
                                     onClick={() => navigate("/board/0")}
                                 >
-                                    더보기 &gt;
+                                    전체 보기
                                 </button>
                             )}
                         </div>
@@ -526,7 +526,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                                     공지
                                                 </Label>
                                             ) : (
-                                                <Label variant="accent" size="small" className="category-badge">
+                                                <Label variant="secondary" size="small" className="category-badge">
                                                     {displayName}
                                                 </Label>
                                             )
@@ -633,7 +633,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                                                     공지
                                                 </Label>
                                             ) : (
-                                                <Label variant="accent" size="small" className="category-badge">
+                                                <Label variant="secondary" size="small" className="category-badge">
                                                     {displayName}
                                                 </Label>
                                             )

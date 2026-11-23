@@ -13,6 +13,8 @@ import { useFocusTrap } from "../useFocusTrap";
 interface CalendarProps {
     staffAuth: boolean;
     compact?: boolean;
+    embedded?: boolean;
+    toolbarAction?: React.ReactNode;
 }
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -88,7 +90,7 @@ const buildMonthGrid = (year: number, month: number): Date[] => {
     return cells;
 };
 
-const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
+const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedded = false, toolbarAction }) => {
     const { signOutLocal, accessToken } = useUser();
     const { showAlert, showConfirm } = useAlert();
     const navigate = useNavigate();
@@ -284,12 +286,16 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false }) => {
     const maxVisible = compact ? 2 : 3;
 
     return (
-        <div className={`primer-calendar${compact ? " primer-calendar-compact" : ""}`} aria-label="동아리 일정 캘린더">
+        <div
+            className={`primer-calendar${compact ? " primer-calendar-compact" : ""}${embedded ? " primer-calendar-embedded" : ""}`}
+            aria-label="동아리 일정 캘린더"
+        >
             <div className="primer-calendar-toolbar">
                 <h4 className="primer-calendar-month" aria-live="polite">
                     {year}년 {month + 1}월
                 </h4>
                 <div className="primer-calendar-controls">
+                    {toolbarAction}
                     <button
                         type="button"
                         className="primer-calendar-nav-btn"
