@@ -8,6 +8,7 @@
  *  2. 인증 화면     .auth-*  (로그인, 회원가입, 비밀번호 찾기)
  *  3. 오버레이      .overlay-backdrop, .overlay-panel, .overlay-header, .overlay-close
  *  4. 스켈레톤      .skeleton-shimmer
+ *  5. 마크다운 에디터 글꼴  .w-md-editor
  */
 
 /* 1. 브랜드 마크: 실제 JBIG 마스코트(/JBIG-logo-192.png). 크기와 라운드는 쓰는 곳에서 정한다 */
@@ -277,6 +278,13 @@ a.auth-logo:hover {
 .overlay-close:disabled {
     opacity: 0.55;
     cursor: not-allowed;
+}
+
+/* 5. 마크다운 에디터(@uiw/react-md-editor): 라이브러리가 자체 글꼴(Helvetica Neue)을 지정하므로 앱 글꼴로 맞춘다.
+ *    body를 붙인 이유: 라이브러리 CSS가 글쓰기 화면에서 나중에 로드되어 같은 강도면 이긴다 */
+body .w-md-editor {
+    --md-editor-font-family: var(--fontStack-system);
+    font-family: var(--fontStack-system);
 }
 
 /* 4. 스켈레톤(불러오는 중 자리 표시) -------------------------------------- */

@@ -116,6 +116,16 @@
   box-sizing: border-box;
 }
 
+/* 글꼴: Primer 글꼴 토큰 맨 앞에 Pretendard를 둔다 (DESIGN.md 4절).
+ * Primer BaseStyles가 앱 전체를 감싸며 font-family: var(--fontStack-system)을 직접 지정하기 때문에
+ * body의 --font-sans만으로는 앱 안쪽에 Pretendard가 적용되지 않았다(한글이 맑은 고딕으로 표시됨).
+ * 토큰 자체를 덮어써서 BaseStyles, Tooltip 등 Primer 컴포넌트까지 한 번에 맞춘다. */
+:root {
+  --fontStack-system: 'Pretendard Variable', Pretendard, "Mona Sans VF", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Noto Sans KR", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --fontStack-sansSerif: var(--fontStack-system);
+  --fontStack-sansSerifDisplay: var(--fontStack-system);
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

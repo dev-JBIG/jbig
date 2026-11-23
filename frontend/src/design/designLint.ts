@@ -162,6 +162,9 @@ export function lintDesign(frontendRoot: string): LintResult {
             push("hdr-limit", file, 1, "img { dynamic-range-limit: standard } 없음", lines);
         if (isTokenBridge && !/--font-sans:\s*'Pretendard Variable'/.test(css))
             push("pretendard", file, 1, "--font-sans 첫 글꼴이 Pretendard Variable이 아님", lines);
+        // Primer BaseStyles가 앱 전체에 var(--fontStack-system)을 직접 지정하므로 토큰 자체가 Pretendard로 시작해야 한다
+        if (isTokenBridge && !/:root\s*\{[^}]*--fontStack-system:\s*['"]Pretendard Variable['"]/.test(css))
+            push("pretendard", file, 1, "Primer --fontStack-system 첫 글꼴이 Pretendard Variable이 아님 (앱 본문이 다른 글꼴로 표시됨)", lines);
     }
 
     // ---------- TSX/TS ----------

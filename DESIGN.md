@@ -183,6 +183,7 @@ components:
 
 ## 4. 레이아웃·타이포그래피·반응형
 - **웹폰트**: [`frontend/public/index.html`](./frontend/public/index.html)에서 **`Pretendard Variable`** (dynamic subset)을 로드하고 [`frontend/src/index.css`](./frontend/src/index.css)의 `--font-sans` 최우선 순위로 지정해 Windows/macOS/Linux 전역에서 일관된 한글 에디토리얼 가독성을 유지합니다. (`pretendard`)
+  - Primer `BaseStyles`가 앱 전체에 `font-family: var(--fontStack-system)`을 직접 지정하므로, `index.css`의 `:root`에서 Primer 글꼴 토큰(`--fontStack-system`, `--fontStack-sansSerif`, `--fontStack-sansSerifDisplay`) 맨 앞에 Pretendard를 둡니다. 컴포넌트 CSS에서 `font-family`를 새로 지정하지 않고 상속을 따릅니다. 자체 글꼴을 지정하는 외부 라이브러리(마크다운 에디터 `@uiw/react-md-editor` 등)는 `shared.css`에서 같은 토큰(`var(--fontStack-system)`)으로 맞춥니다.
 - **브랜드 마크**: 헤더·인증·관리자 영역의 로고는 임의 검정 사각형 `J` 모노그램을 만들지 않고 실제 JBIG 마스코트(`/JBIG-logo-192.png`)를 사용합니다.
 - **모바일 퍼스트**: 기본 스타일은 모바일, `@media (min-width: 768px)` 이상에서 데스크톱 확장. 모바일 전용 보정이 필요하면 `@media (max-width: 767px)`만 씁니다. 다른 기준점(600, 768, 960px 등)을 새로 만들지 않습니다. (`breakpoint`)
 - **핵심 레이아웃 토큰**:
@@ -264,7 +265,7 @@ components:
 | `primer-button-inner` | 3.3 | `<Button>` 바로 안에 `className="*-inner"` span |
 | `english-caps-label` | 4.1 | JSX 텍스트로 4자 이상 영문 대문자 단어(JBIG, JBNU, HTML, API, RMSE 등 고유명사 제외) |
 | `forbidden-library` | 1 | `package.json`에 bootstrap, jquery 계열 의존성 |
-| `pretendard` | 4 | `index.html`의 Pretendard 로드 또는 `--font-sans` 첫 글꼴 지정이 사라짐 |
+| `pretendard` | 4 | `index.html`의 Pretendard 로드, `--font-sans` 첫 글꼴, `:root`의 Primer `--fontStack-system` 첫 글꼴 지정 중 하나라도 사라짐 |
 | `hdr-limit` | 5 | `index.css`의 `img { dynamic-range-limit: standard }`가 사라짐 |
 
 ---
@@ -320,4 +321,5 @@ components:
 ---
 
 ## 10. 변경 이력
+- 2026-11-23: Primer BaseStyles 때문에 앱 본문에 Pretendard가 적용되지 않던 문제(한글이 맑은 고딕으로 표시)를 Primer 글꼴 토큰 덮어쓰기로 해결하고 `pretendard` 검사에 추가.
 - 2026-11-23: #81 화면을 초기 디자인 기준선으로 지정. YAML 토큰 머리말, 테마별 토큰 표, 8절 자동 검사, 9절 실측 기준선, 4.2절 전북대 메일 입력 추가. 기존 1~7절 규칙은 그대로 유지하고 각 규칙에 검사 ID를 표시.
