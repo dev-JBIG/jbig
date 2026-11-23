@@ -175,6 +175,7 @@ components:
   - 배경: `var(--bgColor-default)`, `var(--bgColor-muted)`, `var(--bgColor-inset)`, `var(--bgColor-neutral-muted)`, `var(--bgColor-accent-muted)`, `var(--bgColor-accent-emphasis)`, `var(--overlay-bgColor)`
   - 보더: `var(--borderColor-default)`, `var(--borderColor-muted)`, `var(--borderColor-emphasis)`
 - 라이트/다크 양쪽에서 텍스트 대비 **WCAG AA(4.5:1 이상, 큰 글자 3:1 이상)** 를 유지합니다.
+  - 다크 딤드에서는 Primer 기본값이 카드, 공지 행, 선택 행 위에서 4.5에 못 미쳐 `index.css`에서 세 토큰의 밝기만 올립니다(색상 유지): `--fgColor-accent`/`--fgColor-link` #478be6 → #5ea2f6, `--fgColor-danger` #e5534b → #f67d74, `--fgColor-muted` #9198a1 → #9da5ae. 자동 모드는 Primer 선택자와 같은 강도(`[data-color-mode][data-color-mode="auto"]...`)로 덮어씁니다.
 - 포커스 스타일은 전역 `:focus-visible` (`var(--focus-outlineColor, #0969da)`)를 유지하며 `outline: none`으로 제거하지 않습니다. (`outline-none`)
   - 예외: 바깥 상자가 `:focus-within`으로 같은 2px 포커스 링을 그리는 복합 입력(예: `JbnuEmailInput`)의 안쪽 input만, 줄 위에 사유 주석을 달고 허용합니다.
 - **Primer `<Button>` 아이콘 정렬**: 아이콘이 포함된 `@primer/react` `<Button>`은 내부에 `<span className="*-inner">`를 중첩하지 말고 반드시 Primer 네이티브 **`leadingVisual`** prop을 사용합니다. (`primer-button-inner`)
@@ -331,19 +332,20 @@ components:
 
 ### 9.5 대비 (WCAG AA)
 - light, dark: 화면당 1~2건이며 모두 의도된 요소입니다(푸터 구분점 `·`, 비활성 버튼).
-- **dark_dimmed: 홈 29건, 목록·상세 4건** — 캘린더 일·토요일 색, 작성자 링크(`--fgColor-accent` #478be6), 문의 이메일이 #212830 위에서 4.0 ~ 4.33으로 4.5에 못 미칩니다.
+- **dark_dimmed: 홈 29건, 목록·상세 4건** — 캘린더 일·토요일 색, 작성자 링크(`--fgColor-accent` #478be6), 문의 이메일이 #212830 위에서 4.0 ~ 4.33으로 4.5에 못 미칩니다. → 2026-11-23 보정 후 0건(3.3절).
 
 ### 9.6 기준선에서 확인된 정리 대상
 아래는 이 기준선을 시작점으로 순서대로 정리합니다. 정리할 때마다 8절 기준선 숫자가 줄어야 합니다.
 1. **같은 기능의 중복 CSS 통합**: 인증 화면 4종(로그인, 회원가입, 비밀번호 찾기, 비밀번호 변경)의 래퍼, 입력창, 비밀번호 보기 토글, 로고, 링크 / 모달 닫기 버튼 3벌과 배경막 2벌 / 스켈레톤 반짝임 애니메이션 3~4벌 / 말줄임 텍스트 유틸.
 2. **포커스 표시**: 입력창 18곳의 `outline: none`을 토큰 기반 포커스 링으로 교체.
 3. ~~**글자 크기와 굵기 스케일**~~: 2026-11-23 완료(4.3절). 화면당 글자 크기 8~11종 → 5~7종.
-4. **dark_dimmed 대비**: 링크, 캘린더 주말 색을 4.5 이상으로.
+4. ~~**dark_dimmed 대비**~~: 2026-11-23 완료(3.3절). 기준 미달 91건 → 0건.
 5. **`!important` 124곳, 기준점 밖 미디어 쿼리 12곳, 원시 색 16곳, `<div onClick>` 19곳, lazy 누락 `<img>` 14곳, 정의 안 된 변수 1곳** 축소.
 
 ---
 
 ## 10. 변경 이력
+- 2026-11-23: 다크 딤드 글자 대비 보정(링크, 위험, 보조 글자 토큰 밝기). 테마 3종 x 화면 9개 x 너비 2개 실측 기준 미달 91건 → 0건, 라이트와 다크는 변화 없음.
 - 2026-11-23: 글자 크기 10단계 토큰(`--text-*`)과 굵기 4단계 도입(4.3절), 소수점 크기 42곳과 450 굵기 정리, `font-size-token`, `font-weight-scale` 검사 추가.
 - 2026-11-23: Primer BaseStyles 때문에 앱 본문에 Pretendard가 적용되지 않던 문제(한글이 맑은 고딕으로 표시)를 Primer 글꼴 토큰 덮어쓰기로 해결하고 `pretendard` 검사에 추가.
 - 2026-11-23: #81 화면을 초기 디자인 기준선으로 지정. YAML 토큰 머리말, 테마별 토큰 표, 8절 자동 검사, 9절 실측 기준선, 4.2절 전북대 메일 입력 추가. 기존 1~7절 규칙은 그대로 유지하고 각 규칙에 검사 ID를 표시.
