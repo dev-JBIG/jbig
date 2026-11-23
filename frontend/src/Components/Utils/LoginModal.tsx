@@ -5,6 +5,7 @@ import { signin } from "../../API/req";
 import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
 import { useJbnuEmail } from "./useJbnuEmail";
+import JbnuEmailInput from "./JbnuEmailInput";
 import { useFocusTrap } from "./useFocusTrap";
 import { sanitizeInternalPath } from "./safeUrl";
 
@@ -19,7 +20,8 @@ const isValidPassword = (pwd: string) =>
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) => {
     const dialogRef = useRef<HTMLDivElement>(null);
-    const { email: userId, inputRef: userIdRef, onChange: onUserIdChange, onFocus: onUserIdFocus, onClick: onUserIdClick } = useJbnuEmail();
+    const { email: userId, value: userIdLocal, onChange: onUserIdChange } = useJbnuEmail();
+    const userIdRef = useRef<HTMLInputElement | null>(null);
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -134,18 +136,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     <label className="login-modal-label" htmlFor="modal-userid">
                         아이디 (이메일)
                     </label>
-                    <input
+                    <JbnuEmailInput
                         ref={userIdRef}
-                        className={`login-modal-input ${fieldErrors.email ? "input-error" : ""}`}
+                        className="login-modal-input"
+                        invalid={!!fieldErrors.email}
                         id="modal-userid"
-                        type="text"
-                        value={userId}
+                        value={userIdLocal}
                         onChange={(e) => {
                             onUserIdChange(e);
                             if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
                         }}
-                        onFocus={onUserIdFocus}
-                        onClick={onUserIdClick}
                         onBlur={handleEmailBlur}
                     />
                     {fieldErrors.email && <span className="login-modal-field-error">{fieldErrors.email}</span>}

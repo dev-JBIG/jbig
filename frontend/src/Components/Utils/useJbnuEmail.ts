@@ -1,76 +1,56 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
 
 export const JBNU_EMAIL_DOMAIN = "@jbnu.ac.kr";
 
-const endsWithJbnu = (v: string) => v.toLowerCase().endsWith(JBNU_EMAIL_DOMAIN);
-
-const moveCursorToStart = (el: HTMLInputElement) => {
-    try {
-        el.setSelectionRange(0, 0);
-    } catch {
-        // ignore (type=email browsers that don't support selection)
+/**
+ * 입력창 글자를 아이디와 "사용자가 직접 친 도메인 앞부분"으로 나눈다.
+ * - 도메인은 입력창 뒤에 고정 접미사로 보인다. 사용자가 "@"부터 직접 치기 시작하면 친 글자가
+ *   접미사와 겹쳐 채워지고(tail), 접미사는 남은 부분만 보인다. ("abc@jb" → tail "@jb", 남은 접미사 "nu.ac.kr")
+ * - 도메인과 다른 글자는 받지 않는다. ("abc@gm" → tail "@")
+ * - 공백은 이메일 주소에 올 수 없으므로 지운다.
+ */
+export const splitJbnuInput = (raw: string): { local: string; tail: string } => {
+    const noSpace = raw.replace(/\s+/g, "");
+    const at = noSpace.indexOf("@");
+    if (at === -1) return { local: noSpace, tail: "" };
+    const typed = noSpace.slice(at);
+    let matched = 0;
+    while (
+        matched < typed.length &&
+        matched < JBNU_EMAIL_DOMAIN.length &&
+        typed[matched].toLowerCase() === JBNU_EMAIL_DOMAIN[matched]
+    ) {
+        matched += 1;
     }
+    return { local: noSpace.slice(0, at), tail: JBNU_EMAIL_DOMAIN.slice(0, matched) };
 };
 
+/** 아이디(@ 앞부분)만 뽑는다. */
+export const toJbnuLocalPart = (raw: string) => splitJbnuInput(raw).local;
+
+/**
+ * 전북대 메일 입력 훅. 사용자는 아이디만 치면 되고 "@jbnu.ac.kr"은 고정 접미사로 붙는다.
+ * - `value`: 입력창에 보일 글자(아이디 + 사용자가 직접 친 도메인 앞부분)
+ * - `email`: 서버로 보낼 전체 주소 (아이디가 비어 있으면 "")
+ */
 export function useJbnuEmail(initial: string = "") {
-    const [email, setEmailState] = useState<string>(initial || JBNU_EMAIL_DOMAIN);
-    const [domainRemoved, setDomainRemoved] = useState<boolean>(
-        initial !== "" && !endsWithJbnu(initial)
-    );
-    const inputRef = useRef<HTMLInputElement | null>(null);
+    // 코드에서 넣는 값(초기값, setEmail)은 아이디만 남긴다. 도메인 겹쳐 치기는 사용자가 직접 칠 때만.
+    const [value, setValue] = useState<string>(() => splitJbnuInput(initial).local);
 
-    // autoFocus 등 mount 직후 포커스가 들어온 경우 커서를 앞으로 밀어둠
-    useEffect(() => {
-        const el = inputRef.current;
-        if (el && el.value === JBNU_EMAIL_DOMAIN && document.activeElement === el) {
-            setTimeout(() => moveCursorToStart(el), 0);
-        }
+    const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const { local, tail } = splitJbnuInput(e.target.value);
+        setValue(local + tail);
     }, []);
 
-    const handleChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            const newVal = e.target.value;
-            setEmailState((prev) => {
-                if (!domainRemoved && endsWithJbnu(prev) && !endsWithJbnu(newVal)) {
-                    setDomainRemoved(true);
-                }
-                return newVal;
-            });
-        },
-        [domainRemoved]
-    );
-
-    // focus 이벤트 이후 브라우저가 커서를 끝으로 보내므로, setTimeout(0)로 다음 tick에 덮어씀
-    const handleFocus = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-        const el = e.currentTarget;
-        if (el.value === JBNU_EMAIL_DOMAIN) {
-            setTimeout(() => {
-                if (el.value === JBNU_EMAIL_DOMAIN) moveCursorToStart(el);
-            }, 0);
-        }
+    const setEmail = useCallback((next: string) => {
+        setValue(splitJbnuInput(next).local);
     }, []);
 
-    // 도메인만 있는 상태에서 클릭하면 click이 focus 뒤에 커서를 재배치하므로 여기서도 앞으로 보냄
-    const handleClick = useCallback((e: React.MouseEvent<HTMLInputElement>) => {
-        const el = e.currentTarget;
-        if (el.value === JBNU_EMAIL_DOMAIN) {
-            setTimeout(() => {
-                if (el.value === JBNU_EMAIL_DOMAIN) moveCursorToStart(el);
-            }, 0);
-        }
-    }, []);
-
-    const setEmail = useCallback((value: string) => {
-        setEmailState(value);
-        setDomainRemoved(value !== "" && !endsWithJbnu(value));
-    }, []);
-
+    const local = toJbnuLocalPart(value);
     return {
-        email,
+        value,
+        email: local ? `${local}${JBNU_EMAIL_DOMAIN}` : "",
         setEmail,
-        inputRef,
-        onChange: handleChange,
-        onFocus: handleFocus,
-        onClick: handleClick,
+        onChange,
     };
 }

@@ -4,6 +4,7 @@ import { Button } from "@primer/react";
 import { signupUser } from "../../API/req";
 import { useAlert } from "../Utils/AlertContext";
 import { useJbnuEmail } from "../Utils/useJbnuEmail";
+import JbnuEmailInput from "../Utils/JbnuEmailInput";
 import "./Signup.css";
 import EmailVerification from "./EmailVerification";
 
@@ -18,7 +19,7 @@ const Signup: React.FC = () => {
     const [step, setStep] = useState<1 | 2>(1);
 
     // 1단계 입력값
-    const { email, inputRef: emailRef, onChange: onEmailChange, onFocus: onEmailFocus, onClick: onEmailClick } = useJbnuEmail();
+    const { email, value: emailLocal, onChange: onEmailChange } = useJbnuEmail();
     const [userId, setUserId] = useState("");
     const [semester, setSemester] = useState<number | null>(null);
     const [password, setPassword] = useState("");
@@ -96,19 +97,13 @@ const Signup: React.FC = () => {
                     <>
                         <form className="signup-form" onSubmit={handleSignupRequest}>
                             <label className="signup-label" htmlFor="email">이메일</label>
-                            <input
-                                ref={emailRef}
+                            <JbnuEmailInput
                                 className="signup-input"
                                 id="email"
-                                type="text"
-                                inputMode="email"
-                                autoComplete="email"
-                                value={email}
+                                value={emailLocal}
                                 onChange={onEmailChange}
-                                onFocus={onEmailFocus}
-                                onClick={onEmailClick}
                                 required
-                                placeholder="예: example@jbnu.ac.kr"
+                                placeholder="학교 메일 아이디"
                             />
 
                             <label className="signup-label" htmlFor="userId">이름</label>

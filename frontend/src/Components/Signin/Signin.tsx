@@ -6,13 +6,14 @@ import {Link, useNavigate} from "react-router-dom";
 import {signin} from "../../API/req";
 import {useUser} from "../Utils/UserContext";
 import {useJbnuEmail} from "../Utils/useJbnuEmail";
+import JbnuEmailInput from "../Utils/JbnuEmailInput";
 
 const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
 const isValidPassword = (pwd: string) =>
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const Signin: React.FC = () => {
-    const { email: userId, inputRef: userIdRef, onChange: onUserIdChange, onFocus: onUserIdFocus, onClick: onUserIdClick } = useJbnuEmail();
+    const { email: userId, value: userIdLocal, onChange: onUserIdChange } = useJbnuEmail();
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -119,18 +120,15 @@ const Signin: React.FC = () => {
                             <label className="signin-label" htmlFor="userid">
                                 아이디 (이메일)
                             </label>
-                            <input
-                                ref={userIdRef}
-                                className={`signin-input ${fieldErrors.email ? "input-error" : ""}`}
+                            <JbnuEmailInput
+                                className="signin-input"
+                                invalid={!!fieldErrors.email}
                                 id="userid"
-                                type="text"
-                                value={userId}
+                                value={userIdLocal}
                                 onChange={(e) => {
                                     onUserIdChange(e);
                                     if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
                                 }}
-                                onFocus={onUserIdFocus}
-                                onClick={onUserIdClick}
                                 onBlur={handleEmailBlur}
                             />
                             {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}

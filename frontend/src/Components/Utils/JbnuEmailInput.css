@@ -1,0 +1,74 @@
+/* 전북대 메일 입력창
+ * - 바깥 상자(.jbnu-email-field)가 입력창처럼 보인다. 테두리, 높이, 여백, 라운드는 각 폼의 기존
+ *   입력 클래스(signin-input 등)가 그대로 담당하고, 포커스 링은 상자에 그린다.
+ * - 안쪽 실제 input은 친 글자 폭만큼만 넓어지고(.jbnu-email-sizer), 바로 뒤에 고정 도메인이 붙는다.
+ */
+.jbnu-email-field {
+    display: flex;
+    align-items: center;
+    cursor: text;
+    overflow: hidden;
+}
+
+.jbnu-email-field:focus-within {
+    outline: 2px solid var(--focus-outlineColor);
+    outline-offset: -1px;
+    border-color: var(--borderColor-accent-emphasis);
+}
+
+.jbnu-email-field.input-error {
+    border-color: var(--borderColor-danger-emphasis);
+}
+
+/* 입력창 폭을 글자 폭에 맞추는 장치: 숨긴 거울 글자와 input을 같은 칸에 겹친다 */
+.jbnu-email-sizer {
+    display: inline-grid;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.jbnu-email-mirror,
+.jbnu-email-field .jbnu-email-local {
+    grid-area: 1 / 1;
+    font: inherit;
+    letter-spacing: inherit;
+    white-space: pre;
+}
+
+.jbnu-email-mirror {
+    visibility: hidden;
+    overflow: hidden;
+    padding-right: 1px; /* 커서가 들어갈 자리 */
+}
+
+/* 전역 입력 스타일(배경, 포커스 그림자, 높이)을 안쪽 input에서만 걷어낸다.
+ * 포커스 표시는 바깥 상자의 :focus-within 링이 대신하므로 안쪽 링은 그리지 않는다. */
+.jbnu-email-field .jbnu-email-local,
+.jbnu-email-field .jbnu-email-local:focus,
+.jbnu-email-field .jbnu-email-local:focus-visible {
+    width: 100%;
+    min-width: 1ch;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    color: inherit;
+}
+
+.jbnu-email-field .jbnu-email-local::placeholder {
+    color: var(--fgColor-muted);
+}
+
+/* 고정 도메인: 지울 수도, 드래그로 선택할 수도 없다 */
+.jbnu-email-domain {
+    flex-shrink: 0;
+    color: var(--fgColor-muted);
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+    white-space: pre;
+}

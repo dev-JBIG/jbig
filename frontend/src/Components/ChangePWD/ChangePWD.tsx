@@ -6,6 +6,7 @@ import { requestVerificationCode, verifyCode, resetPassword } from "../../API/re
 import { useUser } from "../Utils/UserContext";
 import { useAlert } from "../Utils/AlertContext";
 import { useJbnuEmail } from "../Utils/useJbnuEmail";
+import JbnuEmailInput from "../Utils/JbnuEmailInput";
 
 // 이메일 도메인 유효성 검사
 const isValidEmailDomain = (email: string) => /@jbnu\.ac\.kr$/i.test(email.trim());
@@ -14,7 +15,7 @@ const isValidPassword = (pwd: string) =>
     /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@])[A-Za-z\d!@]{8,16}$/.test(pwd);
 
 const ChangePWD: React.FC = () => {
-    const { email, inputRef: emailRef, onChange: onEmailChange, onFocus: onEmailFocus, onClick: onEmailClick } = useJbnuEmail();
+    const { email, value: emailLocal, onChange: onEmailChange } = useJbnuEmail();
     const [verificationCode, setVerificationCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
@@ -155,18 +156,12 @@ const ChangePWD: React.FC = () => {
                         <label className="changepwd-label" htmlFor="email">
                             아이디
                         </label>
-                        <input
-                            ref={emailRef}
+                        <JbnuEmailInput
                             className="changepwd-input"
                             id="email"
-                            type="text"
-                            inputMode="email"
-                            autoComplete="email"
-                            value={email}
+                            value={emailLocal}
                             onChange={onEmailChange}
-                            onFocus={onEmailFocus}
-                            onClick={onEmailClick}
-                            placeholder="예: jbig@jbnu.ac.kr"
+                            placeholder="학교 메일 아이디"
                             disabled={isLoading}
                         />
                         <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>

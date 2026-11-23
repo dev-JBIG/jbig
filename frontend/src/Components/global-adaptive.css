@@ -1,7 +1,8 @@
 /* Primer 디자인 시스템과 충돌하지 않는 적응형 글로벌 헬퍼 */
 
-/* Primer 컴포넌트([class*="prc-"])에는 전역 입력/버튼 리셋을 강제하지 않음 */
-input:not([type="checkbox"]):not([type="radio"]):not([class*="prc-"]),
+/* Primer 컴포넌트([class*="prc-"])와 전북대 메일 입력(.jbnu-email-local, 바깥 상자가 테두리와 포커스를 그림)에는
+   전역 입력 리셋을 강제하지 않음 */
+input:not([type="checkbox"]):not([type="radio"]):not([class*="prc-"]):not(.jbnu-email-local),
 textarea:not(.w-md-editor-text-input):not([class*="prc-"]),
 select:not([class*="prc-"]) {
     font-family: inherit;
@@ -10,7 +11,7 @@ select:not([class*="prc-"]) {
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([class*="prc-"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([class*="prc-"]):not(.jbnu-email-local):focus,
 textarea:not(.w-md-editor-text-input):not([class*="prc-"]):focus,
 select:not([class*="prc-"]):focus {
     outline: none;
