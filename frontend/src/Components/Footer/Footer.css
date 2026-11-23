@@ -24,17 +24,17 @@
     gap: 6px;
 }
 
+/* 헤더 로고(.logo-mark)와 같은 마스코트 이미지를 작게 쓴다 */
 .footer-brand-mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     width: 18px;
     height: 18px;
     border-radius: var(--radius-sm);
-    background-color: var(--fgColor-muted, #59636e);
-    color: var(--bgColor-default, #ffffff);
-    font-size: 10px;
-    font-weight: 800;
+    border: 1px solid var(--borderColor-muted);
+    background-color: var(--bgColor-white, #ffffff);
+    object-fit: cover;
+    object-position: center 14%;
+    flex-shrink: 0;
 }
 
 .footer-brand-name {
