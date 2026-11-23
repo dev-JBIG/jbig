@@ -44,6 +44,49 @@ describe("designLint 판정", () => {
         expect(lint({ "src/a.css": css }, "raw-color").map(x => x.line)).toEqual([4]);
     });
 
+    test("주석 뒤에 코드가 있는 윗줄의 허용 주석은 다음 선언을 면제하지 않는다", () => {
+        const css = ".a {\n  /* design-lint-allow raw-color: 기존 색상 유지 */ color: #fff;\n  background: #000;\n}\n";
+        expect(lint({ "src/a.css": css }, "raw-color").map(x => x.line)).toEqual([3]);
+        // 여러 줄 주석의 끝줄 뒤에 코드가 붙어도 마찬가지
+        const css2 = ".a {\n  /* design-lint-allow raw-color: 기존 색상 유지,\n     다음 개편 때 정리 */ color: #fff;\n  background: #000;\n}\n";
+        expect(lint({ "src/a.css": css2 }, "raw-color").map(x => x.line)).toEqual([4]);
+        // JSX 주석 뒤에 코드가 있는 줄도
+        const tsx = 'export const A = () => (\n  <>\n    {/* design-lint-allow clickable-div: 배경막 보조 클릭 */}<div onClick={() => {}} />\n    <div onClick={() => {}} />\n  </>\n);\n';
+        expect(lint({ "src/A.tsx": tsx }, "clickable-div").map(x => x.line)).toEqual([4]);
+    });
+
+    test("여러 줄 주석의 가운데, 끝 줄에 있는 허용 주석은 바로 아래 선언을 면제한다", () => {
+        const css = ".a {\n  /*\n   * design-lint-allow raw-color: 브랜드 고정 색\n   */\n  color: #fff;\n}\n";
+        expect(lint({ "src/a.css": css }, "raw-color")).toHaveLength(0);
+    });
+
+    test("JSX 표현식 속 주석, 템플릿 문자열, 안쪽 JSX 글자의 따옴표와 > 를 태그 끝 판단에 쓰지 않는다", () => {
+        const commentQuote = [
+            "export const A = () => (",
+            "  <>",
+            "    <img src={url /* user's avatar */} alt=\"\" />",
+            "    <img src={other} alt=\"\" loading=\"lazy\" decoding=\"async\" />",
+            "  </>",
+            ");",
+        ].join("\n");
+        expect(lint({ "src/A.tsx": commentQuote }, "img-lazy").map(x => x.line)).toEqual([3]);
+        const lineComment = [
+            "export const B = () => (",
+            "  <img",
+            "    src={url // user's avatar",
+            "    }",
+            "    alt=\"\"",
+            "  />",
+            ");",
+            "export const C = () => <img src={x} alt=\"\" loading=\"lazy\" decoding=\"async\" />;",
+        ].join("\n");
+        expect(lint({ "src/B.tsx": lineComment }, "img-lazy").map(x => x.line)).toEqual([2]);
+        const template = 'export const D = () => <img src={`${a > b ? "x" : "y"}.png`} alt="" loading="lazy" decoding="async" />;\n';
+        expect(lint({ "src/D.tsx": template }, "img-lazy")).toHaveLength(0);
+        const nestedText = 'export const E = () => <div title={ok ? <b>it\'s</b> : null} onClick={f} />;\n';
+        expect(lint({ "src/E.tsx": nestedText }, "clickable-div")).toHaveLength(1);
+    });
+
     test("복합 미디어 쿼리의 모든 너비 조건을 검사한다", () => {
         const v = lint({ "src/a.css": "@media (min-width: 600px) and (max-width: 767px) { .a { color: inherit; } }\n" }, "breakpoint");
         expect(v.map(x => x.message)).toEqual(["min-width: 600px"]);

@@ -67,34 +67,83 @@ const hasAllow = (text: string, rule: string) => {
     const m = text.match(/design-lint-allow\s+([a-z-]+)\s*:\s*(.*?)\s*(\*\/|$)/);
     return !!m && m[1] === rule && m[2].replace(/\*\/.*/, "").trim().length >= 4;
 };
-const COMMENT_ONLY_LINE = /^\s*(\/\*|\*|\/\/|\{\/\*)/;
+/**
+ * 줄 전체가 주석인가. `/* 허용 *\/ color: #fff;` 처럼 주석 뒤에 코드가 있으면 주석만 있는 줄이 아니다.
+ * (여러 줄 주석의 가운데 줄 ` * ...`, 끝줄 ` *\/` 도 주석만 있는 줄로 본다)
+ */
+const isCommentOnlyLine = (text: string) => {
+    const t = text.trim();
+    if (t.startsWith("//")) return true;
+    const closeAfter = (open: string, close: string) => {
+        const end = t.indexOf(close, open.length);
+        return end < 0 || t.slice(end + close.length).trim() === "";
+    };
+    if (t.startsWith("{/*")) return closeAfter("{/*", "*/}");
+    if (t.startsWith("/*")) return closeAfter("/*", "*/");
+    if (t.startsWith("*")) return closeAfter("", "*/");
+    return false;
+};
 
 /**
  * 위반 줄에 사유가 있는 허용 주석이 있거나, 바로 위(최대 3줄)에 주석만 있는 줄로 허용 주석이 있는가.
- * 윗줄이 다른 선언이면 그 줄 끝의 허용 주석은 그 선언 것이므로 여기에 적용하지 않는다.
+ * 윗줄에 코드가 있으면 그 줄의 허용 주석은 그 줄 것이므로 여기에 적용하지 않고 스캔을 멈춘다.
  */
 const isAllowed = (lines: string[], line: number, rule: string) => {
     if (hasAllow(lines[line - 1] || "", rule)) return true;
     for (let l = line - 2; l >= Math.max(0, line - 4); l--) {
         const text = lines[l] || "";
         if (!text.trim()) continue;
-        if (!COMMENT_ONLY_LINE.test(text)) break;
+        if (!isCommentOnlyLine(text)) break;
         if (hasAllow(text, rule)) return true;
     }
     return false;
 };
 
-/** JSX 여는 태그의 끝(>) 위치. 속성 안의 {..}, 문자열, 화살표(=>)의 > 는 태그 끝이 아니다 */
+/**
+ * JSX 여는 태그의 끝(>) 위치를 찾는다. 속성 문자열, {..} 표현식 안의 문자열·템플릿 문자열(${..} 포함)·
+ * 주석(// , /* *\/)·화살표(=>)·안쪽 JSX 의 > 는 태그 끝이 아니다.
+ * 표현식 안의 따옴표는 값이 시작될 자리(연산자, 괄호 뒤 등)에 있을 때만 문자열로 본다.
+ * 그래서 안쪽 JSX 글자(<b>user's</b>)나 주석 속 따옴표를 문자열 시작으로 오인하지 않는다.
+ */
 const jsxTagEnd = (text: string, start: number) => {
-    let depth = 0;
-    let quote: string | null = null;
-    for (let i = start + 1; i < text.length; i++) {
+    const stack: ("expr" | "tpl")[] = [];
+    const prevSignificant = (k: number) => {
+        for (let j = k - 1; j > start; j--) if (!/\s/.test(text[j])) return text[j];
+        return "";
+    };
+    const skipString = (i: number, q: string) => {
+        for (let j = i + 1; j < text.length; j++) {
+            if (text[j] === "\\") { j++; continue; }
+            if (text[j] === q || text[j] === "\n") return j + 1;
+        }
+        return text.length;
+    };
+    let i = start + 1;
+    while (i < text.length) {
         const ch = text[i];
-        if (quote) { if (ch === quote && text[i - 1] !== "\\") quote = null; continue; }
-        if (ch === '"' || ch === "'" || ch === "`") { quote = ch; continue; }
-        if (ch === "{") depth++;
-        else if (ch === "}") depth--;
-        else if (ch === ">" && depth === 0) return i;
+        const top = stack[stack.length - 1];
+        if (top === "tpl") {
+            if (ch === "\\") i += 2;
+            else if (ch === "`") { stack.pop(); i++; }
+            else if (ch === "$" && text[i + 1] === "{") { stack.push("expr"); i += 2; }
+            else i++;
+            continue;
+        }
+        if (top === "expr") {
+            if (ch === "/" && text[i + 1] === "/") { const nl = text.indexOf("\n", i); i = nl < 0 ? text.length : nl; continue; }
+            if (ch === "/" && text[i + 1] === "*") { const e = text.indexOf("*/", i + 2); i = e < 0 ? text.length : e + 2; continue; }
+            if (ch === "`") { stack.push("tpl"); i++; continue; }
+            if ((ch === '"' || ch === "'") && /^[(,=:[{?+\-*%!&|;>}]?$/.test(prevSignificant(i))) { i = skipString(i, ch); continue; }
+            if (ch === "{") stack.push("expr");
+            else if (ch === "}") stack.pop();
+            i++;
+            continue;
+        }
+        // 태그의 속성 자리
+        if (ch === '"' || ch === "'") { const e = text.indexOf(ch, i + 1); i = e < 0 ? text.length : e + 1; continue; }
+        if (ch === "{") { stack.push("expr"); i++; continue; }
+        if (ch === ">") return i;
+        i++;
     }
     return text.length - 1;
 };
