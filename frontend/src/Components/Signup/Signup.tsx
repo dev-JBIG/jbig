@@ -103,7 +103,7 @@ const Signup: React.FC = () => {
                                 value={emailLocal}
                                 onChange={onEmailChange}
                                 required
-                                placeholder="학교 메일 아이디"
+                                placeholder="학교메일"
                             />
 
                             <label className="signup-label" htmlFor="userId">이름</label>

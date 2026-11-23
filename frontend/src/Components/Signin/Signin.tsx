@@ -122,6 +122,7 @@ const Signin: React.FC = () => {
                             </label>
                             <JbnuEmailInput
                                 className="signin-input"
+                                placeholder="학교메일"
                                 invalid={!!fieldErrors.email}
                                 id="userid"
                                 value={userIdLocal}

@@ -209,7 +209,7 @@ describe("JbnuEmailInput 구조", () => {
     });
 
     test("빈 값이면 placeholder 폭을 거울 글자로 쓴다", () => {
-        render(<JbnuEmailInput id="p" aria-label="p" value="" placeholder="학교 메일 아이디" onChange={() => {}} />);
-        expect(document.querySelector(".jbnu-email-mirror")).toHaveTextContent("학교 메일 아이디");
+        render(<JbnuEmailInput id="p" aria-label="p" value="" placeholder="학교메일" onChange={() => {}} />);
+        expect(document.querySelector(".jbnu-email-mirror")).toHaveTextContent("학교메일");
     });
 });

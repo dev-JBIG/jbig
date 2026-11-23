@@ -139,6 +139,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     <JbnuEmailInput
                         ref={userIdRef}
                         className="login-modal-input"
+                        placeholder="학교메일"
                         invalid={!!fieldErrors.email}
                         id="modal-userid"
                         value={userIdLocal}

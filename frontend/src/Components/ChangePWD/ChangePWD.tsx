@@ -161,7 +161,7 @@ const ChangePWD: React.FC = () => {
                             id="email"
                             value={emailLocal}
                             onChange={onEmailChange}
-                            placeholder="학교 메일 아이디"
+                            placeholder="학교메일"
                             disabled={isLoading}
                         />
                         <Button variant="primary" block className="changepwd-button" type="submit" disabled={isLoading}>
