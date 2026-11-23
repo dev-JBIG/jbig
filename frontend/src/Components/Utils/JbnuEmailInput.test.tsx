@@ -114,11 +114,31 @@ describe("JbnuEmailInput", () => {
         expect(email()).toBe("paste.user@jbnu.ac.kr");
     });
 
-    test("다른 도메인을 붙여넣어도 전북대 주소로만 만들어진다", () => {
+    test("다른 도메인을 붙여넣으면 조용히 바꾸지 않고 안내하며, 안내는 입력과 연결된다", () => {
         render(<Harness />);
         fireEvent.change(input(), { target: { value: "someone@gmail.com" } });
         expect(input().value).toBe("someone@");
         expect(email()).toBe("someone@jbnu.ac.kr");
+        const notice = document.getElementById("mail-notice")!;
+        expect(notice).toHaveAttribute("role", "status");
+        expect(notice).toHaveTextContent("전북대 메일(@jbnu.ac.kr)만 쓸 수 있어요");
+        expect(input().getAttribute("aria-describedby")!.split(" ")).toContain(notice.id);
+        // 올바르게 다시 치면 안내가 사라진다
+        fireEvent.change(input(), { target: { value: "someone" } });
+        expect(document.getElementById("mail-notice")).toBeNull();
+    });
+
+    test("도메인 앞부분을 맞게 치는 중에는 안내가 뜨지 않는다", () => {
+        render(<Harness />);
+        userEvent.type(input(), "jbig@jbnu.ac");
+        expect(document.getElementById("mail-notice")).toBeNull();
+        userEvent.type(input(), "x");
+        expect(document.getElementById("mail-notice")).toBeInTheDocument();
+    });
+
+    test("호출자가 준 aria-describedby(오류 문구)와 도메인 안내를 함께 연결한다", () => {
+        render(<JbnuEmailInput id="m2" aria-label="메일" aria-describedby="m2-error" value="" onChange={() => {}} />);
+        expect(screen.getByLabelText("메일").getAttribute("aria-describedby")).toBe("m2-error m2-domain");
     });
 
     test("대문자 도메인을 쳐도 소문자 도메인으로 맞춰진다", () => {

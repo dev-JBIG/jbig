@@ -107,6 +107,7 @@ const Signin: React.FC = () => {
                             placeholder="학교메일"
                             invalid={!!fieldErrors.email}
                             id="userid"
+                            aria-describedby={fieldErrors.email ? "userid-error" : undefined}
                             value={userIdLocal}
                             onChange={(e) => {
                                 onUserIdChange(e);
@@ -114,7 +115,7 @@ const Signin: React.FC = () => {
                             }}
                             onBlur={handleEmailBlur}
                         />
-                        {fieldErrors.email && <span className="field-error">{fieldErrors.email}</span>}
+                        {fieldErrors.email && <span id="userid-error" className="field-error">{fieldErrors.email}</span>}
 
                         <label className="auth-label" htmlFor="password">
                             비밀번호
@@ -124,6 +125,8 @@ const Signin: React.FC = () => {
                             toggleClassName="auth-toggle"
                             className={`auth-input ${fieldErrors.password ? "input-error" : ""}`}
                             id="password"
+                            aria-invalid={!!fieldErrors.password || undefined}
+                            aria-describedby={fieldErrors.password ? "password-error" : undefined}
                             value={password}
                             onChange={(e) => {
                                 setPassword(e.target.value);
@@ -131,7 +134,7 @@ const Signin: React.FC = () => {
                             }}
                             onBlur={handlePasswordBlur}
                         />
-                        {fieldErrors.password && <span className="field-error">{fieldErrors.password}</span>}
+                        {fieldErrors.password && <span id="password-error" className="field-error">{fieldErrors.password}</span>}
 
                         {error && <div className="form-error" role="alert">{error}</div>}
 

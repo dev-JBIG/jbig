@@ -1,4 +1,4 @@
-import React, { ReactNode, RefObject, useEffect, useRef } from "react";
+import React, { ReactNode, RefObject, createContext, useContext, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { X } from "lucide-react";
 import { useFocusTrap } from "./useFocusTrap";
@@ -90,22 +90,33 @@ const Dialog: React.FC<DialogProps> = ({
 
     const cls = (base: string, extra?: string) => (extra ? `${base} ${extra}` : base);
 
+    // 누르기 시작한 곳과 뗀 곳이 모두 배경막일 때만 닫는다.
+    // 패널 안에서 누르고(글자 드래그 등) 배경막에서 떼면 click 은 공통 조상인 배경막에서 일어나므로
+    // click 의 대상만 보면 폼이 닫혀 입력이 사라진다.
+    const pressStartedOnBackdrop = useRef(false);
+    const handleBackdropMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        pressStartedOnBackdrop.current = e.target === e.currentTarget;
+    };
     const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        // 패널 안을 누른 것(버블링)은 무시하고, 배경막 자체를 누른 경우만 닫는다
-        if (closeOnBackdrop && e.target === e.currentTarget) requestClose.current();
+        const startedHere = pressStartedOnBackdrop.current;
+        pressStartedOnBackdrop.current = false;
+        if (closeOnBackdrop && startedHere && e.target === e.currentTarget) requestClose.current();
     };
 
     const backdrop = (
         // design-lint-allow clickable-div: 배경막 클릭은 마우스 보조 동작이고 키보드는 ESC와 닫기 버튼으로 닫는다
-        <div className={cls("overlay-backdrop", backdropClassName)} role="dialog" aria-modal="true" aria-labelledby={labelledBy} onClick={handleBackdropClick}>
+        <div className={cls("overlay-backdrop", backdropClassName)} role="dialog" aria-modal="true" aria-labelledby={labelledBy} onMouseDown={handleBackdropMouseDown} onClick={handleBackdropClick}>
             <div ref={panelRef} className={cls("overlay-panel", panelClassName)} tabIndex={-1}>
-                {children}
+                <DialogContext.Provider value={{ busy }}>{children}</DialogContext.Provider>
             </div>
         </div>
     );
 
     return ReactDOM.createPortal(backdrop, document.getElementById(DIALOG_ROOT_ID) ?? document.body);
 };
+
+/** DialogHeader 가 Dialog 의 busy 를 따르도록 전달한다 */
+const DialogContext = createContext<{ busy: boolean }>({ busy: false });
 
 export interface DialogHeaderProps {
     onClose: () => void;
@@ -116,14 +127,17 @@ export interface DialogHeaderProps {
     closeDisabled?: boolean;
 }
 
-/** 회색 머리 줄 + 오른쪽 닫기(X) 버튼 */
-export const DialogHeader: React.FC<DialogHeaderProps> = ({ onClose, children, className, closeLabel = "닫기", closeDisabled }) => (
-    <div className={className ? `overlay-header ${className}` : "overlay-header"}>
-        {children}
-        <button type="button" className="overlay-close" onClick={onClose} aria-label={closeLabel} disabled={closeDisabled}>
-            <X size={16} aria-hidden="true" />
-        </button>
-    </div>
-);
+/** 회색 머리 줄 + 오른쪽 닫기(X) 버튼. Dialog 가 busy 인 동안에는 닫기 버튼도 꺼진다 */
+export const DialogHeader: React.FC<DialogHeaderProps> = ({ onClose, children, className, closeLabel = "닫기", closeDisabled }) => {
+    const { busy } = useContext(DialogContext);
+    return (
+        <div className={className ? `overlay-header ${className}` : "overlay-header"}>
+            {children}
+            <button type="button" className="overlay-close" onClick={onClose} aria-label={closeLabel} disabled={closeDisabled || busy}>
+                <X size={16} aria-hidden="true" />
+            </button>
+        </div>
+    );
+};
 
 export default Dialog;

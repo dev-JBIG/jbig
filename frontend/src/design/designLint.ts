@@ -63,15 +63,40 @@ const walk = (dir: string, exts: string[]): string[] => {
 
 const lineOf = (text: string, index: number) => text.slice(0, index).split("\n").length;
 
-/** 위반 줄 또는 바로 윗줄(들)에 사유가 있는 허용 주석이 있는가 */
+const hasAllow = (text: string, rule: string) => {
+    const m = text.match(/design-lint-allow\s+([a-z-]+)\s*:\s*(.*?)\s*(\*\/|$)/);
+    return !!m && m[1] === rule && m[2].replace(/\*\/.*/, "").trim().length >= 4;
+};
+const COMMENT_ONLY_LINE = /^\s*(\/\*|\*|\/\/|\{\/\*)/;
+
+/**
+ * 위반 줄에 사유가 있는 허용 주석이 있거나, 바로 위(최대 3줄)에 주석만 있는 줄로 허용 주석이 있는가.
+ * 윗줄이 다른 선언이면 그 줄 끝의 허용 주석은 그 선언 것이므로 여기에 적용하지 않는다.
+ */
 const isAllowed = (lines: string[], line: number, rule: string) => {
-    for (let l = line - 1; l >= Math.max(0, line - 3); l--) {
+    if (hasAllow(lines[line - 1] || "", rule)) return true;
+    for (let l = line - 2; l >= Math.max(0, line - 4); l--) {
         const text = lines[l] || "";
-        const m = text.match(/design-lint-allow\s+([a-z-]+)\s*:\s*(.*?)\s*(\*\/|$)/);
-        if (m && m[1] === rule && m[2].replace(/\*\/.*/, "").trim().length >= 4) return true;
-        if (l < line - 1 && text.trim() && !/^\s*(\/\*|\*|\/\/|\{\/\*)/.test(text)) break;
+        if (!text.trim()) continue;
+        if (!COMMENT_ONLY_LINE.test(text)) break;
+        if (hasAllow(text, rule)) return true;
     }
     return false;
+};
+
+/** JSX 여는 태그의 끝(>) 위치. 속성 안의 {..}, 문자열, 화살표(=>)의 > 는 태그 끝이 아니다 */
+const jsxTagEnd = (text: string, start: number) => {
+    let depth = 0;
+    let quote: string | null = null;
+    for (let i = start + 1; i < text.length; i++) {
+        const ch = text[i];
+        if (quote) { if (ch === quote && text[i - 1] !== "\\") quote = null; continue; }
+        if (ch === '"' || ch === "'" || ch === "`") { quote = ch; continue; }
+        if (ch === "{") depth++;
+        else if (ch === "}") depth--;
+        else if (ch === ">" && depth === 0) return i;
+    }
+    return text.length - 1;
 };
 
 /** CSS에서 주석을 같은 길이의 공백으로 바꿔 줄 번호를 유지한다 */
@@ -116,7 +141,8 @@ export function lintDesign(frontendRoot: string): LintResult {
         const isTokenBridge = rel(file) === "src/index.css";
 
         // 선언 단위로 순회하면서 현재 선택자를 기억한다
-        const re = /([^{};]+)\{|\}|([a-zA-Z-]+)\s*:\s*([^;{}]+);/g;
+        // 블록의 마지막 선언은 세미콜론 없이 } 로 끝날 수 있다
+        const re = /([^{};]+)\{|\}|([a-zA-Z-]+)\s*:\s*([^;{}]+?)\s*(?:;|(?=\}))/g;
         const selectorStack: string[] = [];
         let m: RegExpExecArray | null;
         while ((m = re.exec(css))) {
@@ -160,10 +186,13 @@ export function lintDesign(frontendRoot: string): LintResult {
         for (const mm of Array.from(css.matchAll(/var\((--[A-Za-z0-9_-]+)/g)))
             if (!defined.has(mm[1])) push("undefined-var", file, lineOf(css, mm.index!), mm[1], lines);
 
-        for (const mm of Array.from(css.matchAll(/@media[^{]*\((min|max)-width:\s*(\d+)px\)/g))) {
-            const [, kind, px] = mm;
-            const ok = (kind === "min" && px === "768") || (kind === "max" && px === "767");
-            if (!ok) push("breakpoint", file, lineOf(css, mm.index!), `${kind}-width: ${px}px`, lines);
+        // 복합 조건(@media (min-width: 600px) and (max-width: 767px))도 모든 너비 조건을 각각 검사한다
+        for (const media of Array.from(css.matchAll(/@media([^{]*)\{/g))) {
+            for (const mm of Array.from(media[1].matchAll(/\((min|max)-width:\s*(\d+)px\)/g))) {
+                const [, kind, px] = mm;
+                const ok = (kind === "min" && px === "768") || (kind === "max" && px === "767");
+                if (!ok) push("breakpoint", file, lineOf(css, media.index!), `${kind}-width: ${px}px`, lines);
+            }
         }
 
         if (isTokenBridge && !/img\s*\{[^}]*dynamic-range-limit:\s*standard/.test(css))
@@ -187,10 +216,12 @@ export function lintDesign(frontendRoot: string): LintResult {
             if (/['"][^'"]*(\d+px|#[0-9a-fA-F]{3,8}|rgba?\()[^'"]*['"]|:\s*\d+\s*[,}]/.test(body))
                 push("inline-style-static", file, at(mm.index!), body.trim().slice(0, 80), lines);
         }
-        for (const mm of Array.from(text.matchAll(/<(div|span)\b[^>]*\bonClick=/g)))
-            push("clickable-div", file, at(mm.index!), `<${mm[1]} onClick>`, lines);
-        for (const mm of Array.from(text.matchAll(/<img\b[\s\S]*?\/?>/g))) {
-            const tag = mm[0];
+        for (const mm of Array.from(text.matchAll(/<(div|span)\b/g))) {
+            const tag = text.slice(mm.index!, jsxTagEnd(text, mm.index!) + 1);
+            if (/\bonClick=/.test(tag)) push("clickable-div", file, at(mm.index!), `<${mm[1]} onClick>`, lines);
+        }
+        for (const mm of Array.from(text.matchAll(/<img\b/g))) {
+            const tag = text.slice(mm.index!, jsxTagEnd(text, mm.index!) + 1);
             if (!/loading=["{']?\s*["']?lazy/.test(tag) || !/decoding=["{']?\s*["']?async/.test(tag))
                 push("img-lazy", file, at(mm.index!), tag.replace(/\s+/g, " ").slice(0, 80), lines);
         }

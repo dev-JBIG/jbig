@@ -322,7 +322,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
                         rows={5}
                     />
                     <div className="recruitment-modal-actions">
-                        <Button type="button" variant="default" onClick={() => setShowApplyModal(false)}>취소</Button>
+                        <Button type="button" variant="default" onClick={() => setShowApplyModal(false)} disabled={applying}>취소</Button>
                         <Button type="button" variant="primary" onClick={handleApply} disabled={applying}>
                             {applying ? '지원 중...' : '지원하기'}
                         </Button>

@@ -5,6 +5,14 @@ import Dialog, { DIALOG_ROOT_ID, DialogHeader, __resetDialogScrollLockForTest } 
 
 afterEach(() => __resetDialogScrollLockForTest());
 
+// 배경막에서 누르고 떼기 (실제 마우스 클릭 순서)
+const pressBackdrop = () => {
+    const backdrop = screen.getByRole("dialog");
+    fireEvent.mouseDown(backdrop);
+    fireEvent.mouseUp(backdrop);
+    fireEvent.click(backdrop);
+};
+
 const Basic: React.FC<{ onClose?: () => void; closeOnBackdrop?: boolean; busy?: boolean; withInitial?: boolean }> = ({ onClose = () => {}, closeOnBackdrop, busy, withInitial }) => {
     const second = useRef<HTMLButtonElement>(null);
     return (
@@ -73,14 +81,34 @@ describe("Dialog", () => {
         expect(onClose).toHaveBeenCalledTimes(1);
         fireEvent.click(screen.getByRole("button", { name: "닫기" }));
         expect(onClose).toHaveBeenCalledTimes(2);
-        fireEvent.click(screen.getByRole("dialog"));
+        pressBackdrop();
         expect(onClose).toHaveBeenCalledTimes(3);
+    });
+
+    test("패널 안에서 누르고 배경막에서 떼면(드래그) 닫히지 않는다", () => {
+        const onClose = jest.fn();
+        render(<Basic onClose={onClose} />);
+        const backdrop = screen.getByRole("dialog");
+        fireEvent.mouseDown(screen.getByText("첫째"));
+        fireEvent.mouseUp(backdrop);
+        fireEvent.click(backdrop);
+        expect(onClose).not.toHaveBeenCalled();
+        pressBackdrop();
+        expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    test("busy 동안은 머리 줄 닫기 버튼도 꺼진다", () => {
+        const onClose = jest.fn();
+        const { rerender } = render(<Basic onClose={onClose} busy />);
+        expect(screen.getByRole("button", { name: "닫기" })).toBeDisabled();
+        rerender(<Basic onClose={onClose} busy={false} />);
+        expect(screen.getByRole("button", { name: "닫기" })).toBeEnabled();
     });
 
     test("closeOnBackdrop=false 면 배경막 클릭으로 닫히지 않지만 ESC로는 닫힌다", () => {
         const onClose = jest.fn();
         render(<Basic onClose={onClose} closeOnBackdrop={false} />);
-        fireEvent.click(screen.getByRole("dialog"));
+        pressBackdrop();
         expect(onClose).not.toHaveBeenCalled();
         fireEvent.keyDown(document, { key: "Escape" });
         expect(onClose).toHaveBeenCalledTimes(1);
@@ -90,7 +118,7 @@ describe("Dialog", () => {
         const onClose = jest.fn();
         const { rerender } = render(<Basic onClose={onClose} busy />);
         fireEvent.keyDown(document, { key: "Escape" });
-        fireEvent.click(screen.getByRole("dialog"));
+        pressBackdrop();
         expect(onClose).not.toHaveBeenCalled();
         rerender(<Basic onClose={onClose} busy={false} />);
         fireEvent.keyDown(document, { key: "Escape" });

@@ -121,6 +121,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     placeholder="학교메일"
                     invalid={!!fieldErrors.email}
                     id="modal-userid"
+                    aria-describedby={fieldErrors.email ? "modal-userid-error" : undefined}
                     value={userIdLocal}
                     onChange={(e) => {
                         onUserIdChange(e);
@@ -128,7 +129,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     }}
                     onBlur={handleEmailBlur}
                 />
-                {fieldErrors.email && <span className="login-modal-field-error">{fieldErrors.email}</span>}
+                {fieldErrors.email && <span id="modal-userid-error" className="login-modal-field-error">{fieldErrors.email}</span>}
 
                 <label className="login-modal-label" htmlFor="modal-password">
                     비밀번호
@@ -138,6 +139,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     toggleClassName="login-modal-toggle"
                     className={`login-modal-input ${fieldErrors.password ? "input-error" : ""}`}
                     id="modal-password"
+                    aria-invalid={!!fieldErrors.password || undefined}
+                    aria-describedby={fieldErrors.password ? "modal-password-error" : undefined}
                     value={password}
                     onChange={(e) => {
                         setPassword(e.target.value);
@@ -145,7 +148,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     }}
                     onBlur={handlePasswordBlur}
                 />
-                {fieldErrors.password && <span className="login-modal-field-error">{fieldErrors.password}</span>}
+                {fieldErrors.password && <span id="modal-password-error" className="login-modal-field-error">{fieldErrors.password}</span>}
 
                 {error && <div className="login-modal-error" role="alert">{error}</div>}
 
