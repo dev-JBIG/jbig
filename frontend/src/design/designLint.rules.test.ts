@@ -133,8 +133,9 @@ describe("designLint 판정", () => {
             "@media screen, print { .b { display: none !important; } }",
             "@media print { .c { display: none !important; } }",
             "@media only print and (min-width: 768px) { .d { display: none !important; } }",
+            ".app-card:not(.w-md-editor) { color: inherit !important; }",
         ].join("\n");
-        expect(lint({ "src/a.css": css }, "important").map(x => x.line)).toEqual([1, 3, 4]);
+        expect(lint({ "src/a.css": css }, "important").map(x => x.line)).toEqual([1, 3, 4, 7]);
     });
 
     test("복합 미디어 쿼리의 모든 너비 조건을 검사한다", () => {

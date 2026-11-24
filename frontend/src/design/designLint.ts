@@ -243,7 +243,8 @@ export function lintDesign(frontendRoot: string): LintResult {
             // 예외: 동작 줄이기 전역 리셋, 인쇄 전용 스타일, 인라인 스타일을 넣는 외부 라이브러리 덮어쓰기
             // (선택자 목록은 모든 항목이 외부 라이브러리일 때만, 미디어는 인쇄 전용일 때만 예외)
             const ownSelector = selectorStack.filter(s => !s.startsWith("@")).slice(-1)[0] || "";
-            const thirdPartyOnly = ownSelector.split(",").every(part => THIRD_PARTY_SELECTOR.test(part));
+            // :not(...) 안의 클래스는 대상을 정하지 않으므로 빼고 본다
+            const thirdPartyOnly = ownSelector.split(",").every(part => THIRD_PARTY_SELECTOR.test(part.replace(/:not\([^()]*(\([^()]*\))*[^()]*\)/g, "")));
             if (/important/.test(value) && !/prefers-reduced-motion/.test(atRules) && !isPrintOnly(selectorStack) && !thirdPartyOnly)
                 push("important", file, line, `${prop}: ${value}`, lines);
 
