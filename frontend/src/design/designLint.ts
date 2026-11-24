@@ -166,6 +166,28 @@ const blankComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, m => m.r
 const COLOR_PROP = /^(color|background(-color)?|border(-(top|right|bottom|left))?(-color)?|outline(-color)?|fill|stroke|caret-color|text-decoration-color|box-shadow|column-rule(-color)?)$/;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(/;
 const OVERLAY_SELECTOR = /modal|dialog|overlay|dropdown|popup|popover|menu|toast|sheet|tooltip|lightbox|backdrop/i;
+/** name(...) 호출을 괄호 짝을 맞춰 통째로 지운다 (예: calc(100% - 8px)) */
+const stripCalls = (v: string, name: string) => {
+    let out = "", i = 0;
+    while (i < v.length) {
+        const at = v.indexOf(name + "(", i);
+        if (at < 0 || /[\w-]/.test(v[at - 1] || "")) { out += v.slice(i); break; }
+        out += v.slice(i, at) + " ";
+        let depth = 0, j = at + name.length;
+        for (; j < v.length; j++) {
+            if (v[j] === "(") depth++;
+            else if (v[j] === ")" && --depth === 0) break;
+        }
+        i = j + 1;
+    }
+    return out;
+};
+
+/** 규칙을 감싼 @media 중 하나라도 인쇄 전용(모든 쿼리가 print, not print 아님)인가 */
+const isPrintOnly = (stack: string[]) =>
+    stack.filter(s => /^@media\b/.test(s)).some(m =>
+        m.replace(/^@media\s*/, "").split(",").every(q => /^\s*(only\s+)?print\b/i.test(q)));
+
 /** 자체 스타일(인라인 포함)을 넣어 !important 없이는 덮을 수 없는 외부 라이브러리 요소 */
 const THIRD_PARTY_SELECTOR = /\.(w-md-editor|wmde-markdown|react-datepicker|notion)/;
 const RADIUS_OK =/^(var\(--radius-(sm|md|lg)\)|999px|50%|0)$/;
@@ -219,7 +241,10 @@ export function lintDesign(frontendRoot: string): LintResult {
             if (prop.startsWith("--")) continue;
 
             // 예외: 동작 줄이기 전역 리셋, 인쇄 전용 스타일, 인라인 스타일을 넣는 외부 라이브러리 덮어쓰기
-            if (/important/.test(value) && !/prefers-reduced-motion|\bprint\b/.test(atRules) && !THIRD_PARTY_SELECTOR.test(selector))
+            // (선택자 목록은 모든 항목이 외부 라이브러리일 때만, 미디어는 인쇄 전용일 때만 예외)
+            const ownSelector = selectorStack.filter(s => !s.startsWith("@")).slice(-1)[0] || "";
+            const thirdPartyOnly = ownSelector.split(",").every(part => THIRD_PARTY_SELECTOR.test(part));
+            if (/important/.test(value) && !/prefers-reduced-motion/.test(atRules) && !isPrintOnly(selectorStack) && !thirdPartyOnly)
                 push("important", file, line, `${prop}: ${value}`, lines);
 
             const v = value.replace(/\s*!important\s*$/, "");
@@ -241,9 +266,10 @@ export function lintDesign(frontendRoot: string): LintResult {
                 const sizeStripped = v.replace(/var\([^()]*(\([^()]*\))*[^()]*\)/g, "TOKEN");
                 if (/\d(px|rem|pt)\b/.test(sizeStripped)) push("font-size-token", file, line, `${selector} → ${v}`, lines);
             }
-            if (!isTokenBridge && /^(padding|margin|gap|row-gap|column-gap)(-[a-z-]+)?$/.test(prop) && !/calc\(/.test(v)) {
-                const spaceStripped = v.replace(/var\([^()]*(\([^()]*\))*[^()]*\)/g, "TOKEN");
-                const raw = Array.from(spaceStripped.matchAll(/(?<![\w.-])(\d+(?:\.\d+)?)px\b/g)).map(x => parseFloat(x[1]));
+            if (!isTokenBridge && /^(padding|margin|gap|row-gap|column-gap)(-[a-z-]+)?$/.test(prop)) {
+                // calc() 식과 var() 는 빼고 남은 직접값만 본다. 음수도 절댓값으로 범위를 판단한다.
+                const spaceStripped = stripCalls(stripCalls(v, "calc"), "var");
+                const raw = Array.from(spaceStripped.matchAll(/(?<![\w.])(-?\d+(?:\.\d+)?)px\b/g)).map(x => Math.abs(parseFloat(x[1])));
                 if (raw.some(n => n > 1 && n <= 48)) push("spacing-token", file, line, `${selector} → ${prop}: ${v}`, lines);
             }
             if (prop === "font-weight" && /^\d+$/.test(v) && !["400", "500", "600", "700"].includes(v))

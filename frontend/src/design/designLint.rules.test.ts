@@ -116,6 +116,27 @@ describe("designLint 판정", () => {
         expect(lint({ "src/a.css": css }, "spacing-token").map(x => x.line)).toEqual([1, 4]);
     });
 
+    test("calc() 바깥의 직접값과 음수 직접값도 여백 위반이다", () => {
+        const css = [
+            ".a { padding: calc(100% - 8px) 12px; }",
+            ".b { margin-left: -8px; }",
+            ".c { margin-top: calc(-1 * var(--space-2)); margin-left: -1px; }",
+        ].join("\n");
+        expect(lint({ "src/a.css": css }, "spacing-token").map(x => x.line)).toEqual([1, 2]);
+    });
+
+    test("!important 예외는 모든 선택자가 외부 라이브러리이거나 인쇄 전용 미디어일 때만", () => {
+        const css = [
+            ".w-md-editor, .app-card { padding: 0 !important; }",
+            ".w-md-editor .x, .react-datepicker__day { color: inherit !important; }",
+            "@media not print { .a { display: none !important; } }",
+            "@media screen, print { .b { display: none !important; } }",
+            "@media print { .c { display: none !important; } }",
+            "@media only print and (min-width: 768px) { .d { display: none !important; } }",
+        ].join("\n");
+        expect(lint({ "src/a.css": css }, "important").map(x => x.line)).toEqual([1, 3, 4]);
+    });
+
     test("복합 미디어 쿼리의 모든 너비 조건을 검사한다", () => {
         const v = lint({ "src/a.css": "@media (min-width: 600px) and (max-width: 767px) { .a { color: inherit; } }\n" }, "breakpoint");
         expect(v.map(x => x.message)).toEqual(["min-width: 600px"]);
