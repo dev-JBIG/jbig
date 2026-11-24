@@ -12,6 +12,7 @@ from django.core import signing
 from django.http import Http404, StreamingHttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils import timezone
 from urllib.parse import quote
 from django.db.models import (
     F, Q, Count, Value, CharField, DateTimeField, Func, OuterRef, Prefetch, Subquery
@@ -1055,6 +1056,69 @@ class AllPostListAPIView(generics.ListAPIView):
         serializer = self.get_serializer(queryset, many=True)
         return Response({'results': serializer.data})
 
+
+
+POPULAR_SORT_FIELDS = {
+    'likes': 'likes_count',
+    'comments': 'comment_count',
+    'views': 'views',
+}
+POPULAR_DEFAULT_LIMIT = 5
+POPULAR_MAX_LIMIT = 10
+POPULAR_DEFAULT_DAYS = 30
+POPULAR_MAX_DAYS = 365
+
+
+def _bounded_int(raw, default, low, high):
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return default
+    return max(low, min(high, value))
+
+
+@extend_schema(tags=['게시판'])
+@extend_schema_view(
+    get=extend_schema(
+        summary="인기 게시글 목록 조회",
+        description=(
+            "최근 days일(기본 30, 최대 365) 안에 올라온 글을 sort 기준(likes, comments, views)으로 "
+            "많은 순서대로 limit개(기본 5, 최대 10) 돌려줍니다. 전체 글 목록과 같은 읽기 권한 규칙을 따르고 "
+            "사진첩 글과 반응이 0인 글은 뺍니다."
+        ),
+        parameters=[
+            OpenApiParameter(name='sort', type=str, enum=list(POPULAR_SORT_FIELDS), required=False),
+            OpenApiParameter(name='limit', type=int, required=False),
+            OpenApiParameter(name='days', type=int, required=False),
+        ],
+    )
+)
+class PopularPostListAPIView(generics.ListAPIView):
+    serializer_class = PostSummarySerializer
+    permission_classes = [AllowAny]
+    pagination_class = None
+
+    def get_queryset(self):
+        params = self.request.query_params
+        field = POPULAR_SORT_FIELDS.get(params.get('sort'), POPULAR_SORT_FIELDS['likes'])
+        days = _bounded_int(params.get('days'), POPULAR_DEFAULT_DAYS, 1, POPULAR_MAX_DAYS)
+        limit = _bounded_int(params.get('limit'), POPULAR_DEFAULT_LIMIT, 1, POPULAR_MAX_LIMIT)
+        since = timezone.now() - timedelta(days=days)
+
+        queryset = (
+            Post.objects.readable_for_user(self.request.user)
+            .exclude(board__board_type=Board.BoardType.PHOTO_ALBUM)
+            .filter(created_at__gte=since)
+        )
+        return (
+            _with_post_list_summary(queryset)
+            .filter(**{f'{field}__gt': 0})
+            .order_by(f'-{field}', '-created_at', '-id')[:limit]
+        )
+
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response({'results': serializer.data})
 
 
 @extend_schema(tags=['게시판'])

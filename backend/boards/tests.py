@@ -1225,3 +1225,71 @@ class AuthorBoardScopeTest(APITestCase):
         res = self.client.get(reverse('post-attachment-download',
                                       kwargs={'post_id': self.post_a.id, 'index': 0}))
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class PopularPostListTest(APITestCase):
+    """대문 인기 글: 기준별 정렬, 최근 N일, 읽기 권한, 반응 0 글 제외."""
+
+    def setUp(self):
+        self.users = [
+            User.objects.create_user(
+                username=f'pop{i}', email=f'pop{i}@example.com', password='pw',
+                is_verified=True, is_active=True,
+            )
+            for i in range(3)
+        ]
+        self.category = Category.objects.create(name='PopCat')
+        self.board = Board.objects.create(name='자유', category=self.category)
+        self.author_board = Board.objects.create(
+            name='건의함', category=self.category, read_permission='author',
+        )
+        self.liked = self._post('좋아요 많은 글', likes=3, comments=0, views=10)
+        self.commented = self._post('댓글 많은 글', likes=1, comments=2, views=5)
+        self.viewed = self._post('조회 많은 글', likes=0, comments=0, views=99)
+        self.quiet = self._post('반응 없는 글', likes=0, comments=0, views=0)
+        self.old = self._post('오래된 글', likes=3, comments=3, views=500)
+        Post.objects.filter(pk=self.old.pk).update(created_at=timezone.now() - timezone.timedelta(days=40))
+        self.hidden = self._post('남의 건의', likes=3, comments=3, views=500, board=self.author_board)
+
+    def _post(self, title, likes, comments, views, board=None):
+        post = Post.objects.create(
+            author=self.users[0], board=board or self.board, title=title, content_md='x', views=views,
+        )
+        for user in self.users[:likes]:
+            post.likes.add(user)
+        for _ in range(comments):
+            Comment.objects.create(post=post, author=self.users[1], content='c')
+        return post
+
+    def _titles(self, **params):
+        res = self.client.get(reverse('popular-posts-list'), params)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        return [p['title'] for p in res.data['results']]
+
+    def test_sorts_by_each_metric_and_skips_zero(self):
+        self.assertEqual(self._titles(sort='likes'), ['좋아요 많은 글', '댓글 많은 글'])
+        self.assertEqual(self._titles(sort='comments'), ['댓글 많은 글'])
+        self.assertEqual(self._titles(sort='views'), ['조회 많은 글', '좋아요 많은 글', '댓글 많은 글'])
+
+    def test_unknown_sort_falls_back_to_likes(self):
+        self.assertEqual(self._titles(sort='nope'), self._titles(sort='likes'))
+
+    def test_recent_window_and_limit(self):
+        self.assertNotIn('오래된 글', self._titles(sort='views'))
+        self.assertIn('오래된 글', self._titles(sort='views', days=60))
+        self.assertEqual(len(self._titles(sort='views', limit=1)), 1)
+        # 범위 밖 값은 경계로 맞추고, 숫자가 아니면 기본값
+        self.assertEqual(len(self._titles(sort='views', limit=0)), 1)
+        self.assertEqual(len(self._titles(sort='views', limit='x', days='y')), 3)
+
+    def test_respects_read_permission(self):
+        self.assertNotIn('남의 건의', self._titles(sort='views'))
+        token = RefreshToken.for_user(self.users[2])
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        self.assertNotIn('남의 건의', self._titles(sort='views'))
+
+    def test_counts_in_response(self):
+        res = self.client.get(reverse('popular-posts-list'), {'sort': 'likes'})
+        first = res.data['results'][0]
+        self.assertEqual(first['likes_count'], 3)
+        self.assertEqual(first['views'], 10)
