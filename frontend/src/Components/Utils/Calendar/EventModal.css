@@ -91,7 +91,7 @@
     border: 2px solid transparent;
     cursor: pointer;
     padding: 0;
-    transition: transform 120ms ease, box-shadow 120ms ease;
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .event-color-swatch:hover {

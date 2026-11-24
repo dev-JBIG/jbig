@@ -108,9 +108,20 @@ const isAllowed = (lines: string[], line: number, rule: string) => {
  */
 const jsxTagEnd = (text: string, start: number) => {
     const stack: ("expr" | "tpl")[] = [];
-    const prevSignificant = (k: number) => {
-        for (let j = k - 1; j > start; j--) if (!/\s/.test(text[j])) return text[j];
-        return "";
+    // 따옴표 앞 토큰이 값이 시작될 자리인가: 연산자·괄호 뒤, 또는 값을 받는 키워드(return, typeof 등) 뒤.
+    // 키워드는 단어 전체로 비교한다(join's 처럼 키워드로 끝나는 식별자는 아님).
+    const VALUE_KEYWORDS = new Set(["return", "typeof", "case", "yield", "await", "throw", "void", "in", "of", "instanceof", "new", "delete", "else", "do"]);
+    const isValueStart = (k: number) => {
+        let j = k - 1;
+        while (j > start && /\s/.test(text[j])) j--;
+        if (j <= start) return true;
+        const c = text[j];
+        if (/[(,=:[{?+\-*%!&|;>}]/.test(c)) return true;
+        if (!/[A-Za-z0-9_$]/.test(c)) return false;
+        let w = j;
+        while (w > start && /[A-Za-z0-9_$]/.test(text[w - 1])) w--;
+        if (w > start && text[w - 1] === ".") return false; // obj.return 같은 속성 이름
+        return VALUE_KEYWORDS.has(text.slice(w, j + 1));
     };
     const skipString = (i: number, q: string) => {
         for (let j = i + 1; j < text.length; j++) {
@@ -134,7 +145,7 @@ const jsxTagEnd = (text: string, start: number) => {
             if (ch === "/" && text[i + 1] === "/") { const nl = text.indexOf("\n", i); i = nl < 0 ? text.length : nl; continue; }
             if (ch === "/" && text[i + 1] === "*") { const e = text.indexOf("*/", i + 2); i = e < 0 ? text.length : e + 2; continue; }
             if (ch === "`") { stack.push("tpl"); i++; continue; }
-            if ((ch === '"' || ch === "'") && /^[(,=:[{?+\-*%!&|;>}]?$/.test(prevSignificant(i))) { i = skipString(i, ch); continue; }
+            if ((ch === '"' || ch === "'") && isValueStart(i)) { i = skipString(i, ch); continue; }
             if (ch === "{") stack.push("expr");
             else if (ch === "}") stack.pop();
             i++;
@@ -291,7 +302,7 @@ export function lintDesign(frontendRoot: string): LintResult {
             push("primer-button-inner", file, at(mm.index!), "Button > span.*-inner", lines);
         if (file.endsWith(".tsx"))
             for (const mm of Array.from(text.matchAll(/>\s*([A-Z]{4,}(?:\s[A-Z]{2,})*)\s*</g)))
-                if (!/^(JBIG|JBNU|HTML|CSS|API|URL|PDF|RMSE|ADR|CSV|UTF|KST|GPT|AWS|SQL|ID)$/.test(mm[1]))
+                if (!/^(JBIG|JBNU|HTML|CSS|API|URL|PDF|RMSE|ADR|CSV|UTF|KST|GPT|AWS|SQL|ID|TRAIN|TEST)$/.test(mm[1]))
                     push("english-caps-label", file, at(mm.index!), mm[1], lines);
     }
 

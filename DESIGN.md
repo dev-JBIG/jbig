@@ -177,7 +177,9 @@ components:
   - 보더: `var(--borderColor-default)`, `var(--borderColor-muted)`, `var(--borderColor-emphasis)`
 - 라이트/다크 양쪽에서 텍스트 대비 **WCAG AA(4.5:1 이상, 큰 글자 3:1 이상)** 를 유지합니다.
   - 다크 딤드에서는 Primer 기본값이 카드, 공지 행, 선택 행 위에서 4.5에 못 미쳐 `index.css`에서 세 토큰의 밝기만 올립니다(색상 유지): `--fgColor-accent`/`--fgColor-link` #478be6 → #5ea2f6, `--fgColor-danger` #e5534b → #f67d74, `--fgColor-muted` #9198a1 → #9da5ae. 자동 모드는 Primer 선택자와 같은 강도(`[data-color-mode][data-color-mode="auto"]...`)로 덮어씁니다.
-- 포커스 스타일은 전역 `:focus-visible` (`var(--focus-outlineColor, #0969da)`)를 유지하며 `outline: none`으로 제거하지 않습니다. (`outline-none`)
+- 포커스 스타일은 전역 `:focus-visible` (`var(--focus-outlineColor)`)를 유지하며 `outline: none`으로 제거하지 않습니다. (`outline-none`)
+  - 입력창(input, textarea, select)은 Primer 입력창과 같은 **2px 안쪽 링**(`outline: 2px solid var(--focus-outlineColor); outline-offset: -1px` + 테두리 강조)으로 통일합니다(`global-adaptive.css`).
+- 반투명 테두리는 `rgba(31, 35, 40, 0.15)` 대신 `var(--borderColor-translucent)`를 씁니다(다크 테마에서도 보임). 사진 위 글자·버튼용 어두운 막처럼 테마와 무관한 색만 사유 주석으로 예외입니다.
   - 예외: 바깥 상자가 `:focus-within`으로 같은 2px 포커스 링을 그리는 복합 입력(예: `JbnuEmailInput`)의 안쪽 input만, 줄 위에 사유 주석을 달고 허용합니다.
 - **Primer `<Button>` 아이콘 정렬**: 아이콘이 포함된 `@primer/react` `<Button>`은 내부에 `<span className="*-inner">`를 중첩하지 말고 반드시 Primer 네이티브 **`leadingVisual`** prop을 사용합니다. (`primer-button-inner`)
 
@@ -188,6 +190,7 @@ components:
   - Primer `BaseStyles`가 앱 전체에 `font-family: var(--fontStack-system)`을 직접 지정하므로, `index.css`의 `:root`에서 Primer 글꼴 토큰(`--fontStack-system`, `--fontStack-sansSerif`, `--fontStack-sansSerifDisplay`) 맨 앞에 Pretendard를 둡니다. 컴포넌트 CSS에서 `font-family`를 새로 지정하지 않고 상속을 따릅니다. 자체 글꼴을 지정하는 외부 라이브러리(마크다운 에디터 `@uiw/react-md-editor` 등)는 `shared.css`에서 같은 토큰(`var(--fontStack-system)`)으로 맞춥니다.
 - **브랜드 마크**: 헤더·인증·관리자 영역의 로고는 임의 검정 사각형 `J` 모노그램을 만들지 않고 실제 JBIG 마스코트(`/JBIG-logo-192.png`)를 사용합니다.
 - **모바일 퍼스트**: 기본 스타일은 모바일, `@media (min-width: 768px)` 이상에서 데스크톱 확장. 모바일 전용 보정이 필요하면 `@media (max-width: 767px)`만 씁니다. 다른 기준점(600, 768, 960px 등)을 새로 만들지 않습니다. (`breakpoint`)
+  - 사이드바 옆 본문처럼 **부품 폭**에 따라 배치를 바꿔야 하면 화면 폭 대신 컨테이너 쿼리를 씁니다: 부모에 `container-type: inline-size`, 규칙은 `@container (max-width: …)`. (예: 소개 카드 638px, 대회 본문 780px, HTML 편집기 772px. 예전 화면 960, 1100, 820px 기준과 같은 지점)
 - **핵심 레이아웃 토큰**:
   - `--max-content-width: 1280px`
   - `--header-height`: 모바일 `56px`, 데스크톱 `60px`
@@ -271,6 +274,9 @@ components:
 - 모달/다이얼로그는 `role="dialog"`, `aria-modal="true"`, `ESC` 닫기, 닫힘 시 트리거 요소로 포커스 복원을 지킵니다.
 - 스타일은 전용 CSS 파일에 작성하고, 런타임 동적 계산값(예: 진행률 바 너비, 이벤트 색상 변수 등)을 제외한 정적 인라인 `style={{}}` 작성을 지양합니다. (`inline-style-static`)
 - `console.log` 디버그 코드를 커밋하지 않습니다. (`console-log`)
+- 비어 있는 목록, 결과 없음 표시는 [`EmptyState`](./frontend/src/Components/Utils/EmptyState.tsx)(아이콘 + 제목 + 설명 + 행동 버튼, `compact`, `framed`)만 씁니다.
+- 모달 배경막은 모두 `var(--overlay-backdrop-bgColor)` 하나입니다.
+- 전환 속도는 `--transition-fast`(120ms), `--transition-base`(180ms), `--transition-slow`(260ms)만 씁니다.
 
 ---
 
@@ -371,6 +377,7 @@ components:
 ---
 
 ## 10. 변경 이력
+- 2026-11-24: 남은 규칙 위반 정리. 화면 폭 기준점 12곳 통일(768px 경계 버그 4곳 포함, 부품 폭 3곳은 컨테이너 쿼리), 정의 안 된 변수 1곳, 입력창 포커스 링 통일(outline none 13곳 제거), 배경막 3종과 반투명 테두리 6곳 토큰화, 전환 속도 23곳 토큰화, 빈 상태 표시 9곳 EmptyState로 통일, 이미지 로딩 속성 9곳, 인라인 스타일 4곳, 쓰지 않던 CommentList 삭제. 남은 위반은 게시판 목록 !important 뿐.
 - 2026-11-24: 여백 단계 토큰 11개(`--space-0-5` ~ `--space-12`) 도입, 컴포넌트 CSS 여백 907곳을 토큰으로(값이 바뀐 곳 314곳), `spacing-token` 검사 추가. 사용자가 AS-IS/TO-BE 비교 PDF를 보고 승인.
 - 2026-11-24: `important` 검사 예외를 인쇄 전용과 외부 라이브러리 덮어쓰기로 넓힘(정당한 사용 77곳은 위반에서 제외, 남은 위반은 실제 우선순위 싸움만).
 - 2026-11-24: 화면 변화 없는 정리. 예전 색 별칭 `--color-*` 290곳을 Primer 토큰으로 바꾸고 정의 23개 삭제, 항상 정의된 토큰 뒤의 예비값 1,019곳 삭제.

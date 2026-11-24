@@ -200,14 +200,6 @@
     margin-bottom: var(--space-4);
 }
 
-.admin-empty-text {
-    color: var(--text-light-color);
-    text-align: center;
-    padding: var(--space-10) 0;
-    margin: 0;
-    font-size: var(--text-ui);
-}
-
 /* 대시보드 바로가기 카드 */
 .admin-shortcut-grid {
     display: grid;
@@ -505,7 +497,6 @@
 
 .admin-input:focus,
 .admin-select:focus {
-    outline: none;
     border-color: var(--borderColor-accent-emphasis);
     box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
@@ -613,7 +604,7 @@
     display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .admin-header-bar {
         padding: 0 var(--space-4);
         height: 54px;
@@ -646,7 +637,7 @@
         z-index: 100;
         transform: translateX(-100%);
         visibility: hidden;
-        transition: transform 0.22s ease, visibility 0.22s ease;
+        transition: transform var(--transition-base), visibility var(--transition-base);
         box-shadow: var(--shadow-xl);
     }
 

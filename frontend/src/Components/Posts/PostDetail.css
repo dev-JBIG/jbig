@@ -372,7 +372,7 @@
     gap: var(--space-xs);
     z-index: 40;
     pointer-events: none;
-    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+    transition: transform var(--transition-slow), opacity var(--transition-slow), visibility var(--transition-slow);
 }
 
 .postdetail-like-floating.scrolling {
@@ -548,7 +548,7 @@
     border-right: 1px solid var(--borderColor-default);
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
     .postdetail-content.form-style td:first-child {
         width: 100px;
         font-size: var(--text-caption);
@@ -847,7 +847,8 @@
 .recruitment-modal-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(27, 31, 36, 0.55);
+    /* 다른 모달과 같은 배경막 (Dialog 공통) */
+    background-color: var(--overlay-backdrop-bgColor);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -886,7 +887,6 @@
 }
 
 .recruitment-apply-textarea:focus {
-    outline: none;
     border-color: var(--borderColor-accent-emphasis);
     box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }

@@ -109,7 +109,7 @@
   text-decoration: none;
   font-size: var(--text-label);
   font-weight: 500;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 .block-link-item:hover {
   border-color: var(--borderColor-accent-emphasis);
@@ -231,7 +231,7 @@
 .block-skill-bar-row { display: flex; align-items: center; gap: var(--space-2); }
 .block-skill-name { flex-shrink: 0; width: 88px; font-size: var(--text-caption); font-weight: 500; color: var(--fgColor-muted); text-align: right; }
 .block-skill-bar { flex: 1; height: 6px; background: var(--bgColor-neutral-muted); border-radius: 999px; overflow: hidden; }
-.block-skill-bar-fill { height: 100%; background: var(--bgColor-accent-emphasis); border-radius: 999px; transition: width 0.3s ease; }
+.block-skill-bar-fill { height: 100%; background: var(--bgColor-accent-emphasis); border-radius: 999px; transition: width var(--transition-slow); }
 
 /* Header Block */
 .block-header-view {
@@ -407,7 +407,7 @@
   letter-spacing: 0.04em;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .profile-blocks-renderer.two-column { grid-template-columns: 1fr; gap: var(--space-6); }
   .resume-sidebar { position: static; padding-bottom: var(--space-4); border-bottom: 1px solid var(--borderColor-default); }
   .block-project-view { flex-direction: column; }

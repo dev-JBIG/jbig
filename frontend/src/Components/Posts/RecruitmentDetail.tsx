@@ -8,6 +8,8 @@ import {
 import { useUser } from '../Utils/UserContext';
 import { useAlert } from '../Utils/AlertContext';
 import Dialog from '../Utils/Dialog';
+import EmptyState from '../Utils/EmptyState';
+import { Users } from 'lucide-react';
 
 interface RecruitmentDetailProps {
     recruitment: RecruitmentDetailType;
@@ -260,9 +262,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
                             {loadingApps ? (
                                 <div className="recruitment-empty">불러오는 중...</div>
                             ) : filteredApps.length === 0 ? (
-                                <div className="recruitment-empty">
-                                    해당 상태의 지원자가 없습니다.
-                                </div>
+                                <EmptyState compact icon={<Users size={22} />} title="해당 상태의 지원자가 없습니다." />
                             ) : (
                                 <div className="recruitment-app-list">
                                     {filteredApps.map(app => (

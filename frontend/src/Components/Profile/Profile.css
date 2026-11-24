@@ -56,7 +56,7 @@
     padding: var(--space-2) var(--space-5);
     background: var(--bgColor-accent-emphasis);
     color: var(--fgColor-onEmphasis);
-    border: 1px solid rgba(31, 35, 40, 0.15);
+    border: 1px solid var(--borderColor-translucent);
     border-radius: var(--radius-md);
     cursor: pointer;
     font-size: var(--text-ui);
@@ -198,7 +198,7 @@
 .btn-edit {
     background: var(--bgColor-accent-emphasis);
     color: var(--fgColor-onEmphasis);
-    border-color: rgba(31, 35, 40, 0.15);
+    border-color: var(--borderColor-translucent);
 }
 
 .btn-edit:hover {
@@ -222,7 +222,7 @@
 .btn-save {
     background: var(--bgColor-success-emphasis);
     color: var(--fgColor-onEmphasis);
-    border-color: rgba(31, 35, 40, 0.15);
+    border-color: var(--borderColor-translucent);
 }
 
 .btn-save:hover {
@@ -267,7 +267,7 @@
     font-weight: 500;
     color: var(--resume-color-meta);
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
+    transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .profile-tab:hover {
@@ -334,7 +334,6 @@
 }
 
 .resume-editor textarea:focus {
-    outline: none;
     border-color: var(--borderColor-accent-emphasis);
     box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
@@ -423,7 +422,7 @@
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background var(--transition-fast);
 }
 
 .profile-list-item:hover {
@@ -506,13 +505,6 @@
     flex-shrink: 0;
 }
 
-.profile-empty-blocks {
-    text-align: center;
-    padding: 64px var(--space-5);
-    color: var(--resume-color-meta);
-    font-size: var(--text-ui);
-}
-
 /* ============================================================
    Modal (회원 탈퇴)
    ============================================================ */
@@ -522,7 +514,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
+    /* 다른 모달과 같은 배경막 (Dialog 공통) */
+    background-color: var(--overlay-backdrop-bgColor);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -568,7 +561,6 @@
 }
 
 .modal-input:focus {
-    outline: none;
     border-color: var(--borderColor-accent-emphasis);
     box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
@@ -616,7 +608,7 @@
 /* ============================================================
    Responsive
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .profile-container {
         padding: var(--space-6) var(--space-4) 64px;
     }
@@ -651,7 +643,7 @@
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 767px) {
     .profile-list-item {
         flex-direction: column;
         align-items: flex-start;

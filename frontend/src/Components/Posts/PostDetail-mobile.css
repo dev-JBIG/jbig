@@ -35,7 +35,8 @@
 
     .postdetail-like-floating {
         bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-        gap: var(--space-2xs);
+        /* 정의되지 않은 --space-2xs 로 선언이 무시되던 것을 의도한 2px 단계로 */
+        gap: var(--space-0-5);
     }
 
     .postdetail-like-floating .postdetail-like-btn {

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Navigate, NavLink, useLocation } from "react-router-dom";
-import { ArrowDownToLine, ArrowRight, Check, CircleAlert, Clock3, FileUp, Trophy } from "lucide-react";
+import { ArrowDownToLine, ArrowRight, Check, CircleAlert, Clock3, FileUp, Lock, Trophy } from "lucide-react";
+import EmptyState from "../Utils/EmptyState";
 import {
     ArenaFailure, ArenaHistory, ArenaInfo, ArenaLeaderboard, ArenaSubmission, arenaFailure,
     downloadArenaData, fetchArenaHistory, fetchArenaInfo, fetchArenaLeaderboard, selectArenaSubmission, submitArena,
@@ -168,7 +169,7 @@ export default function Arena({ onLogin }: ArenaProps) {
     </section>;
 
     function records(rows: ArenaSubmission[], compact = false) {
-        if (!rows.length) return <div className="arena-empty"><FileUp size={24} aria-hidden="true" /><h3>아직 제출한 파일이 없습니다.</h3><p>모델의 예측 결과를 CSV로 제출해 보세요.</p></div>;
+        if (!rows.length) return <EmptyState icon={<FileUp size={24} />} title="아직 제출한 파일이 없습니다." description={<>모델의 예측 결과를 CSV로 제출해 보세요.</>} />;
         return <div className="arena-records">{rows.map(row => <article key={row.id} className={`arena-record${row.is_selected ? " arena-selected" : ""}`}>
             <div className="arena-record-file"><strong>{row.filename}</strong><time dateTime={row.accepted_at}>{dateTime(row.accepted_at)} KST</time><span className={`arena-processing arena-processing-${row.status}`}>{statusNames[row.status]}</span></div>
             <div className="arena-record-score"><strong>{score(row.public_rmse)}</strong><small>Public RMSE</small>{row.private_rmse != null && <><strong>{score(row.private_rmse)}</strong><small>최종 Private RMSE</small></>}</div>
@@ -214,7 +215,7 @@ export default function Arena({ onLogin }: ArenaProps) {
         {page === "leaderboard" && <>
             <div className="arena-section-heading"><h2><Trophy size={21} aria-hidden="true" /> {info?.phase === 'finalized' ? '최종 리더보드' : 'Public 리더보드'}</h2><span className="arena-muted">RMSE ↓</span></div>
             <p className="arena-muted">{info?.phase === 'finalized' ? '선택된 제출의 Private RMSE 기준 최종 순위입니다.' : '회원별 가장 낮은 Public RMSE를 표시합니다. 최종 순위는 선택한 제출의 Private 점수로 결정됩니다.'}</p>
-            {eligible ? leaderboard?.results.length ? <table className="arena-leaderboard"><thead><tr><th>순위</th><th>공개 닉네임</th><th className="arena-number">{leaderboard.metric === 'private_rmse' ? 'Private' : 'Public'} RMSE</th><th className="arena-desktop-time">접수 시각 (KST)</th></tr></thead><tbody>{leaderboard.results.map(row => <tr key={row.rank} className={row.is_me ? 'arena-my-row' : ''}><td>{row.rank}</td><td><strong>{row.public_name}</strong>{row.is_me && <span className="arena-me">나</span>}<time className="arena-mobile-time" dateTime={row.accepted_at}>{dateTime(row.accepted_at)} KST</time></td><td className="arena-number">{score(row.score)}</td><td className="arena-desktop-time"><time dateTime={row.accepted_at}>{dateTime(row.accepted_at)}</time></td></tr>)}</tbody></table> : <div className="arena-empty"><Trophy size={26} aria-hidden="true" /><h3>{info?.phase === 'preparing' ? '아직 대회가 열리지 않았습니다.' : info?.phase === 'finalized' ? '최종 평가 대상 제출이 없습니다.' : '아직 채점된 제출이 없습니다.'}</h3><p>채점이 완료되면 순위가 표시됩니다.</p></div> : <div className="arena-empty"><h3>회원 전용 리더보드입니다.</h3><p>로그인하면 순위를 확인할 수 있습니다.</p></div>}
+            {eligible ? leaderboard?.results.length ? <table className="arena-leaderboard"><thead><tr><th>순위</th><th>공개 닉네임</th><th className="arena-number">{leaderboard.metric === 'private_rmse' ? 'Private' : 'Public'} RMSE</th><th className="arena-desktop-time">접수 시각 (KST)</th></tr></thead><tbody>{leaderboard.results.map(row => <tr key={row.rank} className={row.is_me ? 'arena-my-row' : ''}><td>{row.rank}</td><td><strong>{row.public_name}</strong>{row.is_me && <span className="arena-me">나</span>}<time className="arena-mobile-time" dateTime={row.accepted_at}>{dateTime(row.accepted_at)} KST</time></td><td className="arena-number">{score(row.score)}</td><td className="arena-desktop-time"><time dateTime={row.accepted_at}>{dateTime(row.accepted_at)}</time></td></tr>)}</tbody></table> : <EmptyState icon={<Trophy size={26} />} title={<>{info?.phase === 'preparing' ? '아직 대회가 열리지 않았습니다.' : info?.phase === 'finalized' ? '최종 평가 대상 제출이 없습니다.' : '아직 채점된 제출이 없습니다.'}</>} description="채점이 완료되면 순위가 표시됩니다." /> : <EmptyState icon={<Lock size={24} />} title="회원 전용 리더보드입니다." description="로그인하면 순위를 확인할 수 있습니다." />}
             <p className="arena-award-note">시상은 조별 최고 성적을 기준으로 운영진이 별도 판별합니다.</p>
         </>}
 

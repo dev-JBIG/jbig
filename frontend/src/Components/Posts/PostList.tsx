@@ -12,6 +12,7 @@ import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
 import RecruitmentBadge from "./RecruitmentBadge";
 import Skeleton from "../Utils/Skeleton";
+import EmptyState from "../Utils/EmptyState";
 
 const BOARD_DESCRIPTIONS: Record<string, string> = {
     "전체 글 보기": "JBIG의 모든 소식을 한눈에 확인하세요!",
@@ -493,10 +494,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
             {!loading && isSearchPage ? (
                 // 검색 페이지
                 (!q.trim() || displayPosts.length === 0) ? (
-                    <div className="no-search-results">
-                        <Inbox size={28} className="empty-posts-icon" aria-hidden="true" />
-                        <div className="empty-posts-title">해당 게시물이 없습니다.</div>
-                    </div>
+                    <EmptyState framed icon={<Inbox size={28} />} title="해당 게시물이 없습니다." />
                 ) : (
                     <table className="postlist-table">
                         <thead>
@@ -561,17 +559,16 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
             ) : !loading ? (
                 // 검색 페이지가 아닐 때
                 displayPosts.length === 0 && !isHome ? (
-                    <div className="empty-posts-message">
-                        <Inbox size={28} className="empty-posts-icon" aria-hidden="true" />
-                        <div className="empty-posts-title">게시글이 없습니다</div>
-                        {canWritePost && (
-                            <div className="empty-posts-message-with-link">
-                                <Button variant="primary" size="small" onClick={handleWrite}>
-                                    게시글 작성하러가기
-                                </Button>
-                            </div>
+                    <EmptyState
+                        framed
+                        icon={<Inbox size={28} />}
+                        title="게시글이 없습니다"
+                        action={canWritePost && (
+                            <Button variant="primary" size="small" onClick={handleWrite}>
+                                게시글 작성하러가기
+                            </Button>
                         )}
-                    </div>
+                    />
                 ) : (
                     <table className="postlist-table">
                         <thead>

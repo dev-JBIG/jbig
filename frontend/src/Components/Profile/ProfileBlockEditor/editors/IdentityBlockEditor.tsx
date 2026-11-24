@@ -12,7 +12,7 @@ const IdentityBlockEditor: React.FC<Props> = ({ block, onChange }) => {
 
   return (
     <div className="block-editor block-identity-editor">
-      <div style={{ fontSize: '0.8em', color: 'var(--fgColor-muted, #59636e)', marginBottom: 8 }}>
+      <div className="block-editor-hint block-editor-hint--block">
         이 블록의 내용은 본문이 아닌 페이지 상단 헤더에 표시됩니다.
       </div>
       <input
@@ -20,7 +20,7 @@ const IdentityBlockEditor: React.FC<Props> = ({ block, onChange }) => {
         placeholder="실명 (예: 홍길동)"
         value={block.data.realName}
         onChange={(e) => update('realName', e.target.value)}
-        style={{ fontSize: '1.05em', fontWeight: 600 }}
+        className="block-editor-name-input"
       />
       <input
         type="text"

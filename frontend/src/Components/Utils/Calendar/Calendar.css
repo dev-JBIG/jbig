@@ -67,7 +67,7 @@
     background-color: var(--bgColor-default);
     color: var(--fgColor-default);
     cursor: pointer;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .primer-calendar-nav-btn:hover {
@@ -93,7 +93,7 @@
     background: transparent;
     color: var(--fgColor-muted);
     cursor: pointer;
-    transition: background-color 120ms ease, color 120ms ease;
+    transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
 .primer-calendar-icon-btn + .primer-calendar-icon-btn {
@@ -221,7 +221,7 @@
     text-align: left;
     cursor: pointer;
     overflow: hidden;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .primer-calendar-event:hover {
@@ -375,7 +375,7 @@
     color: var(--fgColor-default);
     text-align: left;
     cursor: pointer;
-    transition: background-color 120ms ease, border-color 120ms ease;
+    transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .primer-calendar-day-list-item:hover {

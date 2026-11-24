@@ -5,6 +5,8 @@
 }
 
 .jbig-cover {
+    /* 안쪽 배치는 화면 폭이 아니라 카드 폭으로 정한다 (@container) */
+    container-type: inline-size;
     position: relative;
     width: 100%;
     overflow: hidden;
@@ -210,7 +212,21 @@
 }
 .jbig-skeleton-box { height: 220px; }
 
-@media (max-width: 960px) {
+/* 소개 카드가 좁을 때(사이드바 옆 638px 이하, 예전 화면 960px 기준과 같은 지점) 달력을 아래로 내린다 */
+@container (max-width: 638px) {
+    .jbig-cover-layout.has-calendar,
+    .jbig-skeleton-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .jbig-cover-calendar-pane {
+        border-left: none;
+        border-top: 1px solid var(--borderColor-muted);
+    }
+}
+
+/* 모바일은 카드 폭과 상관없이 한 줄 */
+@media (max-width: 767px) {
     .jbig-cover-layout.has-calendar,
     .jbig-skeleton-grid {
         grid-template-columns: 1fr;

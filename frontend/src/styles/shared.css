@@ -11,6 +11,7 @@
  *  5. 마크다운 에디터 글꼴  .w-md-editor
  *  6. 처리 중 표시   .loading-overlay
  *  7. 모바일 터치 대상 최소 크기
+ *  8. 빈 상태 표시   .empty-state (EmptyState)
  */
 
 /* 1. 브랜드 마크: 실제 JBIG 마스코트(/JBIG-logo-192.png). 크기와 라운드는 쓰는 곳에서 정한다 */
@@ -360,4 +361,52 @@ body .w-md-editor {
         min-width: 24px;
         text-align: center;
     }
+}
+
+/* 8. 빈 상태 표시 (EmptyState): 비어 있는 목록, 결과 없음 ------------------ */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-12) var(--space-5);
+    text-align: center;
+    color: var(--fgColor-muted);
+    font-size: var(--text-ui);
+}
+
+.empty-state-icon {
+    display: inline-flex;
+    opacity: 0.55;
+}
+
+.empty-state-title {
+    margin: 0;
+    font-weight: 600;
+    color: var(--fgColor-default);
+}
+
+.empty-state-desc {
+    margin: 0;
+    font-size: var(--text-label);
+}
+
+.empty-state-action {
+    margin-top: var(--space-1);
+}
+
+.empty-state--compact {
+    padding: var(--space-10) var(--space-4);
+    font-size: var(--text-label);
+}
+
+.empty-state--compact .empty-state-title {
+    font-weight: 500;
+}
+
+.empty-state--framed {
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
 }

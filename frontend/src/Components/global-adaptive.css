@@ -14,7 +14,9 @@ select:not([class*="prc-"]) {
 input:not([type="checkbox"]):not([type="radio"]):not([class*="prc-"]):not(.jbnu-email-local):focus,
 textarea:not(.w-md-editor-text-input):not([class*="prc-"]):focus,
 select:not([class*="prc-"]):focus {
-    outline: none;
+    /* 포커스 표시: Primer 입력창과 같은 2px 안쪽 링 (DESIGN.md 3.3, outline 을 끄지 않는다) */
+    outline: 2px solid var(--focus-outlineColor);
+    outline-offset: -1px;
     border-color: var(--focus-outlineColor);
-    box-shadow: inset 0 0 0 1px var(--focus-outlineColor);
+    box-shadow: none;
 }

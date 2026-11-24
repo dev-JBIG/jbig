@@ -146,7 +146,7 @@
 .notion-list .notion-list { list-style-type: circle !important; }
 .notion-list .notion-list .notion-list { list-style-type: square !important; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .note-wrapper {
         padding: var(--space-3) var(--space-3) var(--space-8);
     }

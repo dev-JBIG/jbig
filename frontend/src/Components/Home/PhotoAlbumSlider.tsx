@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Images } from "lucide-react";
+import EmptyState from "../Utils/EmptyState";
 import { fetchPhotoAlbumPosts, PhotoPostItem } from "../../API/req";
 import { Section } from "../Utils/interfaces";
 import useInViewOnce from "../Utils/useInViewOnce";
@@ -126,6 +127,7 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
                                     <ChevronLeft size={18} aria-hidden="true" />
                                 </button>
                             )}
+                            {/* design-lint-allow clickable-div: role=button, tabIndex, Enter/Space 처리가 있어 키보드로도 누를 수 있다 */}
                             <div
                                 className="photo-album-frame"
                                 role="button"
@@ -175,9 +177,7 @@ const PhotoAlbumSlider: React.FC<PhotoAlbumSliderProps> = ({ boards }) => {
                         )}
                     </>
                 ) : (
-                    <div className="photo-album-empty">
-                        아직 사진이 없습니다.
-                    </div>
+                    <EmptyState compact icon={<Images size={22} />} title="아직 사진이 없습니다." />
                 )}
             </div>
         </section>

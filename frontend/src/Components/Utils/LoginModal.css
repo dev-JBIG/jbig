@@ -3,7 +3,8 @@
 .login-modal-backdrop {
     position: fixed;
     inset: 0;
-    background-color: rgba(27, 31, 36, 0.55);
+    /* 다른 모달과 같은 배경막 (Dialog 공통) */
+    background-color: var(--overlay-backdrop-bgColor);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -92,7 +93,6 @@
     color: var(--fgColor-default);
     width: 100%;
     box-sizing: border-box;
-    outline: none;
 }
 
 .login-modal-input:focus {
@@ -175,7 +175,7 @@
     text-decoration: underline;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 767px) {
     .login-modal-container {
         padding: var(--space-6) var(--space-5);
     }

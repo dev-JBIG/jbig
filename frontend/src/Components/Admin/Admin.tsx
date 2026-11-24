@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import "./Admin.css";
 import BrandMark from "../Utils/BrandMark";
+import EmptyState from "../Utils/EmptyState";
 
 function SettingsManagement({ accessToken }: { accessToken: string }) {
     const [notionPageId, setNotionPageId] = useState("");
@@ -788,6 +789,8 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                                         src={imagePreview}
                                         alt="미리보기"
                                         className="admin-image-preview"
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                     <Button
                                         type="button"
@@ -879,9 +882,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
                 </div>
 
                 {popups.length === 0 ? (
-                    <p className="admin-empty-text">
-                        등록된 팝업이 없습니다.
-                    </p>
+                    <EmptyState icon={<Megaphone size={24} />} title="등록된 팝업이 없습니다." />
                 ) : (
                     <div className="table-wrapper">
                         <table className="admin-table">
@@ -1068,6 +1069,7 @@ function Admin() {
 
             <div className="admin-content">
                 {/* 모바일 오버레이 */}
+                {/* design-lint-allow clickable-div: 모바일 메뉴 뒤 배경막 클릭은 마우스 보조 동작이고 메뉴 버튼으로도 닫힌다 */}
                 <div
                     className={`admin-sidebar-overlay ${mobileMenuOpen ? 'show' : ''}`}
                     onClick={() => setMobileMenuOpen(false)}

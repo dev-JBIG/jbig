@@ -87,6 +87,25 @@ describe("designLint 판정", () => {
         expect(lint({ "src/E.tsx": nestedText }, "clickable-div")).toHaveLength(1);
     });
 
+    test("return 등 값을 받는 키워드 뒤의 문자열은 문자열로 건너뛴다 (URL 의 // 를 주석으로 보지 않음)", () => {
+        const kw = [
+            "export const F = () => (",
+            "  <>",
+            '    <img src={(() => { return "https://example.com/a.png"; })()} alt="" />',
+            '    <img src={other} alt="" loading="lazy" decoding="async" />',
+            "  </>",
+            ");",
+        ].join("\n");
+        expect(lint({ "src/F.tsx": kw }, "img-lazy").map(x => x.line)).toEqual([3]);
+        for (const word of ["typeof", "case", "await", "throw", "void", "new"]) {
+            const t = `export const G = () => <><img src={x(() => { ${word} "https://a.b/c"; })} alt="" /><img src={y} alt="" loading="lazy" decoding="async" /></>;\n`;
+            expect(lint({ "src/G.tsx": t }, "img-lazy")).toHaveLength(1);
+        }
+        // 키워드로 끝나는 식별자(join's), 속성 이름(obj.return)은 키워드가 아니다
+        const ident = "export const H = () => <div title={names.join's} onClick={f} />;\n";
+        expect(lint({ "src/H.tsx": ident }, "clickable-div")).toHaveLength(1);
+    });
+
     test("여백은 2~48px 직접값만 위반이고 1px 선, 48px 초과, calc, 토큰은 통과한다", () => {
         const css = [
             ".a { padding: 8px 12px; }",

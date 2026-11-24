@@ -42,7 +42,7 @@
   padding: var(--space-2) var(--space-4);
   background: var(--bgColor-accent-emphasis);
   color: var(--fgColor-onEmphasis);
-  border: 1px solid rgba(31, 35, 40, 0.15);
+  border: 1px solid var(--borderColor-translucent);
   border-radius: var(--radius-md);
   font-weight: 500;
   cursor: pointer;
@@ -130,7 +130,7 @@
   border: 1px solid var(--borderColor-default);
   border-radius: var(--radius-md);
   background: var(--bgColor-default);
-  transition: box-shadow 0.2s;
+  transition: box-shadow var(--transition-base);
 }
 .sortable-block:hover { box-shadow: var(--shadow-sm); }
 .sortable-block-dragging { box-shadow: var(--shadow-lg); }
@@ -205,7 +205,7 @@
   position: relative;
   margin: var(--space-0-5) 0;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--transition-base);
 }
 .profile-block-editor:hover .add-block-inline,
 .add-block-inline:focus-within {
@@ -273,7 +273,6 @@
 .block-editor input:focus,
 .block-editor textarea:focus,
 .block-editor select:focus {
-  outline: none;
   border-color: var(--borderColor-accent-emphasis);
   box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
@@ -325,6 +324,7 @@
   right: 6px;
   display: flex;
   padding: var(--space-1);
+  /* design-lint-allow raw-color: 사진 위 글자와 버튼을 읽히게 하는 고정 어두운 막이라 테마와 무관하다 */
   background: rgba(27, 31, 36, 0.72);
   color: var(--fgColor-onEmphasis);
   border: none;
@@ -428,11 +428,42 @@
 /* Text Editor */
 .block-text-editor .w-md-editor { border-radius: var(--radius-md) !important; }
 
-@media (max-width: 600px) {
+@media (max-width: 767px) {
   .profile-block-editor-header { flex-direction: column; }
   .block-link-edit-row { flex-wrap: wrap; }
   .block-link-edit-row select { width: 100%; }
   .block-image-fields { flex-direction: column; }
   .block-experience-dates { flex-direction: column; align-items: stretch; }
   .block-experience-dates input[type="text"] { width: 100%; }
+}
+
+/* 블록 편집기 보조 모양 (인라인 스타일에서 옮김, 글자 크기와 여백은 토큰) */
+.block-editor input.block-editor-title-input {
+  font-size: var(--text-lead);
+  font-weight: 600;
+}
+
+.block-editor input.block-editor-name-input {
+  font-size: var(--text-body);
+  font-weight: 600;
+}
+
+.block-editor-inline-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.block-editor select.block-editor-inline-select {
+  width: auto;
+  margin-bottom: 0;
+}
+
+.block-editor-hint {
+  font-size: var(--text-caption);
+  color: var(--fgColor-muted);
+}
+
+.block-editor-hint--block {
+  margin-bottom: var(--space-2);
 }
