@@ -196,10 +196,10 @@
     padding: var(--space-3) var(--space-4);
     word-break: break-word;
     overflow-wrap: break-word;
-    white-space: pre-line !important;
+    white-space: pre-line;
     max-width: 100%;
-    overflow: visible !important;
-    text-overflow: clip !important;
+    overflow: visible;
+    text-overflow: clip;
     flex: none;
 }
 

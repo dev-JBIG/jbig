@@ -1,12 +1,1 @@
-{
-  "important": {
-    "src/Components/Competitions/Arena.css": 9,
-    "src/Components/Home/Home-mobile.css": 1,
-    "src/Components/Posts/PostDetail-comments.css": 3,
-    "src/Components/Posts/PostDetail.css": 5,
-    "src/Components/Posts/PostList-mobile.css": 16,
-    "src/Components/Posts/PostList.css": 19,
-    "src/Components/Profile/ProfileBlockEditor/ProfileBlockEditor.css": 3,
-    "src/Components/Utils/Calendar/EventModal.css": 4
-  }
-}
+{}

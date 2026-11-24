@@ -21,21 +21,21 @@
 .arena-eyebrow { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-bottom: var(--space-3); color: var(--fgColor-muted); font-size: var(--text-caption); letter-spacing: .07em; }
 .arena-status { border-radius: 999px; padding: var(--space-0-5) var(--space-3); background: var(--bgColor-neutral-muted); color: var(--fgColor-muted); letter-spacing: 0; font-weight: 600; border: 1px solid var(--borderColor-muted); }
 .arena-status-open, .arena-status-finalized { background: var(--bgColor-accent-muted); color: var(--fgColor-accent); border-color: var(--borderColor-accent-muted); }
-.arena-subtitle { margin-top: var(--space-2) !important; font-size: var(--font-size-lg); font-weight: 500; }
-.arena-schedule { margin-top: var(--space-1-5) !important; color: var(--fgColor-muted); font-size: var(--font-size-sm); }
+.arena-subtitle { margin-top: var(--space-2); font-size: var(--font-size-lg); font-weight: 500; }
+.arena-schedule { margin-top: var(--space-1-5); color: var(--fgColor-muted); font-size: var(--font-size-sm); }
 .arena-tabs { display: flex; gap: var(--space-6); border-bottom: 1px solid var(--borderColor-default); margin: var(--space-6) 0; }
 .arena-tabs a { color: var(--fgColor-muted); border-bottom: 2px solid transparent; text-decoration: none; padding: var(--space-3) 0 var(--space-3); white-space: nowrap; font-size: var(--font-size-sm); }
 .arena-tabs a.active { color: var(--fgColor-default); border-bottom-color: var(--fgColor-accent); font-weight: 600; }
-.arena-notice { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-3) 0 !important; padding: var(--space-4) var(--space-4); border-radius: var(--radius-md); background: var(--bgColor-accent-muted); color: var(--fgColor-accent); border: 1px solid var(--borderColor-accent-muted); font-size: var(--font-size-sm); overflow-wrap: anywhere; }
+.arena-notice { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-3) 0; padding: var(--space-4) var(--space-4); border-radius: var(--radius-md); background: var(--bgColor-accent-muted); color: var(--fgColor-accent); border: 1px solid var(--borderColor-accent-muted); font-size: var(--font-size-sm); overflow-wrap: anywhere; }
 .arena-notice svg { flex-shrink: 0; margin-top: var(--space-0-5); }
 .arena-neutral { background: var(--bgColor-muted); color: var(--fgColor-muted); border-color: var(--borderColor-default); }
 .arena-error { background: var(--bgColor-danger-muted); color: var(--fgColor-danger); border-color: var(--borderColor-danger-muted); }
 .arena-error ul { margin: var(--space-2) 0 0; padding-left: var(--space-5); }
 .arena-inline-button { margin-left: var(--space-2); background: transparent; border: 0; color: inherit; text-decoration: underline; }
 .arena-login { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3); margin: var(--space-4) 0; padding: var(--space-4) 0; font-size: var(--font-size-sm); }
-.arena-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 40px; padding: var(--space-2) var(--space-4); background: var(--bgColor-muted); color: var(--fgColor-default) !important; border: 1px solid var(--borderColor-default); border-radius: var(--radius-md); font-size: var(--font-size-sm) !important; font-weight: 500; text-decoration: none; white-space: normal; }
+.arena-button { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); min-height: 40px; padding: var(--space-2) var(--space-4); background: var(--bgColor-muted); color: var(--fgColor-default); border: 1px solid var(--borderColor-default); border-radius: var(--radius-md); font-size: var(--font-size-sm); font-weight: 500; text-decoration: none; white-space: normal; }
 .arena-button:not(.arena-primary):hover:not(:disabled) { background: var(--bgColor-neutral-muted); }
-.arena-button.arena-primary { background: var(--bgColor-accent-emphasis); border-color: var(--borderColor-translucent); color: var(--fgColor-onEmphasis) !important; }
+.arena-button.arena-primary { background: var(--bgColor-accent-emphasis); border-color: var(--borderColor-translucent); color: var(--fgColor-onEmphasis); }
 .arena-button.arena-primary:hover:not(:disabled) { background: var(--bgColor-accent-emphasis); filter: brightness(0.95); }
 .arena-overview-grid, .arena-submit-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: var(--space-6); align-items: start; }
 .arena-intro { padding: var(--space-2) 0; }
@@ -101,8 +101,8 @@
 .arena-record-score { display: flex; flex-direction: column; text-align: right; gap: var(--space-0-5); font-variant-numeric: tabular-nums; }
 .arena-record-score small { font-size: var(--text-caption); color: var(--fgColor-muted); }
 .arena-record-score strong { font-size: var(--font-size-sm); }
-.arena-select { font-size: var(--text-caption) !important; }
-.arena-button.arena-selection-active { color: var(--fgColor-accent) !important; border-color: var(--borderColor-accent-muted); opacity: 1; background: var(--bgColor-accent-muted); }
+.arena-select { font-size: var(--text-caption); }
+.arena-button.arena-selection-active { color: var(--fgColor-accent); border-color: var(--borderColor-accent-muted); opacity: 1; background: var(--bgColor-accent-muted); }
 .arena-record-help { grid-column: 1 / -1; font-size: var(--text-caption); color: var(--fgColor-muted); }
 .arena-leaderboard { width: 100%; border-collapse: collapse; text-align: left; margin-top: var(--space-5); font-size: var(--font-size-sm); }
 .arena-leaderboard th { font-size: var(--text-caption); font-weight: 600; color: var(--fgColor-muted); background: var(--bgColor-muted); }
@@ -112,8 +112,18 @@
 .arena-my-row { background: var(--bgColor-accent-muted); }
 .arena-me { font-size: var(--text-micro); margin-left: var(--space-1-5); color: var(--fgColor-accent); background: var(--bgColor-default); border: 1px solid var(--borderColor-accent-muted); padding: 1px var(--space-1-5); border-radius: 999px; white-space: nowrap; font-weight: 600; }
 .arena-mobile-time { display: none; }
-.arena-award-note { font-size: var(--text-caption); color: var(--fgColor-muted); margin-top: var(--space-5) !important; }
+.arena-award-note { font-size: var(--text-caption); color: var(--fgColor-muted); margin-top: var(--space-5); }
 .arena-pagination { display: flex; align-items: center; justify-content: center; gap: var(--space-4); margin-top: var(--space-5); font-size: var(--font-size-sm); }
+/* .arena h1~p { margin: 0 }, .arena button { font: inherit }, .arena a { color } 보다 우선해야 하는 값.
+   !important 대신 .arena 아래 선택자로 강도를 올린다. 순서도 의미가 있다(선택 버튼은 일반 버튼 뒤). */
+.arena .arena-subtitle { margin-top: var(--space-2); }
+.arena .arena-schedule { margin-top: var(--space-1-5); }
+.arena .arena-notice { margin: var(--space-3) 0; }
+.arena .arena-award-note { margin-top: var(--space-5); }
+.arena .arena-button { color: var(--fgColor-default); font-size: var(--font-size-sm); }
+.arena .arena-button.arena-primary { color: var(--fgColor-onEmphasis); }
+.arena .arena-select { font-size: var(--text-caption); }
+.arena .arena-button.arena-selection-active { color: var(--fgColor-accent); }
 /* 대회 본문 폭 780px 이하(예전 화면 1100px 기준과 같은 지점)에서 두 열을 한 열로 */
 @container (max-width: 780px) {
     .arena-overview-grid, .arena-submit-grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }

@@ -185,8 +185,12 @@
   display: flex;
   gap: var(--space-1);
 }
+/* 삭제 확인 버튼은 블록 동작 버튼의 기본, hover 글자색보다 우선 */
+.sortable-block-confirm .confirm-yes,
+.sortable-block-confirm .confirm-yes:hover {
+  color: var(--fgColor-danger);
+}
 .confirm-yes {
-  color: var(--fgColor-danger) !important;
   font-size: var(--text-caption);
   font-weight: 600;
 }
@@ -384,7 +388,7 @@
   white-space: nowrap;
   cursor: pointer;
 }
-.block-experience-check input { width: auto !important; margin: 0 !important; }
+.block-experience-check input[type="checkbox"] { width: auto; margin: 0; }
 
 /* Project Editor Tags */
 .block-project-tags-editor { margin-bottom: var(--space-2); }

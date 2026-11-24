@@ -57,21 +57,21 @@
     /* 카드 레이아웃 */
     .postlist-table {
         width: 100%;
-        display: block !important;
+        display: block;
         border: none;
         box-shadow: none;
     }
 
     .postlist-table thead {
-        display: none !important;
+        display: none;
     }
 
     .postlist-table tbody {
-        display: block !important;
+        display: block;
     }
 
     .postlist-table tbody tr {
-        display: block !important;
+        display: block;
         position: relative;
         margin-bottom: var(--space-2);
         padding: var(--space-4) var(--space-4);
@@ -89,12 +89,12 @@
     }
 
     .postlist-table tbody tr.announcement-row {
-        background-color: var(--bgColor-attention-muted) !important;
-        border: 1px solid var(--borderColor-attention-muted) !important;
+        background-color: var(--bgColor-attention-muted);
+        border: 1px solid var(--borderColor-attention-muted);
     }
 
     .announcement-badge.mobile-only {
-        display: inline-flex !important;
+        display: inline-flex;
         margin-right: var(--space-sm);
     }
 
@@ -104,21 +104,21 @@
     }
 
     .postlist-table td.th-category {
-        display: block !important;
+        display: block;
         width: auto;
         max-width: none;
         margin-bottom: var(--space-1-5);
     }
 
     .postlist-table td {
-        display: block !important;
-        padding: 0 !important;
-        border: none !important;
-        text-align: left !important;
+        display: block;
+        padding: 0;
+        border: none;
+        text-align: left;
     }
 
     .postlist-table td.th-id {
-        display: none !important;
+        display: none;
     }
 
     .postlist-table tbody .title-cell {
@@ -132,7 +132,7 @@
     }
 
     .postlist-table tbody .author-cell {
-        display: inline-block !important;
+        display: inline-block;
         font-size: var(--text-label);
         color: var(--fgColor-accent);
         font-weight: 500;
@@ -141,7 +141,7 @@
     }
 
     .postlist-table td.th-date {
-        display: inline-block !important;
+        display: inline-block;
         font-size: var(--text-caption);
         color: var(--fgColor-muted);
         margin-right: var(--space-3);
@@ -149,7 +149,7 @@
 
     .postlist-table td.th-views,
     .postlist-table td.th-likes {
-        display: inline-block !important;
+        display: inline-block;
         font-size: var(--text-caption);
         color: var(--fgColor-muted);
         margin-right: var(--space-2);

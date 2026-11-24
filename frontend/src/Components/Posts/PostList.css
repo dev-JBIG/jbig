@@ -14,10 +14,14 @@
 }
 
 .postlist-header-home {
-    margin-bottom: 0 !important;
     padding: var(--space-4) var(--space-5);
     background-color: var(--bgColor-default);
     border-bottom: 1px solid var(--borderColor-muted);
+}
+
+/* 홈 카드 머리는 .postlist-header 의 아래 여백을 없앤다 (두 클래스라 뒤에 와도 이긴다) */
+.postlist-header.postlist-header-home {
+    margin-bottom: 0;
 }
 
 .postlist-home-card .postlist-table {
@@ -64,8 +68,8 @@
     min-width: 0;
 }
 
-.postlist-title {
-    margin: 0 !important;
+.postlist-header .postlist-title {
+    margin: 0;
     padding: 0;
     line-height: 1.25;
 }
@@ -205,16 +209,6 @@
     background-color: var(--bgColor-neutral-muted);
 }
 
-/* 공지사항 스타일 — 과도한 좌측 강조선 대신 절제된 틴트 사용 */
-.announcement-row {
-    background-color: var(--bgColor-muted) !important;
-    background-color: color-mix(in srgb, var(--bgColor-attention-muted) 36%, var(--bgColor-default)) !important;
-}
-
-.announcement-row:hover {
-    background-color: var(--bgColor-muted) !important;
-    background-color: color-mix(in srgb, var(--bgColor-attention-muted) 52%, var(--bgColor-default)) !important;
-}
 
 .announcement-badge,
 .category-badge,
@@ -256,8 +250,6 @@
     max-width: 78px;
     text-align: center;
     white-space: nowrap;
-    padding-left: var(--space-sm) !important;
-    padding-right: var(--space-sm) !important;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -418,7 +410,7 @@
 
     .postlist-table th,
     .postlist-table td {
-        display: table-cell !important;
+        display: table-cell;
         padding: var(--space-3) var(--space-3);
         text-align: center;
         vertical-align: middle;
@@ -430,6 +422,23 @@
         border-bottom: none;
     }
 
+    /* 공지 행: 과도한 좌측 강조선 대신 절제된 틴트. 표 행 배경과 같은 강도라 뒤에 두어 이긴다 */
+    .postlist-table tbody tr.announcement-row {
+        background-color: var(--bgColor-muted);
+        background-color: color-mix(in srgb, var(--bgColor-attention-muted) 36%, var(--bgColor-default));
+    }
+
+    .postlist-table tbody tr.announcement-row:hover {
+        background-color: var(--bgColor-muted);
+        background-color: color-mix(in srgb, var(--bgColor-attention-muted) 52%, var(--bgColor-default));
+    }
+
+    .postlist-table th.th-category,
+    .postlist-table td.th-category {
+        padding-left: var(--space-sm);
+        padding-right: var(--space-sm);
+    }
+
     .postlist-table th.th-author,
     .postlist-table td.th-author,
     .postlist-table th.th-date,
@@ -438,8 +447,8 @@
     .postlist-table td.th-views,
     .postlist-table th.th-likes,
     .postlist-table td.th-likes {
-        padding-left: var(--space-1-5) !important;
-        padding-right: var(--space-1-5) !important;
+        padding-left: var(--space-1-5);
+        padding-right: var(--space-1-5);
     }
 
     .postlist-table th {
@@ -493,22 +502,22 @@
     }
 
     .postlist-table tbody .title-cell {
-        text-align: left !important;
+        text-align: left;
         font-size: var(--text-ui);
         margin-bottom: 0;
         word-break: normal;
-        display: table-cell !important;
-        padding: var(--space-3) var(--space-4) !important;
+        display: table-cell;
+        padding: var(--space-3) var(--space-4);
     }
 
     .postlist-table tbody .author-cell {
         font-size: var(--text-label);
         color: var(--fgColor-default);
-        display: table-cell !important;
-        padding-top: var(--space-3) !important;
-        padding-bottom: var(--space-3) !important;
-        padding-left: var(--space-1-5) !important;
-        padding-right: var(--space-1-5) !important;
+        display: table-cell;
+        padding-top: var(--space-3);
+        padding-bottom: var(--space-3);
+        padding-left: var(--space-1-5);
+        padding-right: var(--space-1-5);
     }
 
     .author-text {
