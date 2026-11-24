@@ -3,12 +3,13 @@
 .login-modal-backdrop {
     position: fixed;
     inset: 0;
-    background-color: rgba(27, 31, 36, 0.55);
+    /* 다른 모달과 같은 배경막 (Dialog 공통) */
+    background-color: var(--overlay-backdrop-bgColor);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10000;
-    padding: 16px;
+    padding: var(--space-4);
     animation: fadeIn 0.16s ease-out;
 }
 
@@ -18,10 +19,10 @@
 }
 
 .login-modal-container {
-    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
-    padding: 28px 28px 24px;
+    padding: var(--space-8) var(--space-8) var(--space-6);
     width: 100%;
     max-width: 400px;
     box-shadow: var(--shadow-xl);
@@ -42,7 +43,7 @@
     border: none;
     border-radius: var(--radius-md);
     font-size: var(--text-title);
-    color: var(--fgColor-muted, #656d76);
+    color: var(--fgColor-muted);
     cursor: pointer;
     padding: 0;
     width: 32px;
@@ -54,54 +55,53 @@
 }
 
 .login-modal-close:hover {
-    background-color: var(--bgColor-muted, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-muted);
+    color: var(--fgColor-default);
 }
 
 .login-modal-header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .login-modal-title {
     font-size: var(--text-title);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     margin: 0;
 }
 
 .login-modal-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .login-modal-label {
     font-size: var(--text-label);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
-    margin-bottom: -4px;
+    color: var(--fgColor-default);
+    margin-bottom: calc(-1 * var(--space-1));
 }
 
 .login-modal-input {
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
     font-size: var(--text-ui);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-default);
+    color: var(--fgColor-default);
     width: 100%;
     box-sizing: border-box;
-    outline: none;
 }
 
 .login-modal-input:focus {
-    border-color: var(--borderColor-accent-emphasis, #0969da);
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .login-modal-input.input-error {
-    border-color: var(--borderColor-danger-emphasis, #cf222e);
+    border-color: var(--borderColor-danger-emphasis);
 }
 
 .login-modal-password-row {
@@ -119,9 +119,9 @@
     right: 10px;
     background: transparent;
     border: none;
-    padding: 2px 4px;
+    padding: var(--space-0-5) var(--space-1);
     font-size: var(--text-caption);
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     cursor: pointer;
     user-select: none;
     font-weight: 500;
@@ -132,39 +132,39 @@
 }
 
 .login-modal-field-error {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
     font-size: var(--text-caption);
-    margin-top: -4px;
+    margin-top: calc(-1 * var(--space-1));
 }
 
 .login-modal-error {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-    color: var(--fgColor-danger, #cf222e);
-    padding: 10px 12px;
+    background-color: var(--bgColor-danger-muted);
+    color: var(--fgColor-danger);
+    padding: var(--space-3) var(--space-3);
     border-radius: var(--radius-md);
     font-size: var(--text-label);
     text-align: center;
-    border: 1px solid var(--borderColor-danger-muted, #ff8182);
+    border: 1px solid var(--borderColor-danger-muted);
 }
 
 .login-modal-button {
-    margin-top: 8px;
+    margin-top: var(--space-2);
 }
 
 .login-modal-links {
     display: flex;
     justify-content: space-between;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid var(--borderColor-muted, #d0d7de);
-    gap: 12px;
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--borderColor-muted);
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
 .login-modal-link {
     background: none;
     border: none;
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     font-size: var(--text-label);
     cursor: pointer;
     padding: 0;
@@ -175,14 +175,14 @@
     text-decoration: underline;
 }
 
-@media (max-width: 500px) {
+@media (max-width: 767px) {
     .login-modal-container {
-        padding: 24px 20px;
+        padding: var(--space-6) var(--space-5);
     }
 
     .login-modal-links {
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: var(--space-2);
     }
 }

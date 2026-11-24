@@ -1,16 +1,16 @@
 /* GitHub Primer styled Admin Dashboard */
 
 .admin-container {
-    --primary-color: var(--bgColor-accent-emphasis, #0969da);
-    --danger-color: var(--bgColor-danger-emphasis, #cf222e);
-    --success-color: var(--bgColor-success-emphasis, #1f883d);
-    --background-color: var(--bgColor-inset, #f6f8fa);
-    --sidebar-bg: var(--bgColor-default, #ffffff);
-    --header-bg: var(--bgColor-default, #ffffff);
-    --card-bg: var(--bgColor-default, #ffffff);
-    --text-color: var(--fgColor-default, #1f2328);
-    --text-light-color: var(--fgColor-muted, #59636e);
-    --border-color: var(--borderColor-default, #d1d9e0);
+    --primary-color: var(--bgColor-accent-emphasis);
+    --danger-color: var(--bgColor-danger-emphasis);
+    --success-color: var(--bgColor-success-emphasis);
+    --background-color: var(--bgColor-inset);
+    --sidebar-bg: var(--bgColor-default);
+    --header-bg: var(--bgColor-default);
+    --card-bg: var(--bgColor-default);
+    --text-color: var(--fgColor-default);
+    --text-light-color: var(--fgColor-muted);
+    --border-color: var(--borderColor-default);
 
     display: flex;
     flex-direction: column;
@@ -23,7 +23,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 24px;
+    padding: 0 var(--space-6);
     height: 58px;
     background-color: var(--header-bg);
     border-bottom: 1px solid var(--border-color);
@@ -36,14 +36,14 @@
 .admin-header-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .admin-logo {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 8px 4px 4px;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
@@ -55,7 +55,7 @@
 }
 
 .admin-logo:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 /* 공통 모양은 shared.css 의 .brand-mark */
@@ -67,7 +67,7 @@
 .admin-user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     font-size: var(--text-label);
     color: var(--text-light-color);
 }
@@ -82,7 +82,7 @@
     width: 232px;
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
-    padding: 14px 10px;
+    padding: var(--space-4) var(--space-3);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -94,7 +94,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--space-0-5);
 }
 
 .admin-menu-btn {
@@ -102,8 +102,8 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
@@ -117,12 +117,12 @@
 }
 
 .admin-menu-btn:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .admin-menu-btn.active {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
     font-weight: 600;
 }
 
@@ -134,21 +134,21 @@
     bottom: 6px;
     width: 3px;
     border-radius: 999px;
-    background-color: var(--bgColor-accent-emphasis, #0969da);
+    background-color: var(--bgColor-accent-emphasis);
 }
 
 /* 메인 컨텐츠 영역 */
 .admin-main-area {
     flex: 1;
     min-width: 0;
-    padding: 24px;
+    padding: var(--space-6);
     max-width: 1100px;
 }
 
 .admin-content-header {
     font-size: var(--text-title);
     font-weight: 600;
-    margin: 0 0 18px 0;
+    margin: 0 0 var(--space-4) 0;
     color: var(--text-color);
     letter-spacing: -0.015em;
 }
@@ -159,16 +159,16 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    gap: 12px;
+    margin-bottom: var(--space-4);
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -180,13 +180,13 @@
 }
 
 .admin-card-title-spaced {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .admin-section-divider-title {
-    margin-top: 12px;
-    padding-top: 16px;
-    border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    margin-top: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--borderColor-muted);
 }
 
 .admin-muted-text {
@@ -196,34 +196,26 @@
 }
 
 .admin-card-lead {
-    margin-top: 8px;
-    margin-bottom: 18px;
-}
-
-.admin-empty-text {
-    color: var(--text-light-color);
-    text-align: center;
-    padding: 40px 0;
-    margin: 0;
-    font-size: var(--text-ui);
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-4);
 }
 
 /* 대시보드 바로가기 카드 */
 .admin-shortcut-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .admin-shortcut-card {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 16px;
+    gap: var(--space-2);
+    padding: var(--space-4);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
     text-align: left;
     font-family: inherit;
     cursor: pointer;
@@ -231,8 +223,8 @@
 }
 
 .admin-shortcut-card:hover {
-    border-color: var(--borderColor-accent-emphasis, #0969da);
-    background-color: var(--bgColor-default, #ffffff);
+    border-color: var(--borderColor-accent-emphasis);
+    background-color: var(--bgColor-default);
 }
 
 .admin-shortcut-icon {
@@ -242,8 +234,8 @@
     width: 34px;
     height: 34px;
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
 }
 
 .admin-shortcut-title {
@@ -260,13 +252,13 @@
 
 /* 게시판 권한 관리 */
 .admin-board-intro {
-    margin-top: 6px;
-    margin-bottom: 16px;
+    margin-top: var(--space-1-5);
+    margin-bottom: var(--space-4);
     line-height: 1.55;
 }
 
 .admin-board-category {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .admin-board-category:last-child {
@@ -274,7 +266,7 @@
 }
 
 .admin-board-category-title {
-    margin: 0 0 8px;
+    margin: 0 0 var(--space-2);
     font-size: var(--text-label);
     font-weight: 600;
     color: var(--text-light-color);
@@ -293,10 +285,10 @@
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    background-color: var(--bgColor-default, #ffffff);
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--borderColor-muted);
+    background-color: var(--bgColor-default);
 }
 
 .admin-board-row:last-child {
@@ -306,7 +298,7 @@
 .admin-board-info {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--space-0-5);
     min-width: 140px;
     flex: 1;
 }
@@ -320,21 +312,21 @@
 .admin-board-hint {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     font-size: var(--text-caption);
     color: var(--text-light-color);
 }
 
 .admin-board-controls {
     display: flex;
-    gap: 10px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
 .admin-perm-field {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--space-0-5);
     width: 116px;
 }
 
@@ -350,7 +342,7 @@
 
 .admin-perm-select {
     min-width: 0;
-    padding: 6px 10px;
+    padding: var(--space-1-5) var(--space-3);
     font-size: var(--text-label);
 }
 
@@ -368,22 +360,22 @@
 }
 
 .admin-table thead tr {
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
 }
 
 .admin-table th {
     font-weight: 600;
     font-size: var(--text-caption);
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     color: var(--text-light-color);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
 }
 
 .admin-table td {
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--borderColor-muted);
     font-size: var(--text-ui);
     color: var(--text-color);
     vertical-align: middle;
@@ -401,7 +393,7 @@
 .admin-popup-snippet {
     font-size: var(--text-label);
     color: var(--text-light-color);
-    margin-top: 3px;
+    margin-top: var(--space-0-5);
 }
 
 .admin-popup-date {
@@ -416,7 +408,7 @@
 
 .table-actions {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
 }
 
 /* 아이콘 버튼 */
@@ -424,7 +416,7 @@
     width: 30px;
     height: 30px;
     padding: 0;
-    background: var(--bgColor-default, #ffffff);
+    background: var(--bgColor-default);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -436,45 +428,45 @@
 }
 
 .admin-icon-button:hover {
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-color: var(--borderColor-emphasis, #818b98);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-muted);
+    border-color: var(--borderColor-emphasis);
+    color: var(--fgColor-accent);
 }
 
 .admin-icon-button-danger {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
 }
 
 .admin-icon-button-danger:hover {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-    border-color: var(--borderColor-danger-muted, #ff8182);
-    color: var(--fgColor-danger, #cf222e);
+    background-color: var(--bgColor-danger-muted);
+    border-color: var(--borderColor-danger-muted);
+    color: var(--fgColor-danger);
 }
 
 .admin-btn-inner {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1);
 }
 
 /* 폼 요소 */
 .admin-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 12px;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
 }
 
 .admin-grid-2 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
+    gap: var(--space-3);
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-1-5);
 }
 
 .form-label {
@@ -485,11 +477,11 @@
 
 .admin-input,
 .admin-select {
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
     font-size: var(--text-ui);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-default, #ffffff);
+    background-color: var(--bgColor-default);
     color: var(--text-color);
 }
 
@@ -500,22 +492,21 @@
 }
 
 .admin-file-input {
-    padding: 6px 8px;
+    padding: var(--space-1-5) var(--space-2);
 }
 
 .admin-input:focus,
 .admin-select:focus {
-    outline: none;
-    border-color: var(--borderColor-accent-emphasis, #0969da);
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .admin-image-preview-wrap {
-    margin-top: 10px;
+    margin-top: var(--space-2);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .admin-image-preview {
@@ -529,7 +520,7 @@
 .admin-checkbox-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     height: 36px;
     font-size: var(--text-ui);
     color: var(--text-color);
@@ -544,36 +535,36 @@
 
 .admin-form-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 6px;
+    gap: var(--space-2);
+    margin-top: var(--space-1-5);
     flex-wrap: wrap;
 }
 
 /* 메시지 */
 .admin-message {
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
-    margin: 12px 0;
+    margin: var(--space-3) 0;
     font-size: var(--text-ui);
     border: 1px solid transparent;
 }
 
 .admin-message.success {
-    background-color: var(--bgColor-success-muted, #dafbe1);
-    color: var(--fgColor-success, #1a7f37);
-    border-color: var(--borderColor-success-muted, #4ac26b);
+    background-color: var(--bgColor-success-muted);
+    color: var(--fgColor-success);
+    border-color: var(--borderColor-success-muted);
 }
 
 .admin-message.error {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-    color: var(--fgColor-danger, #cf222e);
-    border-color: var(--borderColor-danger-muted, #ff8182);
+    background-color: var(--bgColor-danger-muted);
+    color: var(--fgColor-danger);
+    border-color: var(--borderColor-danger-muted);
 }
 
 .form-hint {
     font-size: var(--text-caption);
     color: var(--text-light-color);
-    margin: 2px 0 0;
+    margin: var(--space-0-5) 0 0;
 }
 
 .admin-loading {
@@ -605,7 +596,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--overlay-backdrop-bgColor, rgba(27, 31, 36, 0.5));
+    background-color: var(--overlay-backdrop-bgColor);
     z-index: 99;
 }
 
@@ -613,9 +604,9 @@
     display: block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .admin-header-bar {
-        padding: 0 14px;
+        padding: 0 var(--space-4);
         height: 54px;
     }
 
@@ -646,7 +637,7 @@
         z-index: 100;
         transform: translateX(-100%);
         visibility: hidden;
-        transition: transform 0.22s ease, visibility 0.22s ease;
+        transition: transform var(--transition-base), visibility var(--transition-base);
         box-shadow: var(--shadow-xl);
     }
 
@@ -656,18 +647,18 @@
     }
 
     .admin-main-area {
-        padding: 16px;
+        padding: var(--space-4);
         width: 100%;
     }
 
     .admin-content-header {
         font-size: var(--text-title);
-        margin-bottom: 14px;
+        margin-bottom: var(--space-3);
     }
 
     .admin-card {
-        padding: 16px;
-        margin-bottom: 16px;
+        padding: var(--space-4);
+        margin-bottom: var(--space-4);
     }
 
     .admin-perm-field,

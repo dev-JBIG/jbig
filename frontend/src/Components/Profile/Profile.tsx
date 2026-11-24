@@ -5,6 +5,8 @@ import { fetchPublicProfile, fetchPublicProfileActivity, updateProfileBlocks, up
 import { Spinner } from "@primer/react";
 import { useAlert } from "../Utils/AlertContext";
 import Dialog from "../Utils/Dialog";
+import EmptyState from "../Utils/EmptyState";
+import { FileText, Lock, MessageSquare, ScrollText } from "lucide-react";
 import { ProfileBlock, IdentityBlock } from "./types";
 import ProfileBlockRenderer from "./ProfileBlockRenderer/ProfileBlockRenderer";
 import { buildSandboxedProfileSrcDoc, sanitizeMediaUrl } from "../Utils/safeUrl";
@@ -261,7 +263,8 @@ const Profile: React.FC = () => {
             <header className="profile-header">
                 <div className="profile-avatar">
                     {photoUrl ? (
-                        <img src={photoUrl} alt={displayName} referrerPolicy="no-referrer" />
+                        // design-lint-allow img-lazy: 프로필 첫 화면 맨 위 사진이라 바로 불러온다
+                        <img decoding="async" src={photoUrl} alt={displayName} referrerPolicy="no-referrer" />
                     ) : (
                         <span>{displayName.charAt(0).toUpperCase()}</span>
                     )}
@@ -377,9 +380,7 @@ const Profile: React.FC = () => {
                         </div>
                     ) : (
                         <div className="profile-content resume-body">
-                            <div className="profile-empty-blocks">
-                                <p>{profile.is_self ? "프로필 편집 → HTML 업로드로 이력서를 올려보세요!" : "아직 작성된 이력서가 없습니다."}</p>
-                            </div>
+                            <EmptyState icon={<ScrollText size={26} />} title={profile.is_self ? "프로필 편집 → HTML 업로드로 이력서를 올려보세요!" : "아직 작성된 이력서가 없습니다."} />
                         </div>
                     )
                 ) : (
@@ -387,9 +388,7 @@ const Profile: React.FC = () => {
                     {bodyBlocks.length > 0 ? (
                         <ProfileBlockRenderer blocks={bodyBlocks} />
                     ) : (
-                        <div className="profile-empty-blocks">
-                            <p>{profile.is_self ? "프로필 편집을 눌러 나만의 이력서를 작성해 보세요!" : "아직 작성된 이력서가 없습니다."}</p>
-                        </div>
+                        <EmptyState icon={<ScrollText size={26} />} title={profile.is_self ? "프로필 편집을 눌러 나만의 이력서를 작성해 보세요!" : "아직 작성된 이력서가 없습니다."} />
                     )}
                 </div>
                 )
@@ -411,9 +410,9 @@ const Profile: React.FC = () => {
                                 ))}
                             </ul>
                         ) : !accessToken ? (
-                            <p className="empty-text">로그인한 회원만 볼 수 있습니다.</p>
+                            <EmptyState compact icon={<Lock size={22} />} title="로그인한 회원만 볼 수 있습니다." />
                         ) : (
-                            <p className="empty-text">작성한 게시글이 없습니다.</p>
+                            <EmptyState compact icon={<FileText size={22} />} title="작성한 게시글이 없습니다." />
                         )}
                     </section>
 
@@ -438,9 +437,9 @@ const Profile: React.FC = () => {
                                 ))}
                             </ul>
                         ) : !accessToken ? (
-                            <p className="empty-text">로그인한 회원만 볼 수 있습니다.</p>
+                            <EmptyState compact icon={<Lock size={22} />} title="로그인한 회원만 볼 수 있습니다." />
                         ) : (
-                            <p className="empty-text">작성한 댓글이 없습니다.</p>
+                            <EmptyState compact icon={<MessageSquare size={22} />} title="작성한 댓글이 없습니다." />
                         )}
                     </section>
 

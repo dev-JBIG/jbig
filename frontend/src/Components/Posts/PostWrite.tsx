@@ -907,7 +907,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                                             const blobUrl = imageUrlMapRef.current.get(src.replace('media-key://', ''));
                                             if (blobUrl) imageSrc = blobUrl;
                                         }
-                                        return <img src={imageSrc} alt={alt} {...props} className="postwrite-preview-img" />;
+                                        return <img loading="lazy" decoding="async" src={imageSrc} alt={alt} {...props} className="postwrite-preview-img" />;
                                     },
                                 },
                             }}
@@ -965,7 +965,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         <div className="photo-grid">
                             {existingAttachments.filter(a => attachments.some(att => att.path === a.path)).map((a) => (
                                 <div className="photo-card" key={`ex-${a.path}`}>
-                                    <img src={a.url} alt={a.filename} className="photo-card-image" />
+                                    <img loading="lazy" decoding="async" src={a.url} alt={a.filename} className="photo-card-image" />
                                     <button type="button" className="photo-card-remove" onClick={() => handleRemoveExistingAttachment(a.path)}>
                                         삭제
                                     </button>
@@ -973,7 +973,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             ))}
                             {files.map((item, idx) => (
                                 <div className="photo-card" key={`new-${idx}`}>
-                                    <img src={item.url} alt={item.file.name} className="photo-card-image" />
+                                    <img loading="lazy" decoding="async" src={item.url} alt={item.file.name} className="photo-card-image" />
                                     <button type="button" className="photo-card-remove" onClick={() => handleRemoveFile(idx)}>
                                         삭제
                                     </button>
@@ -997,7 +997,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         {existingAttachments.filter(a => attachments.some(att => att.path === a.path)).map((a) => (
                             <div className="postwrite-file-preview" key={`ex-${a.path}`}>
                                 {isImageFileName(a.filename)
-                                    ? <img src={a.url} alt={a.filename} className="postwrite-file-thumb" />
+                                    ? <img loading="lazy" decoding="async" src={a.url} alt={a.filename} className="postwrite-file-thumb" />
                                     : <span className="postwrite-file-icon" aria-hidden="true">📄</span>}
                                 <span className="file-name">{a.filename}</span>
                                 {a.sizeBytes && <span className="file-size">({formatBytes(a.sizeBytes)})</span>}
@@ -1006,7 +1006,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         ))}
                         {files.map((item, idx) => (
                             <div className="postwrite-file-preview" key={`new-${idx}`}>
-                                {item.url ? <img src={item.url} alt="미리보기" className="postwrite-file-thumb" />
+                                {item.url ? <img loading="lazy" decoding="async" src={item.url} alt="미리보기" className="postwrite-file-thumb" />
                                     : <span className="postwrite-file-icon" aria-hidden="true">📄</span>}
                                 <span className="file-name">{item.file.name}</span>
                                 <span className="file-size">({(item.file.size / 1024 / 1024).toFixed(2)} MB)</span>

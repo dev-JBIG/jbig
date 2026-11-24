@@ -3,7 +3,7 @@ version: alpha
 name: JBIG Web Platform
 description: >-
   JBIG(전북대학교 빅데이터·AI 학회) 커뮤니티 웹(frontend/)의 디자인 기준.
-  GitHub Primer 토큰 위에 frontend/src/index.css 브리지를 얹은 구조이며,
+  GitHub Primer 토큰 위에 frontend/src/index.css 앱 토큰을 얹은 구조이며,
   2026-11-23 main(771bbd19e, #81) 화면을 실측한 값을 "초기 디자인 기준선"으로 고정했다.
 colors:
   # 라이트 테마 값. 다크 딤드, 다크 값은 3.1절 표 참고. 실제 코드는 아래 이름의 Primer 토큰을 쓴다.
@@ -105,7 +105,8 @@ components:
 - **테마**: `ThemeProvider` + `BaseStyles` 기반 **라이트/다크 모드 자동 대응**
 - **전역 토큰 브리지**: [`frontend/src/index.css`](./frontend/src/index.css)
   - 원시 색값(hex, rgba)은 이 파일의 토큰 정의(그림자, 다크 오버레이 보정)에서만 씁니다.
-  - 컴포넌트 CSS는 Primer 기능 토큰(`--fgColor-*`, `--bgColor-*`, `--borderColor-*`)이나 이 파일의 브리지 변수만 참조합니다.
+  - 컴포넌트 CSS는 Primer 기능 토큰(`--fgColor-*`, `--bgColor-*`, `--borderColor-*`)과 이 파일의 앱 토큰(`--space-*`, `--text-*`, `--radius-*`, `--shadow-*` 등)만 참조합니다. 예전 `--color-*` 색 별칭은 없앴습니다(2026-11-24).
+  - 항상 정의된 토큰에는 `var(--fgColor-default, #1f2328)` 같은 예비값을 붙이지 않습니다. 예비값은 런타임에만 정해지는 변수(예: `--event-color`)에만 씁니다.
 - **정의된 변수만 참조**: 존재하지 않는 CSS 변수를 참조하면 선언 전체가 무시되므로 금지합니다. (`undefined-var`)
 - **금지 라이브러리**: Bootstrap, jQuery UI 등 전역 CSS를 오염시키는 UI 프레임워크·스타일시트 추가 금지 (`forbidden-library`)
 
@@ -170,13 +171,15 @@ components:
 ### 3.3 60-30-10 색상 절제 원칙 및 토큰 규칙
 - **중립색 90% · 포인트색 10%**: 채도가 높은 강조색(`--bgColor-accent-emphasis`, `--button-primary-bgColor-rest`)은 핵심 CTA(글쓰기·제출·저장)와 현재 활성 상태에만 제한합니다. 장식 배지·보조 퀵링크에는 중립 서피스 + 컬러 아이콘 또는 부드러운 틴트(`--bgColor-accent-muted` / `color-mix`)를 사용합니다.
   - **기준선 실측(9.3절)**: 유채색 배경 면적은 화면의 0~4%, 유채색 글자는 전체 글자 요소의 0~17%입니다. 이 범위를 넘는 변경은 리뷰에서 근거를 설명합니다.
-- **하드코딩 색상 금지**: `#ffffff`, `#000000`, `#333333` 등 원시 hex를 단독으로 쓰지 말고, 반드시 Primer 시맨틱 토큰(또는 `index.css` 브리지 변수)을 사용합니다. (`raw-color`)
+- **하드코딩 색상 금지**: `#ffffff`, `#000000`, `#333333` 등 원시 hex를 단독으로 쓰지 말고, 반드시 Primer 시맨틱 토큰(또는 `index.css` 앱 토큰)을 사용합니다. (`raw-color`)
   - 텍스트: `var(--fgColor-default)`, `var(--fgColor-muted)`, `var(--fgColor-accent)`, `var(--fgColor-danger)`, `var(--fgColor-success)`, `var(--fgColor-attention)`, `var(--fgColor-onEmphasis)`
   - 배경: `var(--bgColor-default)`, `var(--bgColor-muted)`, `var(--bgColor-inset)`, `var(--bgColor-neutral-muted)`, `var(--bgColor-accent-muted)`, `var(--bgColor-accent-emphasis)`, `var(--overlay-bgColor)`
   - 보더: `var(--borderColor-default)`, `var(--borderColor-muted)`, `var(--borderColor-emphasis)`
 - 라이트/다크 양쪽에서 텍스트 대비 **WCAG AA(4.5:1 이상, 큰 글자 3:1 이상)** 를 유지합니다.
   - 다크 딤드에서는 Primer 기본값이 카드, 공지 행, 선택 행 위에서 4.5에 못 미쳐 `index.css`에서 세 토큰의 밝기만 올립니다(색상 유지): `--fgColor-accent`/`--fgColor-link` #478be6 → #5ea2f6, `--fgColor-danger` #e5534b → #f67d74, `--fgColor-muted` #9198a1 → #9da5ae. 자동 모드는 Primer 선택자와 같은 강도(`[data-color-mode][data-color-mode="auto"]...`)로 덮어씁니다.
-- 포커스 스타일은 전역 `:focus-visible` (`var(--focus-outlineColor, #0969da)`)를 유지하며 `outline: none`으로 제거하지 않습니다. (`outline-none`)
+- 포커스 스타일은 전역 `:focus-visible` (`var(--focus-outlineColor)`)를 유지하며 `outline: none`으로 제거하지 않습니다. (`outline-none`)
+  - 입력창(input, textarea, select)은 Primer 입력창과 같은 **2px 안쪽 링**(`outline: 2px solid var(--focus-outlineColor); outline-offset: -1px` + 테두리 강조)으로 통일합니다(`global-adaptive.css`).
+- 반투명 테두리는 `rgba(31, 35, 40, 0.15)` 대신 `var(--borderColor-translucent)`를 씁니다(다크 테마에서도 보임). 사진 위 글자·버튼용 어두운 막처럼 테마와 무관한 색만 사유 주석으로 예외입니다.
   - 예외: 바깥 상자가 `:focus-within`으로 같은 2px 포커스 링을 그리는 복합 입력(예: `JbnuEmailInput`)의 안쪽 input만, 줄 위에 사유 주석을 달고 허용합니다.
 - **Primer `<Button>` 아이콘 정렬**: 아이콘이 포함된 `@primer/react` `<Button>`은 내부에 `<span className="*-inner">`를 중첩하지 말고 반드시 Primer 네이티브 **`leadingVisual`** prop을 사용합니다. (`primer-button-inner`)
 
@@ -187,6 +190,7 @@ components:
   - Primer `BaseStyles`가 앱 전체에 `font-family: var(--fontStack-system)`을 직접 지정하므로, `index.css`의 `:root`에서 Primer 글꼴 토큰(`--fontStack-system`, `--fontStack-sansSerif`, `--fontStack-sansSerifDisplay`) 맨 앞에 Pretendard를 둡니다. 컴포넌트 CSS에서 `font-family`를 새로 지정하지 않고 상속을 따릅니다. 자체 글꼴을 지정하는 외부 라이브러리(마크다운 에디터 `@uiw/react-md-editor` 등)는 `shared.css`에서 같은 토큰(`var(--fontStack-system)`)으로 맞춥니다.
 - **브랜드 마크**: 헤더·인증·관리자 영역의 로고는 임의 검정 사각형 `J` 모노그램을 만들지 않고 실제 JBIG 마스코트(`/JBIG-logo-192.png`)를 사용합니다.
 - **모바일 퍼스트**: 기본 스타일은 모바일, `@media (min-width: 768px)` 이상에서 데스크톱 확장. 모바일 전용 보정이 필요하면 `@media (max-width: 767px)`만 씁니다. 다른 기준점(600, 768, 960px 등)을 새로 만들지 않습니다. (`breakpoint`)
+  - 사이드바 옆 본문처럼 **부품 폭**에 따라 배치를 바꿔야 하면 화면 폭 대신 컨테이너 쿼리를 씁니다: 부모에 `container-type: inline-size`, 규칙은 `@container (max-width: …)`. (예: 소개 카드 638px, 대회 본문 780px, HTML 편집기 772px. 예전 화면 960, 1100, 820px 기준과 같은 지점)
 - **핵심 레이아웃 토큰**:
   - `--max-content-width: 1280px`
   - `--header-height`: 모바일 `56px`, 데스크톱 `60px`
@@ -194,7 +198,8 @@ components:
 - **그림자**: 기본 카드 `var(--shadow-sm)`, 드롭다운/모달 등 플로팅 오버레이 `var(--shadow-md)` ~ `var(--shadow-lg)`
 - **숫자 정렬**: 카운터·날짜·순위·통계·페이지 번호에는 `font-variant-numeric: tabular-nums` 적용
 - **긴 텍스트 보호**: 닉네임·제목·URL 등은 `min-width: 0`, `overflow-wrap: anywhere` 또는 `text-overflow: ellipsis`로 모바일 가로 넘침 방지
-- **우선순위 싸움 금지**: `!important`로 스타일을 덮지 않습니다. 선택자 구조로 해결하고, `prefers-reduced-motion` 전역 리셋만 예외입니다. (`important`)
+- **우선순위 싸움 금지**: `!important`로 스타일을 덮지 않습니다. 선택자 구조로 해결합니다. 예외는 `prefers-reduced-motion` 전역 리셋, 인쇄 전용(`@media print`) 스타일, 자체 인라인 스타일을 넣는 외부 라이브러리(마크다운 에디터, 날짜 선택기, 노션 보기) 덮어쓰기뿐입니다. (`important`)
+  - 2026-11-24 정리 완료: 우선순위 싸움은 `.부모 .자식`처럼 선택자 강도로 풉니다(예: `.arena .arena-subtitle`, `.postlist-table tbody tr.announcement-row`). 화면 폭별 규칙은 겹치지 않는 미디어 쿼리(`min-width: 768px` / `max-width: 767px`)에 나눠 두면 `!important`가 필요 없습니다. 사용자 본문 인라인 스타일을 이겨야 하는 곳만 사유 주석으로 남깁니다.
 
 ### 4.1 안티-슬롭(Anti-Slop) 및 에디토리얼 절제 원칙
 전형적인 AI 생성 SaaS 템플릿 느낌을 피하기 위해 다음 패턴을 금지합니다.
@@ -231,6 +236,28 @@ components:
 - 예외(사유 주석 필수): 첫 화면 큰 제목의 화면 폭 비례 크기(`clamp`), 이력서 인쇄용 pt, 노션 문서 보기의 원본 비율, 이력서 전용 `--resume-fs-*` 크기, 본문 안 코드처럼 부모 기준 `em`/`%`.
 - 참고 근거(2026-11-23 실측): 당근 13·14·16·20px, velog 12·14·16·18px, Apple WWDC 12·14·17·21·28px. 모두 정수 크기이고 화면당 4~6단계입니다.
 
+### 4.4 여백 단계
+`padding`, `margin`, `gap`은 아래 토큰만 씁니다(`frontend/src/index.css`). 4px 배수가 기본이고 2, 6px은 배지·칩처럼 촘촘한 부품 보정용입니다. (`spacing-token`)
+
+| 토큰 | 크기 | 주로 쓰는 곳 |
+|---|---|---|
+| `--space-0-5` | 2px | 배지, 칩 안쪽 위아래 |
+| `--space-1` | 4px | 아이콘과 글자 사이, 촘촘한 목록 |
+| `--space-1-5` | 6px | 작은 버튼, 칩 좌우 |
+| `--space-2` | 8px | 기본 간격, 버튼 묶음 |
+| `--space-3` | 12px | 입력창 안쪽, 카드 행 |
+| `--space-4` | 16px | 카드 안쪽(모바일), 구역 사이 |
+| `--space-5` | 20px | 카드 안쪽 |
+| `--space-6` | 24px | 카드 안쪽(데스크톱), 열 사이 |
+| `--space-8` | 32px | 큰 구역 사이, 인증 카드 |
+| `--space-10` | 40px | 빈 화면 위아래 |
+| `--space-12` | 48px | 가장 큰 여백 |
+
+- 기존 `--space-xs` ~ `--space-3xl`은 모바일과 데스크톱에서 값이 바뀌는 페이지 바깥 여백 전용으로 남깁니다.
+- 예외: 1px 헤어라인 보정, 48px을 넘는 배치 치수(헤더 높이 등), `calc()` 식, 이력서 전용 `--resume-gap-*`, 게시글 본문의 `em` 여백.
+- 단계 사이 값은 가까운 단계로 맞추고, 정확히 가운데(10, 14, 18, 22, 28, 36px)는 안쪽 여백(padding)이면 위로, 바깥 여백·간격(margin, gap)이면 아래로 맞췄습니다(2026-11-24, 화면당 여백 값 종류 10~23종 → 7~13종).
+- 근거(실측): 토스, 당근, 애플 모두 4 또는 8의 배수 간격을 씁니다.
+
 ## 5. 이미지 및 미디어 최적화 규칙
 - **HDR 배경 감광 방지**: [`frontend/src/index.css`](./frontend/src/index.css)의 전역 `img { dynamic-range-limit: standard; }` 규칙을 반드시 유지합니다. (`hdr-limit`)
 - **업로드 최적화 경로 유지**: 모든 이미지 업로드는 `uploadAttachment` → [`optimizeImageForUpload`](./frontend/src/Utils/imageOptimize.ts)를 거칩니다.
@@ -247,6 +274,9 @@ components:
 - 모달/다이얼로그는 `role="dialog"`, `aria-modal="true"`, `ESC` 닫기, 닫힘 시 트리거 요소로 포커스 복원을 지킵니다.
 - 스타일은 전용 CSS 파일에 작성하고, 런타임 동적 계산값(예: 진행률 바 너비, 이벤트 색상 변수 등)을 제외한 정적 인라인 `style={{}}` 작성을 지양합니다. (`inline-style-static`)
 - `console.log` 디버그 코드를 커밋하지 않습니다. (`console-log`)
+- 비어 있는 목록, 결과 없음 표시는 [`EmptyState`](./frontend/src/Components/Utils/EmptyState.tsx)(아이콘 + 제목 + 설명 + 행동 버튼, `compact`, `framed`)만 씁니다.
+- 모달 배경막은 모두 `var(--overlay-backdrop-bgColor)` 하나입니다.
+- 전환 속도는 `--transition-fast`(120ms), `--transition-base`(180ms), `--transition-slow`(260ms)만 씁니다.
 
 ---
 
@@ -279,7 +309,7 @@ components:
 | `accent-left-stripe` | 4.1 | `border-left: 2px 이상 solid var(--…-accent/success/danger/attention…)` |
 | `pill-highlight` | 4.1 | `highlight`, `topic` 선택자에 `999px` |
 | `breakpoint` | 4 | `@media (min-width: 768px)`, `(max-width: 767px)` 외의 너비 기준점 |
-| `important` | 4 | `!important` (`prefers-reduced-motion` 블록 제외) |
+| `important` | 4 | `!important` (예외: `prefers-reduced-motion` 블록, `@media print` 인쇄 전용, 외부 라이브러리 덮어쓰기 `.w-md-editor`, `.wmde-markdown`, `.react-datepicker`, `.notion-*`) |
 | `inline-style-static` | 6 | `style={{}}` 안의 정적 px, 숫자, 색 리터럴 |
 | `clickable-div` | 6 | `<div onClick>`, `<span onClick>` |
 | `img-lazy` | 5 | `<img>`에 `loading="lazy"`와 `decoding="async"` 중 하나라도 없음 |
@@ -292,6 +322,7 @@ components:
 | `hdr-limit` | 5 | `index.css`의 `img { dynamic-range-limit: standard }`가 사라짐 |
 | `font-size-token` | 4.3 | 컴포넌트 CSS의 `font-size`에 px, rem, pt 숫자를 직접 씀 (`var(--text-*)`, `var(--font-size-*)`, `em`, `%`, `inherit`만 허용) |
 | `font-weight-scale` | 4.3 | `font-weight`가 400, 500, 600, 700이 아님 |
+| `spacing-token` | 4.4 | `padding`, `margin`, `gap`에 2~48px 숫자를 직접 씀 (1px, 48px 초과, `calc()` 제외) |
 
 ---
 
@@ -346,6 +377,11 @@ components:
 ---
 
 ## 10. 변경 이력
+- 2026-11-24: 우리 CSS의 `!important` 60곳 정리(게시판 목록과 모바일 카드 35, 대회 9, 게시글 본문 4, 댓글 3, 편집기 3, 일정 편집 4, 홈 1). 선택자 강도로 바꾸고 사용자 본문 인라인 정렬을 이겨야 하는 1곳만 사유 주석. 192개 화면 비교에서 보이는 변화 0. 디자인 검사 위반 0.
+- 2026-11-24: 남은 규칙 위반 정리. 화면 폭 기준점 12곳 통일(768px 경계 버그 4곳 포함, 부품 폭 3곳은 컨테이너 쿼리), 정의 안 된 변수 1곳, 입력창 포커스 링 통일(outline none 13곳 제거), 배경막 3종과 반투명 테두리 6곳 토큰화, 전환 속도 23곳 토큰화, 빈 상태 표시 9곳 EmptyState로 통일, 이미지 로딩 속성 9곳, 인라인 스타일 4곳, 쓰지 않던 CommentList 삭제. 남은 위반은 게시판 목록 !important 뿐.
+- 2026-11-24: 여백 단계 토큰 11개(`--space-0-5` ~ `--space-12`) 도입, 컴포넌트 CSS 여백 907곳을 토큰으로(값이 바뀐 곳 314곳), `spacing-token` 검사 추가. 사용자가 AS-IS/TO-BE 비교 PDF를 보고 승인.
+- 2026-11-24: `important` 검사 예외를 인쇄 전용과 외부 라이브러리 덮어쓰기로 넓힘(정당한 사용 77곳은 위반에서 제외, 남은 위반은 실제 우선순위 싸움만).
+- 2026-11-24: 화면 변화 없는 정리. 예전 색 별칭 `--color-*` 290곳을 Primer 토큰으로 바꾸고 정의 23개 삭제, 항상 정의된 토큰 뒤의 예비값 1,019곳 삭제.
 - 2026-11-23: ego lite로 화면 106개(테마 3종, 데스크톱/모바일, 로그인/로그아웃, 모달과 메뉴 동작) 요소 전수 점검. 모바일 터치 대상 24px 미만 12곳과 프로필 편집 소수점 글자 크기 1곳을 고쳐 문제 0건.
 - 2026-11-23: 다크 딤드 글자 대비 보정(링크, 위험, 보조 글자 토큰 밝기). 테마 3종 x 화면 9개 x 너비 2개 실측 기준 미달 91건 → 0건, 라이트와 다크는 변화 없음.
 - 2026-11-23: 글자 크기 10단계 토큰(`--text-*`)과 굵기 4단계 도입(4.3절), 소수점 크기 42곳과 450 굵기 정리, `font-size-token`, `font-weight-scale` 검사 추가.

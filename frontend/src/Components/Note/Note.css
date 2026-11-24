@@ -4,9 +4,9 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 16px 24px 40px;
-    background-color: var(--bgColor-inset, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
+    padding: var(--space-4) var(--space-6) var(--space-10);
+    background-color: var(--bgColor-inset);
+    color: var(--fgColor-default);
     min-height: 100vh;
     box-sizing: border-box;
 }
@@ -17,9 +17,9 @@
     align-items: center;
     width: 100%;
     max-width: 900px;
-    padding: 8px 0 14px 0;
-    margin-bottom: 16px;
-    border-bottom: 1px solid var(--borderColor-default, #d0d7de);
+    padding: var(--space-2) 0 var(--space-4) 0;
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--borderColor-default);
     box-sizing: border-box;
 }
 
@@ -27,15 +27,15 @@
     font-size: var(--text-title);
     font-weight: 700;
     text-decoration: none;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     cursor: pointer;
 }
 
 .note-content {
     width: 100%;
     max-width: 900px;
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
@@ -49,25 +49,25 @@
     width: 100%;
     max-width: 900px;
     height: 360px;
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     font-size: var(--text-body);
-    color: var(--fgColor-muted, #656d76);
-    gap: 12px;
+    color: var(--fgColor-muted);
+    gap: var(--space-3);
 }
 
 .note-error {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
 }
 
 /* react-notion-x 스타일 오버라이드 */
 .notion-page {
-    padding: 24px 0 10vh !important;
+    padding: var(--space-6) 0 10vh !important;
 }
 
 .notion-page-content {
-    padding: 20px !important;
+    padding: var(--space-5) !important;
 }
 
 .notion-title {
@@ -108,7 +108,7 @@
 }
 
 .notion-link {
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     text-decoration: none;
 }
 
@@ -117,10 +117,10 @@
 }
 
 .notion-table-of-contents {
-    margin: 16px 0;
-    padding: 14px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border: 1px solid var(--borderColor-muted, #d0d7de);
+    margin: var(--space-4) 0;
+    padding: var(--space-4);
+    background-color: var(--bgColor-muted);
+    border: 1px solid var(--borderColor-muted);
     border-radius: var(--radius-md);
 }
 
@@ -146,12 +146,12 @@
 .notion-list .notion-list { list-style-type: circle !important; }
 .notion-list .notion-list .notion-list { list-style-type: square !important; }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
     .note-wrapper {
-        padding: 12px 12px 32px;
+        padding: var(--space-3) var(--space-3) var(--space-8);
     }
 
     .notion-page-content {
-        padding: 14px !important;
+        padding: var(--space-4) !important;
     }
 }

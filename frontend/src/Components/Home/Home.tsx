@@ -45,6 +45,7 @@ import PhotoAlbumSlider from "./PhotoAlbumSlider";
 import scheduleIdleTask from "../Utils/scheduleIdleTask";
 import BrandMark from "../Utils/BrandMark";
 import Skeleton from "../Utils/Skeleton";
+import EmptyState from "../Utils/EmptyState";
 
 const PostDetail = lazy(() => import("../Posts/PostDetail"));
 const PostWrite = lazy(() => import("../Posts/PostWrite"));
@@ -665,10 +666,7 @@ const Home: React.FC = () => {
                                         </div>
                                         <div className="notification-list">
                                             {notifications.length === 0 ? (
-                                                <div className="notification-empty">
-                                                    <Bell size={22} className="notification-empty-icon" aria-hidden="true" />
-                                                    <span>새로운 알림이 없습니다</span>
-                                                </div>
+                                                <EmptyState compact icon={<Bell size={22} />} title="새로운 알림이 없습니다" />
                                             ) : (
                                                 notifications.map(n => (
                                                     <button
@@ -792,7 +790,8 @@ const Home: React.FC = () => {
             {isHomePage && !isArenaPage && (
                 <div className="home-banner-wrap">
                     <button type="button" className="home-banner" onClick={() => navigate('/')} aria-label="홈으로 이동">
-                        <img src={BANNER_IMAGE_URL} alt="JBIG 배너" className="banner-image"/>
+                        {/* design-lint-allow img-lazy: 첫 화면 맨 위 배너라 바로 불러온다 */}
+                        <img decoding="async" src={BANNER_IMAGE_URL} alt="JBIG 배너" className="banner-image"/>
                     </button>
                 </div>
             )}

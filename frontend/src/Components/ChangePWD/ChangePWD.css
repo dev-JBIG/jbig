@@ -3,7 +3,7 @@
 /* 기존 값 유지: 데스크톱에서도 안쪽 여백 28px 24px (다른 인증 화면은 32px) */
 @media (min-width: 768px) {
     .changepwd-container {
-        padding: 28px 24px;
+        padding: var(--space-8) var(--space-6);
     }
 }
 
@@ -24,7 +24,7 @@
 .changepwd-code-row {
     position: relative;
     width: 100%;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
 }
 
 .changepwd-code-row .changepwd-input {

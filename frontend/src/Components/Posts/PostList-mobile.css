@@ -13,7 +13,7 @@
         margin-bottom: 0;
         border: none;
         border-radius: 0;
-        border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+        border-bottom: 1px solid var(--borderColor-muted);
         box-shadow: none;
     }
 
@@ -57,26 +57,26 @@
     /* 카드 레이아웃 */
     .postlist-table {
         width: 100%;
-        display: block !important;
+        display: block;
         border: none;
         box-shadow: none;
     }
 
     .postlist-table thead {
-        display: none !important;
+        display: none;
     }
 
     .postlist-table tbody {
-        display: block !important;
+        display: block;
     }
 
     .postlist-table tbody tr {
-        display: block !important;
+        display: block;
         position: relative;
-        margin-bottom: 10px;
-        padding: 14px 16px;
-        background-color: var(--bgColor-default, var(--color-bg-primary));
-        border: 1px solid var(--borderColor-default, var(--color-border-light));
+        margin-bottom: var(--space-2);
+        padding: var(--space-4) var(--space-4);
+        background-color: var(--bgColor-default);
+        border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-sm);
         cursor: pointer;
@@ -84,86 +84,86 @@
     }
 
     .postlist-table tbody tr:hover {
-        border-color: var(--borderColor-accent-emphasis, var(--color-primary));
-        background-color: var(--bgColor-muted, var(--color-bg-secondary));
+        border-color: var(--borderColor-accent-emphasis);
+        background-color: var(--bgColor-muted);
     }
 
     .postlist-table tbody tr.announcement-row {
-        background-color: var(--bgColor-attention-muted, #fff8c5) !important;
-        border: 1px solid var(--borderColor-attention-muted, #d4a72c) !important;
+        background-color: var(--bgColor-attention-muted);
+        border: 1px solid var(--borderColor-attention-muted);
     }
 
     .announcement-badge.mobile-only {
-        display: inline-flex !important;
+        display: inline-flex;
         margin-right: var(--space-sm);
     }
 
     .announcement-title {
         font-weight: 600;
-        color: var(--fgColor-default, var(--color-text-primary));
+        color: var(--fgColor-default);
     }
 
     .postlist-table td.th-category {
-        display: block !important;
+        display: block;
         width: auto;
         max-width: none;
-        margin-bottom: 6px;
+        margin-bottom: var(--space-1-5);
     }
 
     .postlist-table td {
-        display: block !important;
-        padding: 0 !important;
-        border: none !important;
-        text-align: left !important;
+        display: block;
+        padding: 0;
+        border: none;
+        text-align: left;
     }
 
     .postlist-table td.th-id {
-        display: none !important;
+        display: none;
     }
 
     .postlist-table tbody .title-cell {
         font-size: var(--text-body);
         font-weight: 600;
-        color: var(--fgColor-default, var(--color-text-primary));
+        color: var(--fgColor-default);
         line-height: 1.45;
-        margin-bottom: 8px;
+        margin-bottom: var(--space-2);
         word-break: break-word;
         overflow-wrap: break-word;
     }
 
     .postlist-table tbody .author-cell {
-        display: inline-block !important;
+        display: inline-block;
         font-size: var(--text-label);
-        color: var(--fgColor-accent, var(--color-primary));
+        color: var(--fgColor-accent);
         font-weight: 500;
-        margin-right: 12px;
-        margin-bottom: 2px;
+        margin-right: var(--space-3);
+        margin-bottom: var(--space-0-5);
     }
 
     .postlist-table td.th-date {
-        display: inline-block !important;
+        display: inline-block;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
-        margin-right: 12px;
+        color: var(--fgColor-muted);
+        margin-right: var(--space-3);
     }
 
     .postlist-table td.th-views,
     .postlist-table td.th-likes {
-        display: inline-block !important;
+        display: inline-block;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
-        margin-right: 10px;
+        color: var(--fgColor-muted);
+        margin-right: var(--space-2);
         font-weight: 400;
     }
 
     .postlist-table td.th-views::before {
         content: "조회 ";
-        color: var(--fgColor-muted, var(--color-text-tertiary));
+        color: var(--fgColor-muted);
     }
 
     .postlist-table td.th-likes::before {
         content: "좋아요 ";
-        color: var(--fgColor-muted, var(--color-text-tertiary));
+        color: var(--fgColor-muted);
     }
 
     .postlist-table td.th-likes {
@@ -174,16 +174,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 6px;
+        gap: var(--space-1-5);
         margin-top: var(--space-lg);
-        padding-bottom: 16px;
+        padding-bottom: var(--space-4);
         flex-wrap: wrap;
     }
 
     .pagination-btn {
         min-width: 36px;
         height: 36px;
-        padding: 0 10px;
+        padding: 0 var(--space-3);
         display: inline-flex;
         align-items: center;
         justify-content: center;

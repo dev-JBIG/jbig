@@ -219,7 +219,9 @@ const PopupSlider: React.FC = () => {
             <div className="popup-content">
                 {displayImageSrc && (
                     <div className="popup-image">
+                        {/* design-lint-allow img-lazy: 열리자마자 보이는 팝업 이미지라 바로 불러온다 */}
                         <img
+                            decoding="async"
                             src={displayImageSrc}
                             alt={currentPopup.title}
                             referrerPolicy="no-referrer"

@@ -361,7 +361,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
 
                             <div className="primer-calendar-events">
                                 {visibleEvents.map(ev => {
-                                    const accent = ev.color || "#0969da";
+                                    const accent = ev.color || "var(--bgColor-accent-emphasis)";
                                     return (
                                         <button
                                             key={`${key}-${ev.id}`}
@@ -414,7 +414,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
                             >
                                 <span
                                     className="primer-calendar-color-swatch"
-                                    style={{ backgroundColor: ev.color || "#0969da" }}
+                                    style={{ backgroundColor: ev.color || "var(--bgColor-accent-emphasis)" }}
                                     aria-hidden="true"
                                 />
                                 <div className="primer-calendar-day-list-text">
@@ -434,7 +434,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
                         <div className="primer-calendar-modal-title-wrap">
                             <span
                                 className="primer-calendar-color-swatch"
-                                style={{ backgroundColor: selectedEvent.color || "#0969da" }}
+                                style={{ backgroundColor: selectedEvent.color || "var(--bgColor-accent-emphasis)" }}
                                 aria-hidden="true"
                             />
                             <h3 id="calendar-event-modal-title">{selectedEvent.title}</h3>

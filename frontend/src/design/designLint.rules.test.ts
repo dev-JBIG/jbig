@@ -87,6 +87,57 @@ describe("designLint 판정", () => {
         expect(lint({ "src/E.tsx": nestedText }, "clickable-div")).toHaveLength(1);
     });
 
+    test("return 등 값을 받는 키워드 뒤의 문자열은 문자열로 건너뛴다 (URL 의 // 를 주석으로 보지 않음)", () => {
+        const kw = [
+            "export const F = () => (",
+            "  <>",
+            '    <img src={(() => { return "https://example.com/a.png"; })()} alt="" />',
+            '    <img src={other} alt="" loading="lazy" decoding="async" />',
+            "  </>",
+            ");",
+        ].join("\n");
+        expect(lint({ "src/F.tsx": kw }, "img-lazy").map(x => x.line)).toEqual([3]);
+        for (const word of ["typeof", "case", "await", "throw", "void", "new"]) {
+            const t = `export const G = () => <><img src={x(() => { ${word} "https://a.b/c"; })} alt="" /><img src={y} alt="" loading="lazy" decoding="async" /></>;\n`;
+            expect(lint({ "src/G.tsx": t }, "img-lazy")).toHaveLength(1);
+        }
+        // 키워드로 끝나는 식별자(join's), 속성 이름(obj.return)은 키워드가 아니다
+        const ident = "export const H = () => <div title={names.join's} onClick={f} />;\n";
+        expect(lint({ "src/H.tsx": ident }, "clickable-div")).toHaveLength(1);
+    });
+
+    test("여백은 2~48px 직접값만 위반이고 1px 선, 48px 초과, calc, 토큰은 통과한다", () => {
+        const css = [
+            ".a { padding: 8px 12px; }",
+            ".b { margin: 0 1px; gap: var(--space-2); }",
+            ".c { margin-top: 56px; padding: calc(var(--space-2) + 2px); }",
+            ".d { column-gap: 0.5em; row-gap: 7px }",
+        ].join("\n");
+        expect(lint({ "src/a.css": css }, "spacing-token").map(x => x.line)).toEqual([1, 4]);
+    });
+
+    test("calc() 바깥의 직접값과 음수 직접값도 여백 위반이다", () => {
+        const css = [
+            ".a { padding: calc(100% - 8px) 12px; }",
+            ".b { margin-left: -8px; }",
+            ".c { margin-top: calc(-1 * var(--space-2)); margin-left: -1px; }",
+        ].join("\n");
+        expect(lint({ "src/a.css": css }, "spacing-token").map(x => x.line)).toEqual([1, 2]);
+    });
+
+    test("!important 예외는 모든 선택자가 외부 라이브러리이거나 인쇄 전용 미디어일 때만", () => {
+        const css = [
+            ".w-md-editor, .app-card { padding: 0 !important; }",
+            ".w-md-editor .x, .react-datepicker__day { color: inherit !important; }",
+            "@media not print { .a { display: none !important; } }",
+            "@media screen, print { .b { display: none !important; } }",
+            "@media print { .c { display: none !important; } }",
+            "@media only print and (min-width: 768px) { .d { display: none !important; } }",
+            ".app-card:not(.w-md-editor) { color: inherit !important; }",
+        ].join("\n");
+        expect(lint({ "src/a.css": css }, "important").map(x => x.line)).toEqual([1, 3, 4, 7]);
+    });
+
     test("복합 미디어 쿼리의 모든 너비 조건을 검사한다", () => {
         const v = lint({ "src/a.css": "@media (min-width: 600px) and (max-width: 767px) { .a { color: inherit; } }\n" }, "breakpoint");
         expect(v.map(x => x.message)).toEqual(["min-width: 600px"]);

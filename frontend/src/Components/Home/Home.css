@@ -4,15 +4,15 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: var(--bgColor-inset, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-inset);
+    color: var(--fgColor-default);
 }
 
 /* 헤더 - GitHub Primer Global Header */
 .home-header {
     height: var(--header-height);
-    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
-    background-color: var(--bgColor-default, #ffffff);
+    border-bottom: 1px solid var(--borderColor-default);
+    background-color: var(--bgColor-default);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -27,25 +27,25 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .home-header-left {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     min-width: 0;
 }
 
 .logo {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     background: transparent;
     border: none;
-    padding: 4px 8px 4px 4px;
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
     border-radius: var(--radius-md);
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     font-size: var(--text-title-s);
     /* design-lint-allow font-weight-scale: JBIG 글자 로고는 브랜드 굵기 800 */
     font-weight: 800;
@@ -56,7 +56,7 @@
 }
 
 .logo:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 /* 공통 모양은 shared.css 의 .brand-mark */
@@ -78,7 +78,7 @@
 .header-right-section {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-1-5);
     flex-shrink: 0;
 }
 
@@ -95,15 +95,15 @@
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     background-color: transparent;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     cursor: pointer;
     transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .theme-toggle-btn:hover,
 .notification-icon-wrapper:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
 }
 
 .theme-menu-wrapper {
@@ -117,19 +117,19 @@
     top: calc(100% + 6px);
     right: 0;
     min-width: 204px;
-    padding: 6px;
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    padding: var(--space-1-5);
+    background-color: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     z-index: 210;
 }
 
 .theme-dropdown-header {
-    padding: 4px 8px 6px;
+    padding: var(--space-1) var(--space-2) var(--space-1-5);
     font-size: var(--text-caption);
     font-weight: 600;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     letter-spacing: 0.02em;
 }
 
@@ -137,12 +137,12 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 8px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-2);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     font-family: inherit;
     font-size: var(--text-label);
     font-weight: 500;
@@ -152,12 +152,12 @@
 }
 
 .theme-option:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .theme-option.is-active {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
     font-weight: 600;
 }
 
@@ -175,18 +175,18 @@
 .theme-option-desc {
     font-size: var(--text-caption);
     font-weight: 400;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     line-height: 1.25;
 }
 
 .theme-option.is-active .theme-option-desc {
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     opacity: 0.85;
 }
 
 .theme-option-check {
     flex-shrink: 0;
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
 }
 
 /* 배너 (홈 전용) */
@@ -202,16 +202,16 @@
     overflow: hidden;
     display: block;
     padding: 0;
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background: var(--bgColor-default, #ffffff);
+    background: var(--bgColor-default);
     cursor: pointer;
     box-shadow: var(--shadow-sm);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .home-banner:hover {
-    border-color: var(--borderColor-emphasis, #818b98);
+    border-color: var(--borderColor-emphasis);
 }
 
 .banner-image {
@@ -225,13 +225,13 @@
 .route-loading-fallback {
     width: 100%;
     min-height: 240px;
-    padding: 24px;
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    padding: var(--space-6);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--space-3);
 }
 
 .route-loading-bar {
@@ -269,8 +269,8 @@
 /* 사진첩 카드 & 슬라이더 (Primer Box 패턴) */
 .photo-album-card {
     margin-top: var(--space-lg);
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
@@ -280,10 +280,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 14px 18px;
-    background-color: var(--bgColor-default, #ffffff);
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    background-color: var(--bgColor-default);
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .photo-album-card-title {
@@ -291,28 +291,28 @@
     font-size: var(--text-ui);
     font-weight: 600;
     letter-spacing: -0.015em;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .photo-album-card-actions {
     display: inline-flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .photo-album-counter {
     font-size: var(--text-caption);
     font-weight: 500;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     font-variant-numeric: tabular-nums;
 }
 
 .photo-album-more-btn {
     background: transparent;
     border: none;
-    padding: 4px 8px;
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-md);
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
@@ -320,8 +320,8 @@
 }
 
 .photo-album-more-btn:hover {
-    color: var(--fgColor-default, #1f2328);
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    color: var(--fgColor-default);
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .photo-album-slider {
@@ -347,7 +347,7 @@
     border-radius: 0;
     border: none;
     overflow: hidden;
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
     cursor: pointer;
 }
 
@@ -364,9 +364,10 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 28px 18px 14px;
+    padding: var(--space-8) var(--space-5) var(--space-4);
+    /* design-lint-allow raw-color: 사진 위 글자와 버튼을 읽히게 하는 고정 어두운 막이라 테마와 무관하다 */
     background: linear-gradient(180deg, rgba(13, 17, 23, 0), rgba(13, 17, 23, 0.78));
-    color: var(--fgColor-onEmphasis, #ffffff);
+    color: var(--fgColor-onEmphasis);
     font-size: var(--text-ui);
     font-weight: 500;
     letter-spacing: -0.01em;
@@ -379,9 +380,11 @@
     width: 34px;
     height: 34px;
     border-radius: 50%;
+    /* design-lint-allow raw-color: 사진 위 글자와 버튼을 읽히게 하는 고정 어두운 막이라 테마와 무관하다 */
     border: 1px solid rgba(255, 255, 255, 0.25);
+    /* design-lint-allow raw-color: 사진 위 글자와 버튼을 읽히게 하는 고정 어두운 막이라 테마와 무관하다 */
     background: rgba(13, 17, 23, 0.58);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    color: var(--fgColor-onEmphasis);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -391,6 +394,7 @@
 }
 
 .photo-album-nav:hover {
+    /* design-lint-allow raw-color: 사진 위 글자와 버튼을 읽히게 하는 고정 어두운 막이라 테마와 무관하다 */
     background: rgba(13, 17, 23, 0.85);
 }
 
@@ -401,8 +405,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px 12px;
+    gap: var(--space-1-5);
+    padding: var(--space-3) var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -412,22 +416,14 @@
     padding: 0;
     border: none;
     border-radius: 999px;
-    background-color: var(--borderColor-default, #d1d9e0);
+    background-color: var(--borderColor-default);
     cursor: pointer;
     transition: width var(--transition-fast), background-color var(--transition-fast);
 }
 
 .photo-album-dot.is-active {
     width: 18px;
-    background-color: var(--fgColor-default, #1f2328);
-}
-
-.photo-album-empty {
-    color: var(--fgColor-muted, #59636e);
-    font-size: var(--text-label);
-    padding: 36px 16px;
-    width: 100%;
-    text-align: center;
+    background-color: var(--fgColor-default);
 }
 
 @keyframes photoFadeIn {
@@ -443,19 +439,19 @@
 .user-info-clickable {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: var(--space-1-5);
     height: 32px;
-    padding: 0 8px 0 5px;
+    padding: 0 var(--space-2) 0 var(--space-1-5);
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     background-color: transparent;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     cursor: pointer;
     transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .user-info-clickable:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .user-avatar-chip {
@@ -465,8 +461,8 @@
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.2));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
     font-size: var(--text-caption);
     font-weight: 700;
     flex-shrink: 0;
@@ -475,18 +471,18 @@
 .user-info-name {
     font-size: var(--text-label);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     white-space: nowrap;
 }
 
 .user-semester-tag {
     font-size: var(--text-caption);
     font-weight: 500;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 .user-chevron {
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     flex-shrink: 0;
 }
 
@@ -494,34 +490,34 @@
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     min-width: 210px;
-    padding: 6px;
+    padding: var(--space-1-5);
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-0-5);
 }
 
 .dropdown-user-header {
-    padding: 6px 10px 8px;
+    padding: var(--space-1-5) var(--space-3) var(--space-2);
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-0-5);
 }
 
 .dropdown-user-name {
     font-size: var(--text-label);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .dropdown-user-email {
     font-size: var(--text-caption);
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -530,36 +526,36 @@
 .dropdown-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     width: 100%;
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-3);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
     font-size: var(--text-label);
     font-weight: 500;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     text-align: left;
     cursor: pointer;
     transition: background-color var(--transition-fast);
 }
 
 .dropdown-item:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .dropdown-item-danger {
-    color: var(--fgColor-danger, #d1242f);
+    color: var(--fgColor-danger);
 }
 
 .dropdown-item-danger:hover {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
+    background-color: var(--bgColor-danger-muted);
 }
 
 .dropdown-divider {
     height: 1px;
-    background-color: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    margin: 4px 0;
+    background-color: var(--borderColor-muted);
+    margin: var(--space-1) 0;
 }
 
 /* 알림 스타일 */
@@ -571,8 +567,8 @@
     position: absolute;
     top: -5px;
     right: -5px;
-    background-color: var(--bgColor-danger-emphasis, #cf222e);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background-color: var(--bgColor-danger-emphasis);
+    color: var(--fgColor-onEmphasis);
     font-size: var(--text-micro);
     font-weight: 700;
     min-width: 18px;
@@ -581,16 +577,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 4px;
-    border: 2px solid var(--bgColor-default, #ffffff);
+    padding: 0 var(--space-1);
+    border: 2px solid var(--bgColor-default);
 }
 
 .notification-dropdown {
     position: absolute;
     top: calc(100% + 6px);
     right: 0;
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     width: 348px;
@@ -603,51 +599,36 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 14px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+    padding: var(--space-3) var(--space-4);
+    background-color: var(--bgColor-muted);
+    border-bottom: 1px solid var(--borderColor-default);
 }
 
 .notification-title {
     font-weight: 600;
     font-size: var(--text-ui);
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .mark-all-read-btn {
     background: none;
     border: none;
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     font-size: var(--text-caption);
     font-weight: 600;
     cursor: pointer;
-    padding: 4px 8px;
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-md);
     transition: background-color var(--transition-fast);
 }
 
 .mark-all-read-btn:hover {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    background-color: var(--bgColor-accent-muted);
 }
 
 .notification-list {
     max-height: 368px;
     overflow-y: auto;
-}
-
-.notification-empty {
-    padding: 36px 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    text-align: center;
-    color: var(--fgColor-muted, #59636e);
-    font-size: var(--text-label);
-}
-
-.notification-empty-icon {
-    opacity: 0.5;
 }
 
 .notification-item {
@@ -656,8 +637,8 @@
     text-align: left;
     background: transparent;
     border: none;
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    padding: 12px 14px;
+    border-bottom: 1px solid var(--borderColor-muted);
+    padding: var(--space-3) var(--space-4);
     cursor: pointer;
     font-family: inherit;
     transition: background-color var(--transition-fast);
@@ -668,77 +649,77 @@
 }
 
 .notification-item:hover {
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
 }
 
 .notification-item.unread {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    background-color: var(--bgColor-accent-muted);
 }
 
 .notification-content {
     font-size: var(--text-label);
     line-height: 1.45;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
 }
 
 .notification-actor {
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .notification-text {
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 .notification-post-title {
     font-size: var(--text-caption);
-    color: var(--fgColor-accent, #0969da);
-    margin-bottom: 4px;
+    color: var(--fgColor-accent);
+    margin-bottom: var(--space-1);
     font-weight: 500;
 }
 
 .notification-comment {
     font-size: var(--text-caption);
-    color: var(--fgColor-muted, #59636e);
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    padding: 4px 8px;
+    color: var(--fgColor-muted);
+    background-color: var(--bgColor-muted);
+    border: 1px solid var(--borderColor-muted);
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-md);
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
 }
 
 .notification-time {
     font-size: var(--text-caption);
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 /* 아이콘 */
 .board-icon {
     flex-shrink: 0;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 .board-lock-icon {
-    margin-left: 4px;
+    margin-left: var(--space-1);
     flex-shrink: 0;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 .user-id {
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     font-weight: 500;
     cursor: pointer;
 }
 
 .user-id:hover {
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     text-decoration: underline;
 }
 
 .add-event-btn-inner {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 /* PC 스타일 (768px 이상) */
@@ -758,32 +739,32 @@
         flex: 0 1 320px;
         min-width: 180px;
         margin-left: auto;
-        margin-right: 4px;
+        margin-right: var(--space-1);
     }
 
     .header-search-icon {
         position: absolute;
         left: 10px;
-        color: var(--fgColor-muted, #59636e);
+        color: var(--fgColor-muted);
         pointer-events: none;
     }
 
     .header-search-input {
         width: 100%;
         height: 32px;
-        padding: 4px 32px 4px 32px;
-        border: 1px solid var(--borderColor-default, #d1d9e0);
+        padding: var(--space-1) var(--space-8) var(--space-1) var(--space-8);
+        border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-md);
-        background-color: var(--bgColor-inset, #f6f8fa);
-        color: var(--fgColor-default, #1f2328);
+        background-color: var(--bgColor-inset);
+        color: var(--fgColor-default);
         font-size: var(--text-label);
         transition: background-color var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
     }
 
     .header-search-input:focus {
-        background-color: var(--bgColor-default, #ffffff);
-        border-color: var(--borderColor-accent-emphasis, #0969da);
-        box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+        background-color: var(--bgColor-default);
+        border-color: var(--borderColor-accent-emphasis);
+        box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
     }
 
     .header-search-kbd {
@@ -794,11 +775,11 @@
         justify-content: center;
         min-width: 18px;
         height: 18px;
-        padding: 0 4px;
-        border: 1px solid var(--borderColor-default, #d1d9e0);
+        padding: 0 var(--space-1);
+        border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-sm);
-        background-color: var(--bgColor-default, #ffffff);
-        color: var(--fgColor-muted, #59636e);
+        background-color: var(--bgColor-default);
+        color: var(--fgColor-muted);
         font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
         font-size: var(--text-caption);
         line-height: 1;
@@ -825,15 +806,15 @@
         flex-direction: column;
         width: var(--sidebar-width);
         flex-shrink: 0;
-        background-color: var(--bgColor-default, #ffffff);
-        border: 1px solid var(--borderColor-default, #d1d9e0);
+        background-color: var(--bgColor-default);
+        border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-sm);
         align-self: flex-start;
     }
 
     .sidebar-scrollable {
-        padding: 10px 12px;
+        padding: var(--space-3) var(--space-3);
     }
 
     .main-area {
@@ -846,28 +827,28 @@
 .sidebar-top-divider {
     width: 100%;
     height: 1px;
-    background-color: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    margin: 8px 0;
+    background-color: var(--borderColor-muted);
+    margin: var(--space-2) 0;
     flex-shrink: 0;
 }
 
 .sidebar-middle-divider {
     width: 100%;
     height: 1px;
-    background-color: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    margin: 6px 0;
+    background-color: var(--borderColor-muted);
+    margin: var(--space-1-5) 0;
 }
 
 .sidebar-section-heading {
-    padding: 4px 10px 3px;
+    padding: var(--space-1) var(--space-3) var(--space-1);
     font-size: var(--text-caption);
     font-weight: 600;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     letter-spacing: -0.005em;
 }
 
 .sidebar-signup-wrap {
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
 }
 
 .sidebar-signup-btn {
@@ -891,15 +872,15 @@ a.sidebar-nav-btn,
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px;
-    padding: 5px 10px;
+    gap: var(--space-2);
+    padding: var(--space-1-5) var(--space-3);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
     font-family: inherit;
     font-size: var(--text-ui);
     font-weight: 400;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     text-align: left;
     text-decoration: none;
     cursor: pointer;
@@ -909,15 +890,15 @@ a.sidebar-nav-btn,
 
 a.sidebar-nav-btn:hover,
 .sidebar-nav-btn:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
     text-decoration: none;
 }
 
 a.sidebar-nav-btn.is-active,
 .sidebar-nav-btn.is-active {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
     font-weight: 600;
 }
 
@@ -929,17 +910,17 @@ a.sidebar-nav-btn.is-active,
     bottom: 6px;
     width: 3px;
     border-radius: 999px;
-    background-color: var(--bgColor-accent-emphasis, #0969da);
+    background-color: var(--bgColor-accent-emphasis);
 }
 
 .sidebar-nav-btn.is-active .board-icon {
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
 }
 
 .board-item-content {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -950,7 +931,7 @@ a.sidebar-nav-btn.is-active,
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background-color: var(--bgColor-accent-emphasis, #0969da);
+    background-color: var(--bgColor-accent-emphasis);
     flex-shrink: 0;
 }
 
@@ -958,7 +939,7 @@ a.sidebar-nav-btn.is-active,
     display: flex;
     flex-direction: column;
     gap: 1px;
-    margin-top: 2px;
+    margin-top: var(--space-0-5);
 }
 
 a.sidebar-external-link,
@@ -966,14 +947,14 @@ a.sidebar-external-link,
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
     width: 100%;
     min-height: 30px;
-    padding: 5px 10px;
+    padding: var(--space-1-5) var(--space-3);
     border-radius: var(--radius-md);
     border: none;
     background: transparent;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     font-size: var(--text-label);
     font-weight: 500;
     text-decoration: none;
@@ -982,8 +963,8 @@ a.sidebar-external-link,
 
 a.sidebar-external-link:hover,
 .sidebar-external-link:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
     text-decoration: none;
 }
 
@@ -1011,10 +992,10 @@ a.sidebar-external-link:hover .sidebar-external-arrow,
     width: 15px;
     height: 15px;
     flex-shrink: 0;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 a.sidebar-external-link:hover .sidebar-discord-icon,
 .sidebar-external-link:hover .sidebar-discord-icon {
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }

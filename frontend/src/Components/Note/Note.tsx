@@ -240,6 +240,7 @@ const Note: React.FC = () => {
                     홈으로
                 </Button>
             </div>
+            {/* design-lint-allow clickable-div: 노션 본문 안 링크 클릭을 가로채는 이벤트 위임이라 컨트롤이 아니다 */}
             <div className="note-content" onClick={handleContentClick}>
                 {recordMap && (
                     <NotionRenderer

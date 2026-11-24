@@ -99,7 +99,9 @@ const MobileNav: React.FC<MobileNavProps> = ({
       </button>
 
       {isOpen && (
+        // design-lint-allow clickable-div: 서랍 뒤 배경막 클릭은 마우스 보조 동작이고 ESC와 닫기 버튼으로도 닫힌다
         <div className="mobile-nav-overlay" onClick={closeDrawer}>
+          {/* design-lint-allow clickable-div: 배경막으로 클릭이 번지지 않게 막는 처리라 컨트롤이 아니다 */}
           <div
             ref={drawerRef}
             className="mobile-nav-drawer"

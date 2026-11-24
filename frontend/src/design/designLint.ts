@@ -48,6 +48,7 @@ export const RULES: RuleInfo[] = [
     { id: "hdr-limit", section: "5", summary: "전역 img { dynamic-range-limit: standard } 유지" },
     { id: "font-size-token", section: "4.3", summary: "글자 크기는 --text-* 토큰(또는 em, %, inherit)만, px·rem·pt 직접 지정 금지" },
     { id: "font-weight-scale", section: "4.3", summary: "글자 굵기는 400, 500, 600, 700만 (글자 로고 800은 허용 주석)" },
+    { id: "spacing-token", section: "4.4", summary: "padding, margin, gap의 2~48px 값은 --space-* 토큰으로 (1px 선, 48px 초과 배치 치수, calc 제외)" },
 ];
 
 const RULE_IDS = new Set(RULES.map(r => r.id));
@@ -107,9 +108,20 @@ const isAllowed = (lines: string[], line: number, rule: string) => {
  */
 const jsxTagEnd = (text: string, start: number) => {
     const stack: ("expr" | "tpl")[] = [];
-    const prevSignificant = (k: number) => {
-        for (let j = k - 1; j > start; j--) if (!/\s/.test(text[j])) return text[j];
-        return "";
+    // 따옴표 앞 토큰이 값이 시작될 자리인가: 연산자·괄호 뒤, 또는 값을 받는 키워드(return, typeof 등) 뒤.
+    // 키워드는 단어 전체로 비교한다(join's 처럼 키워드로 끝나는 식별자는 아님).
+    const VALUE_KEYWORDS = new Set(["return", "typeof", "case", "yield", "await", "throw", "void", "in", "of", "instanceof", "new", "delete", "else", "do"]);
+    const isValueStart = (k: number) => {
+        let j = k - 1;
+        while (j > start && /\s/.test(text[j])) j--;
+        if (j <= start) return true;
+        const c = text[j];
+        if (/[(,=:[{?+\-*%!&|;>}]/.test(c)) return true;
+        if (!/[A-Za-z0-9_$]/.test(c)) return false;
+        let w = j;
+        while (w > start && /[A-Za-z0-9_$]/.test(text[w - 1])) w--;
+        if (w > start && text[w - 1] === ".") return false; // obj.return 같은 속성 이름
+        return VALUE_KEYWORDS.has(text.slice(w, j + 1));
     };
     const skipString = (i: number, q: string) => {
         for (let j = i + 1; j < text.length; j++) {
@@ -133,7 +145,7 @@ const jsxTagEnd = (text: string, start: number) => {
             if (ch === "/" && text[i + 1] === "/") { const nl = text.indexOf("\n", i); i = nl < 0 ? text.length : nl; continue; }
             if (ch === "/" && text[i + 1] === "*") { const e = text.indexOf("*/", i + 2); i = e < 0 ? text.length : e + 2; continue; }
             if (ch === "`") { stack.push("tpl"); i++; continue; }
-            if ((ch === '"' || ch === "'") && /^[(,=:[{?+\-*%!&|;>}]?$/.test(prevSignificant(i))) { i = skipString(i, ch); continue; }
+            if ((ch === '"' || ch === "'") && isValueStart(i)) { i = skipString(i, ch); continue; }
             if (ch === "{") stack.push("expr");
             else if (ch === "}") stack.pop();
             i++;
@@ -154,7 +166,31 @@ const blankComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, m => m.r
 const COLOR_PROP = /^(color|background(-color)?|border(-(top|right|bottom|left))?(-color)?|outline(-color)?|fill|stroke|caret-color|text-decoration-color|box-shadow|column-rule(-color)?)$/;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(/;
 const OVERLAY_SELECTOR = /modal|dialog|overlay|dropdown|popup|popover|menu|toast|sheet|tooltip|lightbox|backdrop/i;
-const RADIUS_OK = /^(var\(--radius-(sm|md|lg)\)|999px|50%|0)$/;
+/** name(...) 호출을 괄호 짝을 맞춰 통째로 지운다 (예: calc(100% - 8px)) */
+const stripCalls = (v: string, name: string) => {
+    let out = "", i = 0;
+    while (i < v.length) {
+        const at = v.indexOf(name + "(", i);
+        if (at < 0 || /[\w-]/.test(v[at - 1] || "")) { out += v.slice(i); break; }
+        out += v.slice(i, at) + " ";
+        let depth = 0, j = at + name.length;
+        for (; j < v.length; j++) {
+            if (v[j] === "(") depth++;
+            else if (v[j] === ")" && --depth === 0) break;
+        }
+        i = j + 1;
+    }
+    return out;
+};
+
+/** 규칙을 감싼 @media 중 하나라도 인쇄 전용(모든 쿼리가 print, not print 아님)인가 */
+const isPrintOnly = (stack: string[]) =>
+    stack.filter(s => /^@media\b/.test(s)).some(m =>
+        m.replace(/^@media\s*/, "").split(",").every(q => /^\s*(only\s+)?print\b/i.test(q)));
+
+/** 자체 스타일(인라인 포함)을 넣어 !important 없이는 덮을 수 없는 외부 라이브러리 요소 */
+const THIRD_PARTY_SELECTOR = /\.(w-md-editor|wmde-markdown|react-datepicker|notion)/;
+const RADIUS_OK =/^(var\(--radius-(sm|md|lg)\)|999px|50%|0)$/;
 
 export interface LintResult {
     violations: Violation[];
@@ -204,7 +240,12 @@ export function lintDesign(frontendRoot: string): LintResult {
             const atRules = selectorStack.filter(s => s.startsWith("@")).join(" ");
             if (prop.startsWith("--")) continue;
 
-            if (/important/.test(value) && !/prefers-reduced-motion/.test(atRules))
+            // 예외: 동작 줄이기 전역 리셋, 인쇄 전용 스타일, 인라인 스타일을 넣는 외부 라이브러리 덮어쓰기
+            // (선택자 목록은 모든 항목이 외부 라이브러리일 때만, 미디어는 인쇄 전용일 때만 예외)
+            const ownSelector = selectorStack.filter(s => !s.startsWith("@")).slice(-1)[0] || "";
+            // :not(...) 안의 클래스는 대상을 정하지 않으므로 빼고 본다
+            const thirdPartyOnly = ownSelector.split(",").every(part => THIRD_PARTY_SELECTOR.test(part.replace(/:not\([^()]*(\([^()]*\))*[^()]*\)/g, "")));
+            if (/important/.test(value) && !/prefers-reduced-motion/.test(atRules) && !isPrintOnly(selectorStack) && !thirdPartyOnly)
                 push("important", file, line, `${prop}: ${value}`, lines);
 
             const v = value.replace(/\s*!important\s*$/, "");
@@ -225,6 +266,12 @@ export function lintDesign(frontendRoot: string): LintResult {
             if (!isTokenBridge && prop === "font-size") {
                 const sizeStripped = v.replace(/var\([^()]*(\([^()]*\))*[^()]*\)/g, "TOKEN");
                 if (/\d(px|rem|pt)\b/.test(sizeStripped)) push("font-size-token", file, line, `${selector} → ${v}`, lines);
+            }
+            if (!isTokenBridge && /^(padding|margin|gap|row-gap|column-gap)(-[a-z-]+)?$/.test(prop)) {
+                // calc() 식과 var() 는 빼고 남은 직접값만 본다. 음수도 절댓값으로 범위를 판단한다.
+                const spaceStripped = stripCalls(stripCalls(v, "calc"), "var");
+                const raw = Array.from(spaceStripped.matchAll(/(?<![\w.])(-?\d+(?:\.\d+)?)px\b/g)).map(x => Math.abs(parseFloat(x[1])));
+                if (raw.some(n => n > 1 && n <= 48)) push("spacing-token", file, line, `${selector} → ${prop}: ${v}`, lines);
             }
             if (prop === "font-weight" && /^\d+$/.test(v) && !["400", "500", "600", "700"].includes(v))
                 push("font-weight-scale", file, line, `${selector} → ${v}`, lines);
@@ -282,7 +329,7 @@ export function lintDesign(frontendRoot: string): LintResult {
             push("primer-button-inner", file, at(mm.index!), "Button > span.*-inner", lines);
         if (file.endsWith(".tsx"))
             for (const mm of Array.from(text.matchAll(/>\s*([A-Z]{4,}(?:\s[A-Z]{2,})*)\s*</g)))
-                if (!/^(JBIG|JBNU|HTML|CSS|API|URL|PDF|RMSE|ADR|CSV|UTF|KST|GPT|AWS|SQL|ID)$/.test(mm[1]))
+                if (!/^(JBIG|JBNU|HTML|CSS|API|URL|PDF|RMSE|ADR|CSV|UTF|KST|GPT|AWS|SQL|ID|TRAIN|TEST)$/.test(mm[1]))
                     push("english-caps-label", file, at(mm.index!), mm[1], lines);
     }
 
