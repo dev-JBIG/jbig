@@ -1065,7 +1065,7 @@ POPULAR_SORT_FIELDS = {
 }
 POPULAR_DEFAULT_LIMIT = 5
 POPULAR_MAX_LIMIT = 10
-POPULAR_DEFAULT_DAYS = 30
+POPULAR_DEFAULT_DAYS = 90
 POPULAR_MAX_DAYS = 365
 
 
@@ -1082,7 +1082,7 @@ def _bounded_int(raw, default, low, high):
     get=extend_schema(
         summary="인기 게시글 목록 조회",
         description=(
-            "최근 days일(기본 30, 최대 365) 안에 올라온 글을 sort 기준(likes, comments, views)으로 "
+            "최근 days일(기본 90, 최대 365) 안에 올라온 글을 sort 기준(likes, comments, views)으로 "
             "많은 순서대로 limit개(기본 5, 최대 10) 돌려줍니다. 전체 글 목록과 같은 읽기 권한 규칙을 따르고 "
             "사진첩 글과 반응이 0인 글은 뺍니다."
         ),

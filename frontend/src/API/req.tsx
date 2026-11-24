@@ -294,12 +294,14 @@ export const fetchBoardPosts = async (
 };
 
 export type PopularSort = "likes" | "comments" | "views";
+/** 대문 인기 글을 모으는 기간(일). 서버 기본값과 같게 둔다 */
+export const POPULAR_DAYS = 90;
 
 // 대문 인기 글 (최근 N일 안에서 좋아요/댓글/조회 순). 읽기 권한 없는 글은 서버가 뺀다.
 export const fetchPopularPosts = async (
     sort: PopularSort,
     limit: number = 5,
-    days: number = 30
+    days: number = POPULAR_DAYS
 ): Promise<PostItem[]> => {
     const res = await axios.get(`${BASE_URL}/api/posts/popular/`, { params: { sort, limit, days } });
     return extractResults<RawPostItem>(res.data).map(mapRawPostToPostItem);

@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@primer/react";
 import { Eye, Heart, MessageSquare } from "lucide-react";
 import { useUser } from "../Utils/UserContext";
-import { fetchPopularPosts, PopularSort } from "../../API/req";
+import { fetchPopularPosts, POPULAR_DAYS, PopularSort } from "../../API/req";
 import { PostItem } from "../Utils/interfaces";
 import EmptyState from "../Utils/EmptyState";
 import Skeleton from "../Utils/Skeleton";
@@ -71,7 +71,7 @@ const PopularList: React.FC = () => {
                         {s.label}
                     </button>
                 ))}
-                <span className="home-pane-sort-range">최근 30일</span>
+                <span className="home-pane-sort-range">최근 {POPULAR_DAYS}일</span>
             </div>
             {posts === null ? (
                 <div className="home-pane-rank-skeleton">
@@ -82,7 +82,7 @@ const PopularList: React.FC = () => {
                 <EmptyState
                     compact
                     title={failed ? "인기 글을 불러오지 못했어요" : "아직 인기 글이 없어요"}
-                    description={failed ? "잠시 뒤 다시 시도해 주세요." : "최근 30일 안에 반응이 모이면 여기에 보여요."}
+                    description={failed ? "잠시 뒤 다시 시도해 주세요." : `최근 ${POPULAR_DAYS}일 안에 반응이 모이면 여기에 보여요.`}
                     action={failed ? (
                         <Button size="small" onClick={() => setAttempt((n) => n + 1)}>다시 시도</Button>
                     ) : undefined}
