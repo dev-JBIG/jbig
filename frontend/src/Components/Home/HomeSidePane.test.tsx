@@ -61,6 +61,12 @@ test("불러오기 실패와 빈 목록을 구분해 알린다", async () => {
     localStorage.setItem("jbig-home-pane-tab", "popular");
     renderPane();
     expect(await screen.findByText("인기 글을 불러오지 못했어요")).toBeInTheDocument();
+
+    // 다시 시도하면 같은 기준으로 다시 불러온다
+    fireEvent.click(screen.getByRole("button", { name: "다시 시도" }));
+    expect(await screen.findByText("첫째 글")).toBeInTheDocument();
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+    expect(mockFetch).toHaveBeenLastCalledWith("likes");
 });
 
 test("소식 띠는 다음 버튼으로 돌아가며 보여준다", () => {

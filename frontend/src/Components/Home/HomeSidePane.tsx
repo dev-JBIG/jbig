@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { Button } from "@primer/react";
 import { Eye, Heart, MessageSquare } from "lucide-react";
 import { useUser } from "../Utils/UserContext";
 import { fetchPopularPosts, PopularSort } from "../../API/req";
@@ -40,6 +41,8 @@ const PopularList: React.FC = () => {
     const [sort, setSort] = useState<PopularSort>("likes");
     const [posts, setPosts] = useState<PostItem[] | null>(null);
     const [failed, setFailed] = useState(false);
+    // 실패 뒤 다시 시도 버튼이 올리는 값. 성공한 목록은 탭을 바꿔도 그대로 다시 쓴다
+    const [attempt, setAttempt] = useState(0);
 
     useEffect(() => {
         let alive = true;
@@ -49,7 +52,7 @@ const PopularList: React.FC = () => {
             .then((list) => { if (alive) setPosts(list); })
             .catch(() => { if (alive) { setPosts([]); setFailed(true); } });
         return () => { alive = false; };
-    }, [sort]);
+    }, [sort, attempt]);
 
     const current = SORTS.find((s) => s.id === sort) ?? SORTS[0];
     const SortIcon = current.icon;
@@ -79,7 +82,10 @@ const PopularList: React.FC = () => {
                 <EmptyState
                     compact
                     title={failed ? "인기 글을 불러오지 못했어요" : "아직 인기 글이 없어요"}
-                    description={failed ? "잠시 뒤 다시 열어 주세요." : "최근 30일 안에 반응이 모이면 여기에 보여요."}
+                    description={failed ? "잠시 뒤 다시 시도해 주세요." : "최근 30일 안에 반응이 모이면 여기에 보여요."}
+                    action={failed ? (
+                        <Button size="small" onClick={() => setAttempt((n) => n + 1)}>다시 시도</Button>
+                    ) : undefined}
                 />
             ) : (
                 <ol className="home-pane-rank">
