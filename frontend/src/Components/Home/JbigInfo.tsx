@@ -3,6 +3,7 @@ import "./JbigInfo.css";
 import { fetchSiteSettings, SiteSettings } from "../../API/req";
 import { sanitizeMailto } from "../Utils/safeUrl";
 import Skeleton from "../Utils/Skeleton";
+import HomeSidePane from "./HomeSidePane";
 
 interface JbigInfoProps {
     calendarSlot?: ReactNode;
@@ -140,7 +141,7 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => 
                                     {calendarAction}
                                 </div>
                             )}
-                            {calendarSlot}
+                            <HomeSidePane calendar={calendarSlot} />
                         </div>
                     )}
                 </div>
