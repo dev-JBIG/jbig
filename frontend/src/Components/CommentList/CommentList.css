@@ -12,7 +12,7 @@
 
 .user-comment-item {
     border-bottom: 1px solid var(--borderColor-muted);
-    padding: 12px 16px;
+    padding: var(--space-3) var(--space-4);
     background: var(--bgColor-default);
     transition: background-color var(--transition-fast);
 }
@@ -32,7 +32,7 @@
 
 .user-comment-item .user-comment-post {
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
     color: var(--fgColor-default);
     font-size: var(--text-ui);
     white-space: nowrap;
@@ -42,7 +42,7 @@
 
 .user-comment-item .user-comment-content {
     color: var(--fgColor-muted);
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
     font-size: var(--text-ui);
     white-space: nowrap;
     overflow: hidden;
@@ -57,7 +57,7 @@
 .user-comment-list .loading,
 .user-comment-list .end {
     text-align: center;
-    padding: 14px;
+    padding: var(--space-4);
     color: var(--fgColor-muted);
     font-size: var(--text-label);
     border-top: 1px solid var(--borderColor-muted);

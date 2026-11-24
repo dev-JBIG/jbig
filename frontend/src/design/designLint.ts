@@ -48,6 +48,7 @@ export const RULES: RuleInfo[] = [
     { id: "hdr-limit", section: "5", summary: "전역 img { dynamic-range-limit: standard } 유지" },
     { id: "font-size-token", section: "4.3", summary: "글자 크기는 --text-* 토큰(또는 em, %, inherit)만, px·rem·pt 직접 지정 금지" },
     { id: "font-weight-scale", section: "4.3", summary: "글자 굵기는 400, 500, 600, 700만 (글자 로고 800은 허용 주석)" },
+    { id: "spacing-token", section: "4.4", summary: "padding, margin, gap의 2~48px 값은 --space-* 토큰으로 (1px 선, 48px 초과 배치 치수, calc 제외)" },
 ];
 
 const RULE_IDS = new Set(RULES.map(r => r.id));
@@ -228,6 +229,11 @@ export function lintDesign(frontendRoot: string): LintResult {
             if (!isTokenBridge && prop === "font-size") {
                 const sizeStripped = v.replace(/var\([^()]*(\([^()]*\))*[^()]*\)/g, "TOKEN");
                 if (/\d(px|rem|pt)\b/.test(sizeStripped)) push("font-size-token", file, line, `${selector} → ${v}`, lines);
+            }
+            if (!isTokenBridge && /^(padding|margin|gap|row-gap|column-gap)(-[a-z-]+)?$/.test(prop) && !/calc\(/.test(v)) {
+                const spaceStripped = v.replace(/var\([^()]*(\([^()]*\))*[^()]*\)/g, "TOKEN");
+                const raw = Array.from(spaceStripped.matchAll(/(?<![\w.-])(\d+(?:\.\d+)?)px\b/g)).map(x => parseFloat(x[1]));
+                if (raw.some(n => n > 1 && n <= 48)) push("spacing-token", file, line, `${selector} → ${prop}: ${v}`, lines);
             }
             if (prop === "font-weight" && /^\d+$/.test(v) && !["400", "500", "600", "700"].includes(v))
                 push("font-weight-scale", file, line, `${selector} → ${v}`, lines);

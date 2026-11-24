@@ -15,7 +15,7 @@
 
 .postlist-header-home {
     margin-bottom: 0 !important;
-    padding: 14px 18px;
+    padding: var(--space-4) var(--space-5);
     background-color: var(--bgColor-default);
     border-bottom: 1px solid var(--borderColor-muted);
 }
@@ -32,13 +32,13 @@
     margin-bottom: var(--space-md);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .postlist-header-top {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2);
     width: 100%;
 }
 
@@ -60,7 +60,7 @@
 .title-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-0-5);
     min-width: 0;
 }
 
@@ -81,20 +81,20 @@
 .postlist-header-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
 /* 태그 필터 탭 */
 .postlist-tag-tabs {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
     flex-wrap: wrap;
     width: 100%;
 }
 
 .postlist-tag-tab {
-    padding: 4px 12px;
+    padding: var(--space-1) var(--space-3);
     border-radius: 999px;
     border: 1px solid var(--borderColor-default);
     background: var(--bgColor-default);
@@ -120,7 +120,7 @@
 /* 검색 폼 */
 .list-search-form {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
     width: 100%;
     align-items: center;
 }
@@ -143,7 +143,7 @@
 .list-search-input {
     width: 100%;
     height: 32px;
-    padding: 4px 10px 4px 30px;
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-8);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background-color: var(--bgColor-default);
@@ -165,12 +165,12 @@
 .write-button {
     flex-shrink: 0;
     font-weight: 600;
-    padding-inline: 10px;
+    padding-inline: var(--space-3);
 }
 
 /* 페이지당 항목 수 선택 */
 .perpage-select {
-    padding: 6px 10px;
+    padding: var(--space-1-5) var(--space-3);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background: var(--bgColor-default);
@@ -193,7 +193,7 @@
     justify-content: center;
     background: transparent;
     border: none;
-    padding: 4px 8px;
+    padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-md);
     color: var(--fgColor-muted);
     font-size: var(--text-label);
@@ -225,7 +225,7 @@
 }
 
 .postlist-tag-badge {
-    margin-right: 6px;
+    margin-right: var(--space-1-5);
     vertical-align: middle;
 }
 
@@ -241,8 +241,8 @@
 .recruitment-badge-wrap {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    margin-left: 6px;
+    gap: var(--space-1);
+    margin-left: var(--space-1-5);
     vertical-align: middle;
 }
 
@@ -277,11 +277,11 @@
 .comment-count {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: var(--space-0-5);
     color: var(--fgColor-muted);
     font-size: var(--text-caption);
     font-weight: 600;
-    margin-left: 7px;
+    margin-left: var(--space-1-5);
     vertical-align: middle;
     font-variant-numeric: tabular-nums;
 }
@@ -290,9 +290,9 @@
 .private-post-badge {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: var(--space-0-5);
     color: var(--fgColor-muted);
-    margin-left: 6px;
+    margin-left: var(--space-1-5);
     font-size: var(--text-caption);
     font-weight: 500;
     vertical-align: middle;
@@ -303,7 +303,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     margin-top: var(--space-lg);
     flex-wrap: wrap;
 }
@@ -311,7 +311,7 @@
 .pagination-btn {
     min-width: 32px;
     height: 32px;
-    padding: 0 10px;
+    padding: 0 var(--space-3);
     background-color: var(--bgColor-default);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
@@ -421,7 +421,7 @@
     .postlist-table th,
     .postlist-table td {
         display: table-cell !important;
-        padding: 11px 12px;
+        padding: var(--space-3) var(--space-3);
         text-align: center;
         vertical-align: middle;
         border-bottom: 1px solid var(--borderColor-muted);
@@ -440,8 +440,8 @@
     .postlist-table td.th-views,
     .postlist-table th.th-likes,
     .postlist-table td.th-likes {
-        padding-left: 6px !important;
-        padding-right: 6px !important;
+        padding-left: var(--space-1-5) !important;
+        padding-right: var(--space-1-5) !important;
     }
 
     .postlist-table th {
@@ -500,17 +500,17 @@
         margin-bottom: 0;
         word-break: normal;
         display: table-cell !important;
-        padding: 11px 14px !important;
+        padding: var(--space-3) var(--space-4) !important;
     }
 
     .postlist-table tbody .author-cell {
         font-size: var(--text-label);
         color: var(--fgColor-default);
         display: table-cell !important;
-        padding-top: 11px !important;
-        padding-bottom: 11px !important;
-        padding-left: 6px !important;
-        padding-right: 6px !important;
+        padding-top: var(--space-3) !important;
+        padding-bottom: var(--space-3) !important;
+        padding-left: var(--space-1-5) !important;
+        padding-right: var(--space-1-5) !important;
     }
 
     .author-text {
@@ -543,9 +543,9 @@
 
 .skeleton-row {
     display: flex;
-    gap: 16px;
+    gap: var(--space-4);
     align-items: center;
-    padding: 13px 16px;
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--borderColor-muted);
 }
 
@@ -598,8 +598,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 48px 20px;
+    gap: var(--space-2);
+    padding: var(--space-12) var(--space-5);
     text-align: center;
     color: var(--fgColor-muted);
     background-color: var(--bgColor-default);
@@ -619,5 +619,5 @@
 }
 
 .empty-posts-message-with-link {
-    margin-top: 4px;
+    margin-top: var(--space-1);
 }

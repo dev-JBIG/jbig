@@ -97,6 +97,22 @@
   --fontStack-sansSerifDisplay: var(--fontStack-system);
 }
 
+/* 여백 단계 (padding, margin, gap, DESIGN.md 4.4). 4px 배수가 기본이고 2, 6px은 촘촘한 부품(배지, 칩) 보정용.
+ * 컴포넌트 CSS는 px 대신 이 토큰을 쓴다. 1px 헤어라인과 48px을 넘는 배치 치수는 예외. */
+:root {
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+}
+
 /* 글자 크기 단계 (DESIGN.md 4.3). 컴포넌트 CSS는 px 대신 이 토큰만 쓴다.
  * 한 화면에서는 보통 4~5단계만 쓰고, 소수점 크기는 만들지 않는다. */
 :root {

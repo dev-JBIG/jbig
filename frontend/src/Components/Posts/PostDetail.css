@@ -24,11 +24,11 @@
 
 .post-not-found {
     text-align: center;
-    padding: 56px 24px;
+    padding: 56px var(--space-6);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .post-not-found h2 {
@@ -38,7 +38,7 @@
 }
 
 .post-not-found p {
-    margin: 0 0 8px;
+    margin: 0 0 var(--space-2);
     font-size: var(--text-ui);
     color: var(--fgColor-muted);
 }
@@ -47,7 +47,7 @@
 .postdetail-skeleton {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .postdetail-skeleton-line {
@@ -64,7 +64,7 @@
 .postdetail-header {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
     margin-bottom: var(--space-md);
     position: relative;
 }
@@ -73,20 +73,20 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
 .postdetail-breadcrumbs {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
 .postdetail-actions {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
     align-items: center;
     margin-left: auto;
 }
@@ -94,9 +94,9 @@
 .postdetail-category {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    padding: 4px 8px;
-    margin-left: -8px;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    margin-left: calc(-1 * var(--space-2));
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
@@ -120,13 +120,13 @@
     font-size: var(--font-size-xl);
     font-weight: 600;
     color: var(--fgColor-default);
-    margin: 2px 0 4px 0;
+    margin: var(--space-0-5) 0 var(--space-1) 0;
     line-height: 1.3;
     letter-spacing: -0.015em;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 @media (min-width: 768px) {
@@ -144,7 +144,7 @@
     color: var(--fgColor-muted);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
     font-variant-numeric: tabular-nums;
 }
@@ -152,7 +152,7 @@
 .postdetail-meta-item {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 .postdetail-author {
@@ -174,7 +174,7 @@
 
 .postdetail-updated-time {
     color: var(--fgColor-muted);
-    margin-left: 4px;
+    margin-left: var(--space-1);
 }
 
 /* 첨부파일 박스 (GitHub Release Asset Box 스타일) */
@@ -189,8 +189,8 @@
 .postdetail-attachments-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 12px 16px;
+    gap: var(--space-1-5);
+    padding: var(--space-3) var(--space-4);
     background-color: var(--bgColor-muted);
     border-bottom: 1px solid var(--borderColor-default);
     font-size: var(--text-ui);
@@ -204,7 +204,7 @@
     justify-content: center;
     min-width: 20px;
     height: 18px;
-    padding: 0 6px;
+    padding: 0 var(--space-1-5);
     border-radius: 999px;
     background-color: var(--bgColor-neutral-muted);
     color: var(--fgColor-muted);
@@ -229,8 +229,8 @@
 .postdetail-attachment-link {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
     font-size: var(--text-ui);
     color: var(--fgColor-accent);
     transition: background-color var(--transition-fast);
@@ -428,7 +428,7 @@
     align-items: center;
     justify-content: center;
     gap: var(--space-sm);
-    padding: 8px 22px;
+    padding: var(--space-2) var(--space-6);
     color: var(--fgColor-default);
     background: var(--bgColor-muted);
     border: 1px solid var(--borderColor-default);
@@ -489,7 +489,7 @@
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    margin: 20px 0;
+    margin: var(--space-5) 0;
     font-size: var(--text-ui);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
@@ -500,7 +500,7 @@
     background-color: var(--bgColor-muted);
     color: var(--fgColor-default);
     font-weight: 600;
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-3);
     text-align: center;
     border-bottom: 1px solid var(--borderColor-default);
     border-right: 1px solid var(--borderColor-default);
@@ -512,7 +512,7 @@
 }
 
 .postdetail-content td {
-    padding: 8px 10px;
+    padding: var(--space-2) var(--space-3);
     text-align: left;
     line-height: 1.6;
     font-size: var(--text-label);
@@ -557,8 +557,8 @@
 
 .postdetail-content blockquote {
     border-left: 4px solid var(--borderColor-default);
-    padding: 8px 16px;
-    margin: 16px 0;
+    padding: var(--space-2) var(--space-4);
+    margin: var(--space-4) 0;
     background-color: var(--bgColor-muted);
     color: var(--fgColor-muted);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
@@ -580,17 +580,17 @@
     height: 1px;
     border: 0;
     background-color: var(--borderColor-muted);
-    margin: 24px 0;
+    margin: var(--space-6) 0;
 }
 
 .postdetail-content pre {
     background-color: var(--bgColor-muted);
     color: var(--fgColor-default);
     border: 1px solid var(--borderColor-muted);
-    padding: 16px;
+    padding: var(--space-4);
     border-radius: var(--radius-md);
     overflow-x: auto;
-    margin: 16px 0;
+    margin: var(--space-4) 0;
     line-height: 1.5;
     font-size: var(--text-label);
 }
@@ -608,8 +608,8 @@
     font-weight: 600;
     border-bottom: 1px solid var(--borderColor-muted);
     padding-bottom: 0.3em;
-    margin-top: 24px;
-    margin-bottom: 16px;
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-4);
     letter-spacing: -0.02em;
     word-break: keep-all;
 }
@@ -619,8 +619,8 @@
     font-weight: 600;
     border-bottom: 1px solid var(--borderColor-muted);
     padding-bottom: 0.3em;
-    margin-top: 24px;
-    margin-bottom: 14px;
+    margin-top: var(--space-6);
+    margin-bottom: var(--space-3);
     letter-spacing: -0.015em;
     word-break: keep-all;
 }
@@ -628,15 +628,15 @@
 .postdetail-content h3 {
     font-size: var(--text-title-s);
     font-weight: 600;
-    margin-top: 20px;
-    margin-bottom: 10px;
+    margin-top: var(--space-5);
+    margin-bottom: var(--space-2);
     word-break: keep-all;
 }
 
 .postdetail-content ul,
 .postdetail-content ol {
-    padding-left: 24px !important;
-    margin: 10px 0;
+    padding-left: var(--space-6) !important;
+    margin: var(--space-2) 0;
     list-style-position: outside;
 }
 
@@ -649,7 +649,7 @@
 .postdetail-content ol ul,
 .postdetail-content ul ol,
 .postdetail-content ol ol {
-    margin-top: 4px;
+    margin-top: var(--space-1);
 }
 
 .postdetail-content img,
@@ -657,13 +657,13 @@
     max-width: 100%;
     height: auto;
     border-radius: var(--radius-md);
-    margin: 12px 0;
+    margin: var(--space-3) 0;
     border: 1px solid var(--borderColor-muted);
 }
 
 .postdetail-back-btn {
     margin-top: var(--space-lg);
-    padding: 8px 18px;
+    padding: var(--space-2) var(--space-5);
     background-color: var(--bgColor-muted);
     color: var(--fgColor-default);
     border: 1px solid var(--borderColor-default);
@@ -681,14 +681,14 @@
 .comment-owner-badge {
     color: var(--fgColor-accent);
     font-weight: 600;
-    margin-left: 4px;
+    margin-left: var(--space-1);
     font-size: var(--text-caption);
 }
 
 /* --- 모집 정보 카드 (RecruitmentDetail) --- */
 .recruitment-detail-card {
-    margin: 16px 0 20px;
-    padding: 16px 20px;
+    margin: var(--space-4) 0 var(--space-5);
+    padding: var(--space-4) var(--space-5);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background-color: var(--bgColor-muted);
@@ -697,15 +697,15 @@
 .recruitment-detail-badges {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
     flex-wrap: wrap;
 }
 
 .recruitment-detail-grid {
     display: grid;
     grid-template-columns: 96px 1fr;
-    gap: 8px 12px;
+    gap: var(--space-2) var(--space-3);
     font-size: var(--text-ui);
     margin: 0;
 }
@@ -729,12 +729,12 @@
 .recruitment-skill-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1-5);
 }
 
 .recruitment-detail-footer {
-    margin-top: 14px;
-    padding-top: 12px;
+    margin-top: var(--space-3);
+    padding-top: var(--space-3);
     border-top: 1px solid var(--borderColor-muted);
 }
 
@@ -742,7 +742,7 @@
 .recruitment-owner-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
@@ -753,8 +753,8 @@
 }
 
 .recruitment-manager-panel {
-    margin-top: 14px;
-    padding: 14px;
+    margin-top: var(--space-3);
+    padding: var(--space-4);
     background-color: var(--bgColor-default);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
@@ -762,15 +762,15 @@
 
 .recruitment-manager-tabs {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
     border-bottom: 1px solid var(--borderColor-muted);
-    padding-bottom: 10px;
-    margin-bottom: 12px;
+    padding-bottom: var(--space-3);
+    margin-bottom: var(--space-3);
     flex-wrap: wrap;
 }
 
 .recruitment-manager-tab {
-    padding: 5px 12px;
+    padding: var(--space-1-5) var(--space-3);
     border-radius: var(--radius-md);
     border: 1px solid transparent;
     background: transparent;
@@ -794,7 +794,7 @@
 
 .recruitment-empty {
     text-align: center;
-    padding: 20px 12px;
+    padding: var(--space-5) var(--space-3);
     color: var(--fgColor-muted);
     font-size: var(--text-label);
 }
@@ -802,11 +802,11 @@
 .recruitment-app-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .recruitment-app-card {
-    padding: 12px 14px;
+    padding: var(--space-3) var(--space-4);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background-color: var(--bgColor-muted);
@@ -816,8 +816,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-1-5);
     font-size: var(--text-label);
     color: var(--fgColor-muted);
 }
@@ -829,19 +829,19 @@
 .recruitment-app-message {
     font-size: var(--text-ui);
     color: var(--fgColor-default);
-    margin-bottom: 6px;
+    margin-bottom: var(--space-1-5);
     white-space: pre-wrap;
 }
 
 .recruitment-app-resume {
     font-size: var(--text-caption);
     color: var(--fgColor-muted);
-    margin-bottom: 8px;
+    margin-bottom: var(--space-2);
 }
 
 .recruitment-app-actions {
     display: flex;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .recruitment-modal-backdrop {
@@ -852,21 +852,21 @@
     align-items: center;
     justify-content: center;
     z-index: 1200;
-    padding: 16px;
+    padding: var(--space-4);
 }
 
 .recruitment-modal-card {
     background: var(--overlay-bgColor);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
-    padding: 20px;
+    padding: var(--space-5);
     width: 100%;
     max-width: 440px;
     box-shadow: var(--shadow-xl);
 }
 
 .recruitment-modal-card h3 {
-    margin: 0 0 12px;
+    margin: 0 0 var(--space-3);
     font-size: var(--text-lead);
     font-weight: 600;
     color: var(--fgColor-default);
@@ -874,7 +874,7 @@
 
 .recruitment-apply-textarea {
     width: 100%;
-    padding: 10px 12px;
+    padding: var(--space-3) var(--space-3);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background: var(--bgColor-default);
@@ -882,7 +882,7 @@
     font-size: var(--text-ui);
     font-family: inherit;
     resize: vertical;
-    margin-bottom: 14px;
+    margin-bottom: var(--space-3);
 }
 
 .recruitment-apply-textarea:focus {
@@ -894,5 +894,5 @@
 .recruitment-modal-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: var(--space-2);
 }

@@ -22,8 +22,8 @@
 .alert-modal-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 16px 20px 12px;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5) var(--space-3);
     border-bottom: 1px solid var(--borderColor-muted);
 }
 
@@ -65,7 +65,7 @@
 }
 
 .alert-modal-desc {
-    padding: 16px 20px;
+    padding: var(--space-4) var(--space-5);
     font-size: var(--text-ui);
     line-height: 1.6;
     color: var(--fgColor-muted);
@@ -76,8 +76,8 @@
 .alert-modal-button-group {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    padding: 12px 20px 16px;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5) var(--space-4);
     background-color: var(--bgColor-muted);
     border-top: 1px solid var(--borderColor-muted);
 }

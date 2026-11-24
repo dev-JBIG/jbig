@@ -4,13 +4,13 @@
     width: 100%;
     background: var(--bgColor-default);
     border: 1px solid var(--borderColor-default);
-    padding: 24px;
+    padding: var(--space-6);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--space-4);
 }
 
 .postwrite-hidden-input {
@@ -39,14 +39,14 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .postwrite-row {
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 4px;
+    gap: var(--space-1-5);
+    margin-bottom: var(--space-1);
 }
 
 .postwrite-row label,
@@ -61,7 +61,7 @@
 .board-select,
 .category-select {
     font-size: var(--text-ui);
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background-color: var(--bgColor-default);
@@ -92,9 +92,9 @@
 .postwrite-visibility-notice {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     background-color: var(--bgColor-muted);
     border: 1px solid var(--borderColor-default);
@@ -105,7 +105,7 @@
 /* 태그 선택 그룹 */
 .postwrite-tag-group {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
     flex-wrap: wrap;
 }
 
@@ -114,7 +114,7 @@
 .postwrite-checkbox-inline {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     font-size: var(--text-ui);
     font-weight: 500;
     color: var(--fgColor-default);
@@ -125,14 +125,14 @@
 .postwrite-inline-hint {
     font-size: var(--text-caption);
     color: var(--fgColor-muted);
-    margin-left: 4px;
+    margin-left: var(--space-1);
     font-weight: 400;
 }
 
 .postwrite-inline-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
@@ -150,14 +150,14 @@
 .postwrite-skill-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: var(--space-1-5);
 }
 
 .postwrite-skill-chip {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
     border-radius: 999px;
     background-color: var(--bgColor-accent-muted);
     color: var(--fgColor-accent);
@@ -173,13 +173,13 @@
     font-size: var(--text-ui);
     line-height: 1;
     cursor: pointer;
-    padding: 0 2px;
+    padding: 0 var(--space-0-5);
 }
 
 .postwrite-images {
     display: flex;
-    gap: 12px;
-    margin-top: 6px;
+    gap: var(--space-3);
+    margin-top: var(--space-1-5);
     flex-wrap: wrap;
 }
 
@@ -202,7 +202,7 @@
     height: 80px;
     object-fit: cover;
     border-radius: var(--radius-sm);
-    margin-bottom: 2px;
+    margin-bottom: var(--space-0-5);
     user-select: none;
     pointer-events: none;
 }
@@ -215,7 +215,7 @@
     background: rgba(27, 31, 36, 0.72);
     color: var(--fgColor-onEmphasis);
     border-radius: var(--radius-sm);
-    padding: 2px 6px;
+    padding: var(--space-0-5) var(--space-1-5);
     font-size: var(--text-caption);
     cursor: pointer;
 }
@@ -223,11 +223,11 @@
 .postwrite-img-hint {
     font-size: var(--text-caption);
     color: var(--fgColor-muted);
-    margin-top: 4px;
+    margin-top: var(--space-1);
 }
 
 .postwrite-photo-hint {
-    padding: 12px 14px;
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     background: var(--bgColor-muted);
     border: 1px dashed var(--borderColor-default);
@@ -240,7 +240,7 @@
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background: var(--bgColor-muted);
-    padding: 12px;
+    padding: var(--space-3);
 }
 
 .photo-upload-button {
@@ -248,10 +248,10 @@
 }
 
 .photo-grid {
-    margin-top: 12px;
+    margin-top: var(--space-3);
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .photo-card {
@@ -278,7 +278,7 @@
     background: rgba(27, 31, 36, 0.78);
     color: var(--fgColor-onEmphasis);
     font-size: var(--text-caption);
-    padding: 4px 8px;
+    padding: var(--space-1) var(--space-2);
     cursor: pointer;
 }
 
@@ -290,18 +290,18 @@
 .postwrite-files {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 6px;
+    gap: var(--space-2);
+    margin-top: var(--space-1-5);
 }
 
 .postwrite-file-preview {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     background: var(--bgColor-muted);
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
 }
 
 .postwrite-file-thumb {
@@ -331,14 +331,14 @@
 }
 
 .attachments-top {
-    padding-top: 8px;
+    padding-top: var(--space-2);
 }
 
 .postwrite-submit-row {
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
-    margin-top: 8px;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
 }
 
 .postwrite-submit {
@@ -385,15 +385,15 @@
     color: var(--fgColor-muted);
     background-color: var(--bgColor-muted);
     border: 1px solid var(--borderColor-default);
-    padding: 12px 14px;
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
     line-height: 1.55;
-    margin-bottom: 12px;
+    margin-bottom: var(--space-3);
 }
 
 @media (max-width: 767px) {
     .postwrite-form {
-        padding: 16px;
+        padding: var(--space-4);
     }
 
     .postwrite-submit-row {

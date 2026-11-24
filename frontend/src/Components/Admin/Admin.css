@@ -23,7 +23,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0 24px;
+    padding: 0 var(--space-6);
     height: 58px;
     background-color: var(--header-bg);
     border-bottom: 1px solid var(--border-color);
@@ -36,14 +36,14 @@
 .admin-header-left {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
 }
 
 .admin-logo {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 4px 8px 4px 4px;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-1);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
@@ -67,7 +67,7 @@
 .admin-user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: var(--space-2);
     font-size: var(--text-label);
     color: var(--text-light-color);
 }
@@ -82,7 +82,7 @@
     width: 232px;
     background-color: var(--sidebar-bg);
     border-right: 1px solid var(--border-color);
-    padding: 14px 10px;
+    padding: var(--space-4) var(--space-3);
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
@@ -94,7 +94,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--space-0-5);
 }
 
 .admin-menu-btn {
@@ -102,8 +102,8 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
@@ -141,14 +141,14 @@
 .admin-main-area {
     flex: 1;
     min-width: 0;
-    padding: 24px;
+    padding: var(--space-6);
     max-width: 1100px;
 }
 
 .admin-content-header {
     font-size: var(--text-title);
     font-weight: 600;
-    margin: 0 0 18px 0;
+    margin: 0 0 var(--space-4) 0;
     color: var(--text-color);
     letter-spacing: -0.015em;
 }
@@ -159,16 +159,16 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: var(--space-5);
+    margin-bottom: var(--space-5);
 }
 
 .card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    gap: 12px;
+    margin-bottom: var(--space-4);
+    gap: var(--space-3);
     flex-wrap: wrap;
 }
 
@@ -180,12 +180,12 @@
 }
 
 .admin-card-title-spaced {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .admin-section-divider-title {
-    margin-top: 12px;
-    padding-top: 16px;
+    margin-top: var(--space-3);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--borderColor-muted);
 }
 
@@ -196,14 +196,14 @@
 }
 
 .admin-card-lead {
-    margin-top: 8px;
-    margin-bottom: 18px;
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-4);
 }
 
 .admin-empty-text {
     color: var(--text-light-color);
     text-align: center;
-    padding: 40px 0;
+    padding: var(--space-10) 0;
     margin: 0;
     font-size: var(--text-ui);
 }
@@ -212,15 +212,15 @@
 .admin-shortcut-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .admin-shortcut-card {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
-    padding: 16px;
+    gap: var(--space-2);
+    padding: var(--space-4);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     background-color: var(--bgColor-muted);
@@ -260,13 +260,13 @@
 
 /* 게시판 권한 관리 */
 .admin-board-intro {
-    margin-top: 6px;
-    margin-bottom: 16px;
+    margin-top: var(--space-1-5);
+    margin-bottom: var(--space-4);
     line-height: 1.55;
 }
 
 .admin-board-category {
-    margin-bottom: 20px;
+    margin-bottom: var(--space-5);
 }
 
 .admin-board-category:last-child {
@@ -274,7 +274,7 @@
 }
 
 .admin-board-category-title {
-    margin: 0 0 8px;
+    margin: 0 0 var(--space-2);
     font-size: var(--text-label);
     font-weight: 600;
     color: var(--text-light-color);
@@ -293,8 +293,8 @@
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--borderColor-muted);
     background-color: var(--bgColor-default);
 }
@@ -306,7 +306,7 @@
 .admin-board-info {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--space-0-5);
     min-width: 140px;
     flex: 1;
 }
@@ -320,21 +320,21 @@
 .admin-board-hint {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-1);
     font-size: var(--text-caption);
     color: var(--text-light-color);
 }
 
 .admin-board-controls {
     display: flex;
-    gap: 10px;
+    gap: var(--space-2);
     flex-wrap: wrap;
 }
 
 .admin-perm-field {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: var(--space-0-5);
     width: 116px;
 }
 
@@ -350,7 +350,7 @@
 
 .admin-perm-select {
     min-width: 0;
-    padding: 6px 10px;
+    padding: var(--space-1-5) var(--space-3);
     font-size: var(--text-label);
 }
 
@@ -374,7 +374,7 @@
 .admin-table th {
     font-weight: 600;
     font-size: var(--text-caption);
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     color: var(--text-light-color);
@@ -382,7 +382,7 @@
 }
 
 .admin-table td {
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--borderColor-muted);
     font-size: var(--text-ui);
     color: var(--text-color);
@@ -401,7 +401,7 @@
 .admin-popup-snippet {
     font-size: var(--text-label);
     color: var(--text-light-color);
-    margin-top: 3px;
+    margin-top: var(--space-0-5);
 }
 
 .admin-popup-date {
@@ -416,7 +416,7 @@
 
 .table-actions {
     display: flex;
-    gap: 6px;
+    gap: var(--space-1-5);
 }
 
 /* 아이콘 버튼 */
@@ -454,27 +454,27 @@
 .admin-btn-inner {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: var(--space-1);
 }
 
 /* 폼 요소 */
 .admin-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: 12px;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
 }
 
 .admin-grid-2 {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
+    gap: var(--space-3);
 }
 
 .form-group {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--space-1-5);
 }
 
 .form-label {
@@ -485,7 +485,7 @@
 
 .admin-input,
 .admin-select {
-    padding: 8px 12px;
+    padding: var(--space-2) var(--space-3);
     font-size: var(--text-ui);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -500,7 +500,7 @@
 }
 
 .admin-file-input {
-    padding: 6px 8px;
+    padding: var(--space-1-5) var(--space-2);
 }
 
 .admin-input:focus,
@@ -511,11 +511,11 @@
 }
 
 .admin-image-preview-wrap {
-    margin-top: 10px;
+    margin-top: var(--space-2);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .admin-image-preview {
@@ -529,7 +529,7 @@
 .admin-checkbox-label {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     height: 36px;
     font-size: var(--text-ui);
     color: var(--text-color);
@@ -544,16 +544,16 @@
 
 .admin-form-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 6px;
+    gap: var(--space-2);
+    margin-top: var(--space-1-5);
     flex-wrap: wrap;
 }
 
 /* 메시지 */
 .admin-message {
-    padding: 10px 14px;
+    padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-md);
-    margin: 12px 0;
+    margin: var(--space-3) 0;
     font-size: var(--text-ui);
     border: 1px solid transparent;
 }
@@ -573,7 +573,7 @@
 .form-hint {
     font-size: var(--text-caption);
     color: var(--text-light-color);
-    margin: 2px 0 0;
+    margin: var(--space-0-5) 0 0;
 }
 
 .admin-loading {
@@ -615,7 +615,7 @@
 
 @media (max-width: 768px) {
     .admin-header-bar {
-        padding: 0 14px;
+        padding: 0 var(--space-4);
         height: 54px;
     }
 
@@ -656,18 +656,18 @@
     }
 
     .admin-main-area {
-        padding: 16px;
+        padding: var(--space-4);
         width: 100%;
     }
 
     .admin-content-header {
         font-size: var(--text-title);
-        margin-bottom: 14px;
+        margin-bottom: var(--space-3);
     }
 
     .admin-card {
-        padding: 16px;
-        margin-bottom: 16px;
+        padding: var(--space-4);
+        margin-bottom: var(--space-4);
     }
 
     .admin-perm-field,

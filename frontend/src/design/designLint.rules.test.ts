@@ -87,6 +87,16 @@ describe("designLint 판정", () => {
         expect(lint({ "src/E.tsx": nestedText }, "clickable-div")).toHaveLength(1);
     });
 
+    test("여백은 2~48px 직접값만 위반이고 1px 선, 48px 초과, calc, 토큰은 통과한다", () => {
+        const css = [
+            ".a { padding: 8px 12px; }",
+            ".b { margin: 0 1px; gap: var(--space-2); }",
+            ".c { margin-top: 56px; padding: calc(var(--space-2) + 2px); }",
+            ".d { column-gap: 0.5em; row-gap: 7px }",
+        ].join("\n");
+        expect(lint({ "src/a.css": css }, "spacing-token").map(x => x.line)).toEqual([1, 4]);
+    });
+
     test("복합 미디어 쿼리의 모든 너비 조건을 검사한다", () => {
         const v = lint({ "src/a.css": "@media (min-width: 600px) and (max-width: 767px) { .a { color: inherit; } }\n" }, "breakpoint");
         expect(v.map(x => x.message)).toEqual(["min-width: 600px"]);

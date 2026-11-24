@@ -14,7 +14,7 @@
 }
 
 .popup-header {
-    padding: 14px 18px;
+    padding: var(--space-4) var(--space-5);
     flex-shrink: 0;
 }
 
@@ -55,14 +55,14 @@
 }
 
 .popup-text {
-    padding: 16px 18px;
+    padding: var(--space-4) var(--space-5);
     line-height: 1.65;
     color: var(--fgColor-default);
     font-size: var(--text-ui);
 }
 
 .popup-text p {
-    margin: 0 0 10px 0;
+    margin: 0 0 var(--space-2) 0;
 }
 
 .popup-text p:last-child {
@@ -73,7 +73,7 @@
     font-size: var(--text-body);
     font-weight: 600;
     color: var(--fgColor-default);
-    margin: 0 0 10px;
+    margin: 0 0 var(--space-2);
     word-break: break-word;
 }
 
@@ -90,7 +90,7 @@
 }
 
 .popup-post-body p {
-    margin: 0 0 8px;
+    margin: 0 0 var(--space-2);
 }
 
 .popup-post-body img {
@@ -101,8 +101,8 @@
 .popup-footer {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 14px 18px;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
     background-color: var(--bgColor-muted);
     border-top: 1px solid var(--borderColor-default);
     flex-shrink: 0;
@@ -111,14 +111,14 @@
 .popup-congrats-box {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: var(--space-2);
 }
 
 .popup-congrats-box input {
     width: 100%;
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    padding: 7px 10px;
+    padding: var(--space-2) var(--space-3);
     font-size: var(--text-ui);
     background-color: var(--bgColor-default);
     color: var(--fgColor-default);
@@ -132,7 +132,7 @@
 
 .popup-congrats-submit-btn {
     width: 100%;
-    padding: 8px 14px;
+    padding: var(--space-2) var(--space-4);
     background-color: var(--button-primary-bgColor-rest);
     color: var(--button-primary-fgColor-rest);
     border: 1px solid var(--button-primary-borderColor-rest);
@@ -155,14 +155,14 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px;
+    gap: var(--space-3);
 }
 
 .popup-nav-btn {
     background-color: var(--bgColor-default);
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    padding: 5px;
+    padding: var(--space-1-5);
     cursor: pointer;
     display: inline-flex;
     align-items: center;

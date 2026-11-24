@@ -73,8 +73,8 @@
     .postlist-table tbody tr {
         display: block !important;
         position: relative;
-        margin-bottom: 10px;
-        padding: 14px 16px;
+        margin-bottom: var(--space-2);
+        padding: var(--space-4) var(--space-4);
         background-color: var(--bgColor-default);
         border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-md);
@@ -107,7 +107,7 @@
         display: block !important;
         width: auto;
         max-width: none;
-        margin-bottom: 6px;
+        margin-bottom: var(--space-1-5);
     }
 
     .postlist-table td {
@@ -126,7 +126,7 @@
         font-weight: 600;
         color: var(--fgColor-default);
         line-height: 1.45;
-        margin-bottom: 8px;
+        margin-bottom: var(--space-2);
         word-break: break-word;
         overflow-wrap: break-word;
     }
@@ -136,15 +136,15 @@
         font-size: var(--text-label);
         color: var(--fgColor-accent);
         font-weight: 500;
-        margin-right: 12px;
-        margin-bottom: 2px;
+        margin-right: var(--space-3);
+        margin-bottom: var(--space-0-5);
     }
 
     .postlist-table td.th-date {
         display: inline-block !important;
         font-size: var(--text-caption);
         color: var(--fgColor-muted);
-        margin-right: 12px;
+        margin-right: var(--space-3);
     }
 
     .postlist-table td.th-views,
@@ -152,7 +152,7 @@
         display: inline-block !important;
         font-size: var(--text-caption);
         color: var(--fgColor-muted);
-        margin-right: 10px;
+        margin-right: var(--space-2);
         font-weight: 400;
     }
 
@@ -174,16 +174,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 6px;
+        gap: var(--space-1-5);
         margin-top: var(--space-lg);
-        padding-bottom: 16px;
+        padding-bottom: var(--space-4);
         flex-wrap: wrap;
     }
 
     .pagination-btn {
         min-width: 36px;
         height: 36px;
-        padding: 0 10px;
+        padding: 0 var(--space-3);
         display: inline-flex;
         align-items: center;
         justify-content: center;

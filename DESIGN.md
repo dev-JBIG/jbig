@@ -233,6 +233,28 @@ components:
 - 예외(사유 주석 필수): 첫 화면 큰 제목의 화면 폭 비례 크기(`clamp`), 이력서 인쇄용 pt, 노션 문서 보기의 원본 비율, 이력서 전용 `--resume-fs-*` 크기, 본문 안 코드처럼 부모 기준 `em`/`%`.
 - 참고 근거(2026-11-23 실측): 당근 13·14·16·20px, velog 12·14·16·18px, Apple WWDC 12·14·17·21·28px. 모두 정수 크기이고 화면당 4~6단계입니다.
 
+### 4.4 여백 단계
+`padding`, `margin`, `gap`은 아래 토큰만 씁니다(`frontend/src/index.css`). 4px 배수가 기본이고 2, 6px은 배지·칩처럼 촘촘한 부품 보정용입니다. (`spacing-token`)
+
+| 토큰 | 크기 | 주로 쓰는 곳 |
+|---|---|---|
+| `--space-0-5` | 2px | 배지, 칩 안쪽 위아래 |
+| `--space-1` | 4px | 아이콘과 글자 사이, 촘촘한 목록 |
+| `--space-1-5` | 6px | 작은 버튼, 칩 좌우 |
+| `--space-2` | 8px | 기본 간격, 버튼 묶음 |
+| `--space-3` | 12px | 입력창 안쪽, 카드 행 |
+| `--space-4` | 16px | 카드 안쪽(모바일), 구역 사이 |
+| `--space-5` | 20px | 카드 안쪽 |
+| `--space-6` | 24px | 카드 안쪽(데스크톱), 열 사이 |
+| `--space-8` | 32px | 큰 구역 사이, 인증 카드 |
+| `--space-10` | 40px | 빈 화면 위아래 |
+| `--space-12` | 48px | 가장 큰 여백 |
+
+- 기존 `--space-xs` ~ `--space-3xl`은 모바일과 데스크톱에서 값이 바뀌는 페이지 바깥 여백 전용으로 남깁니다.
+- 예외: 1px 헤어라인 보정, 48px을 넘는 배치 치수(헤더 높이 등), `calc()` 식, 이력서 전용 `--resume-gap-*`, 게시글 본문의 `em` 여백.
+- 단계 사이 값은 가까운 단계로 맞추고, 정확히 가운데(10, 14, 18, 22, 28, 36px)는 안쪽 여백(padding)이면 위로, 바깥 여백·간격(margin, gap)이면 아래로 맞췄습니다(2026-11-24, 화면당 여백 값 종류 10~23종 → 7~13종).
+- 근거(실측): 토스, 당근, 애플 모두 4 또는 8의 배수 간격을 씁니다.
+
 ## 5. 이미지 및 미디어 최적화 규칙
 - **HDR 배경 감광 방지**: [`frontend/src/index.css`](./frontend/src/index.css)의 전역 `img { dynamic-range-limit: standard; }` 규칙을 반드시 유지합니다. (`hdr-limit`)
 - **업로드 최적화 경로 유지**: 모든 이미지 업로드는 `uploadAttachment` → [`optimizeImageForUpload`](./frontend/src/Utils/imageOptimize.ts)를 거칩니다.
@@ -294,6 +316,7 @@ components:
 | `hdr-limit` | 5 | `index.css`의 `img { dynamic-range-limit: standard }`가 사라짐 |
 | `font-size-token` | 4.3 | 컴포넌트 CSS의 `font-size`에 px, rem, pt 숫자를 직접 씀 (`var(--text-*)`, `var(--font-size-*)`, `em`, `%`, `inherit`만 허용) |
 | `font-weight-scale` | 4.3 | `font-weight`가 400, 500, 600, 700이 아님 |
+| `spacing-token` | 4.4 | `padding`, `margin`, `gap`에 2~48px 숫자를 직접 씀 (1px, 48px 초과, `calc()` 제외) |
 
 ---
 
@@ -348,6 +371,7 @@ components:
 ---
 
 ## 10. 변경 이력
+- 2026-11-24: 여백 단계 토큰 11개(`--space-0-5` ~ `--space-12`) 도입, 컴포넌트 CSS 여백 907곳을 토큰으로(값이 바뀐 곳 314곳), `spacing-token` 검사 추가. 사용자가 AS-IS/TO-BE 비교 PDF를 보고 승인.
 - 2026-11-24: `important` 검사 예외를 인쇄 전용과 외부 라이브러리 덮어쓰기로 넓힘(정당한 사용 77곳은 위반에서 제외, 남은 위반은 실제 우선순위 싸움만).
 - 2026-11-24: 화면 변화 없는 정리. 예전 색 별칭 `--color-*` 290곳을 Primer 토큰으로 바꾸고 정의 23개 삭제, 항상 정의된 토큰 뒤의 예비값 1,019곳 삭제.
 - 2026-11-23: ego lite로 화면 106개(테마 3종, 데스크톱/모바일, 로그인/로그아웃, 모달과 메뉴 동작) 요소 전수 점검. 모바일 터치 대상 24px 미만 12곳과 프로필 편집 소수점 글자 크기 1곳을 고쳐 문제 0건.
