@@ -1248,7 +1248,7 @@ class PopularPostListTest(APITestCase):
         self.viewed = self._post('조회 많은 글', likes=0, comments=0, views=99)
         self.quiet = self._post('반응 없는 글', likes=0, comments=0, views=0)
         self.old = self._post('오래된 글', likes=3, comments=3, views=500)
-        Post.objects.filter(pk=self.old.pk).update(created_at=timezone.now() - timezone.timedelta(days=40))
+        Post.objects.filter(pk=self.old.pk).update(created_at=timezone.now() - timezone.timedelta(days=100))
         self.hidden = self._post('남의 건의', likes=3, comments=3, views=500, board=self.author_board)
 
     def _post(self, title, likes, comments, views, board=None):
@@ -1276,7 +1276,7 @@ class PopularPostListTest(APITestCase):
 
     def test_recent_window_and_limit(self):
         self.assertNotIn('오래된 글', self._titles(sort='views'))
-        self.assertIn('오래된 글', self._titles(sort='views', days=60))
+        self.assertIn('오래된 글', self._titles(sort='views', days=120))
         self.assertEqual(len(self._titles(sort='views', limit=1)), 1)
         # 범위 밖 값은 경계로 맞추고, 숫자가 아니면 기본값
         self.assertEqual(len(self._titles(sort='views', limit=0)), 1)

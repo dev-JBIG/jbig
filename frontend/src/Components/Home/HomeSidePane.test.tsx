@@ -6,6 +6,7 @@ import { fetchPopularPosts } from "../../API/req";
 
 jest.mock("../../API/req", () => ({
     fetchPopularPosts: jest.fn(),
+    POPULAR_DAYS: 90,
 }));
 jest.mock("../Utils/UserContext", () => ({
     useUser: () => ({ user: null }),
@@ -37,6 +38,7 @@ test("처음에는 일정 탭이 열리고 인기 글은 탭을 열 때 불러�
     fireEvent.click(screen.getByRole("tab", { name: "인기 글" }));
     expect(await screen.findByText("첫째 글")).toBeInTheDocument();
     expect(mockFetch).toHaveBeenCalledWith("likes");
+    expect(screen.getByText("최근 90일")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /첫째 글/ })).toHaveAttribute("href", "/board/4/1");
     expect(localStorage.getItem("jbig-home-pane-tab")).toBe("popular");
 });
