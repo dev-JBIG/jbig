@@ -4,8 +4,8 @@
     margin: 0;
     padding: 0;
     width: 100%;
-    background-color: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-default);
+    color: var(--fgColor-default);
 }
 
 .app-root {
@@ -13,8 +13,8 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-default);
+    color: var(--fgColor-default);
 }
 
 #root {
@@ -39,7 +39,7 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     font-size: var(--text-ui);
 }
 
@@ -48,29 +48,29 @@
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--bgColor-muted);
+    border-bottom: 1px solid var(--borderColor-default);
 }
 
 .auth-header-brand {
     font-size: var(--text-title-s);
     font-weight: 700;
     letter-spacing: -0.02em;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .auth-header-signin {
     padding: 5px 12px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
-    background-color: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-default, #1f2328);
+    border: 1px solid var(--borderColor-default);
+    background-color: var(--bgColor-default);
+    color: var(--fgColor-default);
     font-size: var(--text-label);
     font-weight: 600;
 }
 
 .auth-header-signin:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .auth-notice {
@@ -80,9 +80,9 @@
     flex-wrap: wrap;
     gap: 12px;
     padding: 12px 24px;
-    background-color: var(--bgColor-attention-muted, #fff8c5);
-    border-bottom: 1px solid var(--borderColor-attention-muted, rgba(212, 167, 44, 0.4));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-attention-muted);
+    border-bottom: 1px solid var(--borderColor-attention-muted);
+    color: var(--fgColor-default);
     font-size: var(--text-ui);
 }
 
@@ -100,7 +100,7 @@
 .auth-notice-link {
     font-size: var(--text-label);
     font-weight: 600;
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     text-decoration: underline;
     text-underline-offset: 2px;
 }

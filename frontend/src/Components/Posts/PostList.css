@@ -6,8 +6,8 @@
 
 /* 홈 최근 글 섹션: JbigInfo / PhotoAlbumSlider와 통일된 Primer Box 카드 */
 .postlist-home-card {
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
@@ -16,8 +16,8 @@
 .postlist-header-home {
     margin-bottom: 0 !important;
     padding: 14px 18px;
-    background-color: var(--bgColor-default, #ffffff);
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background-color: var(--bgColor-default);
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .postlist-home-card .postlist-table {
@@ -46,7 +46,7 @@
     margin: 0;
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     padding: 0;
     text-align: left;
     letter-spacing: -0.02em;
@@ -72,7 +72,7 @@
 
 .board-description {
     font-size: var(--text-label);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     margin: 0;
     line-height: 1.45;
     font-weight: 400;
@@ -96,9 +96,9 @@
 .postlist-tag-tab {
     padding: 4px 12px;
     border-radius: 999px;
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
-    background: var(--bgColor-default, var(--color-bg-primary));
-    color: var(--fgColor-default, var(--color-text-primary));
+    border: 1px solid var(--borderColor-default);
+    background: var(--bgColor-default);
+    color: var(--fgColor-default);
     font-size: var(--text-caption);
     font-weight: 500;
     cursor: pointer;
@@ -106,14 +106,14 @@
 }
 
 .postlist-tag-tab:hover {
-    background: var(--bgColor-muted, var(--color-bg-secondary));
-    border-color: var(--borderColor-emphasis, #818b98);
+    background: var(--bgColor-muted);
+    border-color: var(--borderColor-emphasis);
 }
 
 .postlist-tag-tab.active {
-    background: var(--bgColor-accent-emphasis, var(--color-primary));
-    border-color: var(--bgColor-accent-emphasis, var(--color-primary));
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background: var(--bgColor-accent-emphasis);
+    border-color: var(--bgColor-accent-emphasis);
+    color: var(--fgColor-onEmphasis);
     font-weight: 600;
 }
 
@@ -136,7 +136,7 @@
 .list-search-icon {
     position: absolute;
     left: 10px;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     pointer-events: none;
 }
 
@@ -144,18 +144,18 @@
     width: 100%;
     height: 32px;
     padding: 4px 10px 4px 30px;
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-default, var(--color-bg-primary));
-    color: var(--fgColor-default, var(--color-text-primary));
+    background-color: var(--bgColor-default);
+    color: var(--fgColor-default);
     font-size: var(--text-label);
     outline: none;
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .list-search-input:focus {
-    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .list-search-button {
@@ -171,10 +171,10 @@
 /* 페이지당 항목 수 선택 */
 .perpage-select {
     padding: 6px 10px;
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background: var(--bgColor-default, var(--color-bg-primary));
-    color: var(--fgColor-default, var(--color-text-primary));
+    background: var(--bgColor-default);
+    color: var(--fgColor-default);
     font-size: var(--text-label);
     outline: none;
     margin-bottom: var(--space-md);
@@ -182,8 +182,8 @@
 }
 
 .perpage-select:focus-visible {
-    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 /* 더보기 링크 */
@@ -195,7 +195,7 @@
     border: none;
     padding: 4px 8px;
     border-radius: var(--radius-md);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
@@ -203,19 +203,19 @@
 }
 
 .more-link:hover {
-    color: var(--fgColor-default, var(--color-text-primary));
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    color: var(--fgColor-default);
+    background-color: var(--bgColor-neutral-muted);
 }
 
 /* 공지사항 스타일 — 과도한 좌측 강조선 대신 절제된 틴트 사용 */
 .announcement-row {
-    background-color: var(--bgColor-muted, #f6f8fa) !important;
-    background-color: color-mix(in srgb, var(--bgColor-attention-muted, #fff8c5) 36%, var(--bgColor-default, #ffffff)) !important;
+    background-color: var(--bgColor-muted) !important;
+    background-color: color-mix(in srgb, var(--bgColor-attention-muted) 36%, var(--bgColor-default)) !important;
 }
 
 .announcement-row:hover {
-    background-color: var(--bgColor-muted, #f6f8fa) !important;
-    background-color: color-mix(in srgb, var(--bgColor-attention-muted, #fff8c5) 52%, var(--bgColor-default, #ffffff)) !important;
+    background-color: var(--bgColor-muted) !important;
+    background-color: color-mix(in srgb, var(--bgColor-attention-muted) 52%, var(--bgColor-default)) !important;
 }
 
 .announcement-badge,
@@ -231,11 +231,11 @@
 
 .postlist-title-text {
     font-weight: 500;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
 }
 
 .postlist-table tbody tr:hover .postlist-title-text {
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
 }
 
 .recruitment-badge-wrap {
@@ -249,7 +249,7 @@
 .recruitment-badge-progress {
     font-size: var(--text-caption);
     font-weight: 600;
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-variant-numeric: tabular-nums;
 }
 
@@ -270,7 +270,7 @@
 
 .announcement-title {
     font-weight: 600;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
 }
 
 /* 댓글 수 표시 */
@@ -278,7 +278,7 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     font-size: var(--text-caption);
     font-weight: 600;
     margin-left: 7px;
@@ -291,7 +291,7 @@
     display: inline-flex;
     align-items: center;
     gap: 3px;
-    color: var(--fgColor-muted, var(--color-text-tertiary));
+    color: var(--fgColor-muted);
     margin-left: 6px;
     font-size: var(--text-caption);
     font-weight: 500;
@@ -312,20 +312,20 @@
     min-width: 32px;
     height: 32px;
     padding: 0 10px;
-    background-color: var(--bgColor-default, var(--color-bg-primary));
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     font-size: var(--text-label);
     font-weight: 500;
     font-variant-numeric: tabular-nums;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     cursor: pointer;
     transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .pagination-btn:hover:not(:disabled) {
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    border-color: var(--borderColor-emphasis, #818b98);
+    background-color: var(--bgColor-muted);
+    border-color: var(--borderColor-emphasis);
 }
 
 .pagination-btn:disabled {
@@ -334,9 +334,9 @@
 }
 
 .pagination-btn.active {
-    background-color: var(--bgColor-accent-emphasis, var(--color-primary));
-    color: var(--fgColor-onEmphasis, #ffffff);
-    border-color: var(--bgColor-accent-emphasis, var(--color-primary));
+    background-color: var(--bgColor-accent-emphasis);
+    color: var(--fgColor-onEmphasis);
+    border-color: var(--bgColor-accent-emphasis);
     font-weight: 600;
 }
 
@@ -387,10 +387,10 @@
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
-        border: 1px solid var(--borderColor-default, var(--color-border-light));
+        border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-md);
         overflow: hidden;
-        background-color: var(--bgColor-default, var(--color-bg-primary));
+        background-color: var(--bgColor-default);
         box-shadow: var(--shadow-sm);
         table-layout: fixed;
     }
@@ -404,18 +404,18 @@
     }
 
     .postlist-table thead tr {
-        background-color: var(--bgColor-muted, var(--color-bg-secondary));
+        background-color: var(--bgColor-muted);
     }
 
     .postlist-table tbody tr {
         display: table-row;
-        background-color: var(--bgColor-default, var(--color-bg-primary));
+        background-color: var(--bgColor-default);
         cursor: pointer;
         transition: background-color var(--transition-fast);
     }
 
     .postlist-table tbody tr:hover {
-        background-color: var(--bgColor-muted, var(--color-bg-secondary));
+        background-color: var(--bgColor-muted);
     }
 
     .postlist-table th,
@@ -424,8 +424,8 @@
         padding: 11px 12px;
         text-align: center;
         vertical-align: middle;
-        border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
-        color: var(--fgColor-default, var(--color-text-primary));
+        border-bottom: 1px solid var(--borderColor-muted);
+        color: var(--fgColor-default);
     }
 
     .postlist-table tbody tr:last-child td {
@@ -447,9 +447,9 @@
     .postlist-table th {
         font-weight: 600;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
-        background-color: var(--bgColor-muted, var(--color-bg-secondary));
-        border-bottom: 1px solid var(--borderColor-default, var(--color-border-light));
+        color: var(--fgColor-muted);
+        background-color: var(--bgColor-muted);
+        border-bottom: 1px solid var(--borderColor-default);
     }
 
     .th-id {
@@ -479,7 +479,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
+        color: var(--fgColor-muted);
     }
 
     .th-views,
@@ -490,7 +490,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
+        color: var(--fgColor-muted);
         font-variant-numeric: tabular-nums;
     }
 
@@ -505,7 +505,7 @@
 
     .postlist-table tbody .author-cell {
         font-size: var(--text-label);
-        color: var(--fgColor-default, var(--color-text-primary));
+        color: var(--fgColor-default);
         display: table-cell !important;
         padding-top: 11px !important;
         padding-bottom: 11px !important;
@@ -530,8 +530,8 @@
 .skeleton-container {
     display: flex;
     flex-direction: column;
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
@@ -546,7 +546,7 @@
     gap: 16px;
     align-items: center;
     padding: 13px 16px;
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .skeleton-row:last-child {
@@ -582,13 +582,13 @@
 
 /* 작성자 링크 스타일 */
 .author-link {
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     cursor: pointer;
     font-weight: 500;
 }
 
 .author-link:hover {
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
     text-decoration: underline;
 }
 
@@ -601,9 +601,9 @@
     gap: 10px;
     padding: 48px 20px;
     text-align: center;
-    color: var(--fgColor-muted, var(--color-text-secondary));
-    background-color: var(--bgColor-default, var(--color-bg-primary));
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    color: var(--fgColor-muted);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
     font-size: var(--text-ui);
@@ -615,7 +615,7 @@
 
 .empty-posts-title {
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .empty-posts-message-with-link {

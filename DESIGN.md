@@ -3,7 +3,7 @@ version: alpha
 name: JBIG Web Platform
 description: >-
   JBIG(전북대학교 빅데이터·AI 학회) 커뮤니티 웹(frontend/)의 디자인 기준.
-  GitHub Primer 토큰 위에 frontend/src/index.css 브리지를 얹은 구조이며,
+  GitHub Primer 토큰 위에 frontend/src/index.css 앱 토큰을 얹은 구조이며,
   2026-11-23 main(771bbd19e, #81) 화면을 실측한 값을 "초기 디자인 기준선"으로 고정했다.
 colors:
   # 라이트 테마 값. 다크 딤드, 다크 값은 3.1절 표 참고. 실제 코드는 아래 이름의 Primer 토큰을 쓴다.
@@ -105,7 +105,8 @@ components:
 - **테마**: `ThemeProvider` + `BaseStyles` 기반 **라이트/다크 모드 자동 대응**
 - **전역 토큰 브리지**: [`frontend/src/index.css`](./frontend/src/index.css)
   - 원시 색값(hex, rgba)은 이 파일의 토큰 정의(그림자, 다크 오버레이 보정)에서만 씁니다.
-  - 컴포넌트 CSS는 Primer 기능 토큰(`--fgColor-*`, `--bgColor-*`, `--borderColor-*`)이나 이 파일의 브리지 변수만 참조합니다.
+  - 컴포넌트 CSS는 Primer 기능 토큰(`--fgColor-*`, `--bgColor-*`, `--borderColor-*`)과 이 파일의 앱 토큰(`--space-*`, `--text-*`, `--radius-*`, `--shadow-*` 등)만 참조합니다. 예전 `--color-*` 색 별칭은 없앴습니다(2026-11-24).
+  - 항상 정의된 토큰에는 `var(--fgColor-default, #1f2328)` 같은 예비값을 붙이지 않습니다. 예비값은 런타임에만 정해지는 변수(예: `--event-color`)에만 씁니다.
 - **정의된 변수만 참조**: 존재하지 않는 CSS 변수를 참조하면 선언 전체가 무시되므로 금지합니다. (`undefined-var`)
 - **금지 라이브러리**: Bootstrap, jQuery UI 등 전역 CSS를 오염시키는 UI 프레임워크·스타일시트 추가 금지 (`forbidden-library`)
 
@@ -170,7 +171,7 @@ components:
 ### 3.3 60-30-10 색상 절제 원칙 및 토큰 규칙
 - **중립색 90% · 포인트색 10%**: 채도가 높은 강조색(`--bgColor-accent-emphasis`, `--button-primary-bgColor-rest`)은 핵심 CTA(글쓰기·제출·저장)와 현재 활성 상태에만 제한합니다. 장식 배지·보조 퀵링크에는 중립 서피스 + 컬러 아이콘 또는 부드러운 틴트(`--bgColor-accent-muted` / `color-mix`)를 사용합니다.
   - **기준선 실측(9.3절)**: 유채색 배경 면적은 화면의 0~4%, 유채색 글자는 전체 글자 요소의 0~17%입니다. 이 범위를 넘는 변경은 리뷰에서 근거를 설명합니다.
-- **하드코딩 색상 금지**: `#ffffff`, `#000000`, `#333333` 등 원시 hex를 단독으로 쓰지 말고, 반드시 Primer 시맨틱 토큰(또는 `index.css` 브리지 변수)을 사용합니다. (`raw-color`)
+- **하드코딩 색상 금지**: `#ffffff`, `#000000`, `#333333` 등 원시 hex를 단독으로 쓰지 말고, 반드시 Primer 시맨틱 토큰(또는 `index.css` 앱 토큰)을 사용합니다. (`raw-color`)
   - 텍스트: `var(--fgColor-default)`, `var(--fgColor-muted)`, `var(--fgColor-accent)`, `var(--fgColor-danger)`, `var(--fgColor-success)`, `var(--fgColor-attention)`, `var(--fgColor-onEmphasis)`
   - 배경: `var(--bgColor-default)`, `var(--bgColor-muted)`, `var(--bgColor-inset)`, `var(--bgColor-neutral-muted)`, `var(--bgColor-accent-muted)`, `var(--bgColor-accent-emphasis)`, `var(--overlay-bgColor)`
   - 보더: `var(--borderColor-default)`, `var(--borderColor-muted)`, `var(--borderColor-emphasis)`
@@ -194,7 +195,8 @@ components:
 - **그림자**: 기본 카드 `var(--shadow-sm)`, 드롭다운/모달 등 플로팅 오버레이 `var(--shadow-md)` ~ `var(--shadow-lg)`
 - **숫자 정렬**: 카운터·날짜·순위·통계·페이지 번호에는 `font-variant-numeric: tabular-nums` 적용
 - **긴 텍스트 보호**: 닉네임·제목·URL 등은 `min-width: 0`, `overflow-wrap: anywhere` 또는 `text-overflow: ellipsis`로 모바일 가로 넘침 방지
-- **우선순위 싸움 금지**: `!important`로 스타일을 덮지 않습니다. 선택자 구조로 해결하고, `prefers-reduced-motion` 전역 리셋만 예외입니다. (`important`)
+- **우선순위 싸움 금지**: `!important`로 스타일을 덮지 않습니다. 선택자 구조로 해결합니다. 예외는 `prefers-reduced-motion` 전역 리셋, 인쇄 전용(`@media print`) 스타일, 자체 인라인 스타일을 넣는 외부 라이브러리(마크다운 에디터, 날짜 선택기, 노션 보기) 덮어쓰기뿐입니다. (`important`)
+  - 남은 정리 대상(2026-11-24): 게시판 목록의 모바일 카드 전환(`PostList.css`, `PostList-mobile.css`)은 `!important`끼리 서로 이기고 지는 구조라 하나씩 떼면 화면이 바뀝니다. 표를 카드로 바꾸는 CSS를 다시 짜는 작업으로 따로 정리합니다.
 
 ### 4.1 안티-슬롭(Anti-Slop) 및 에디토리얼 절제 원칙
 전형적인 AI 생성 SaaS 템플릿 느낌을 피하기 위해 다음 패턴을 금지합니다.
@@ -279,7 +281,7 @@ components:
 | `accent-left-stripe` | 4.1 | `border-left: 2px 이상 solid var(--…-accent/success/danger/attention…)` |
 | `pill-highlight` | 4.1 | `highlight`, `topic` 선택자에 `999px` |
 | `breakpoint` | 4 | `@media (min-width: 768px)`, `(max-width: 767px)` 외의 너비 기준점 |
-| `important` | 4 | `!important` (`prefers-reduced-motion` 블록 제외) |
+| `important` | 4 | `!important` (예외: `prefers-reduced-motion` 블록, `@media print` 인쇄 전용, 외부 라이브러리 덮어쓰기 `.w-md-editor`, `.wmde-markdown`, `.react-datepicker`, `.notion-*`) |
 | `inline-style-static` | 6 | `style={{}}` 안의 정적 px, 숫자, 색 리터럴 |
 | `clickable-div` | 6 | `<div onClick>`, `<span onClick>` |
 | `img-lazy` | 5 | `<img>`에 `loading="lazy"`와 `decoding="async"` 중 하나라도 없음 |
@@ -346,6 +348,8 @@ components:
 ---
 
 ## 10. 변경 이력
+- 2026-11-24: `important` 검사 예외를 인쇄 전용과 외부 라이브러리 덮어쓰기로 넓힘(정당한 사용 77곳은 위반에서 제외, 남은 위반은 실제 우선순위 싸움만).
+- 2026-11-24: 화면 변화 없는 정리. 예전 색 별칭 `--color-*` 290곳을 Primer 토큰으로 바꾸고 정의 23개 삭제, 항상 정의된 토큰 뒤의 예비값 1,019곳 삭제.
 - 2026-11-23: ego lite로 화면 106개(테마 3종, 데스크톱/모바일, 로그인/로그아웃, 모달과 메뉴 동작) 요소 전수 점검. 모바일 터치 대상 24px 미만 12곳과 프로필 편집 소수점 글자 크기 1곳을 고쳐 문제 0건.
 - 2026-11-23: 다크 딤드 글자 대비 보정(링크, 위험, 보조 글자 토큰 밝기). 테마 3종 x 화면 9개 x 너비 2개 실측 기준 미달 91건 → 0건, 라이트와 다크는 변화 없음.
 - 2026-11-23: 글자 크기 10단계 토큰(`--text-*`)과 굵기 4단계 도입(4.3절), 소수점 크기 42곳과 450 굵기 정리, `font-size-token`, `font-weight-scale` 검사 추가.

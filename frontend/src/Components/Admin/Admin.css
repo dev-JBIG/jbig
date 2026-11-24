@@ -1,16 +1,16 @@
 /* GitHub Primer styled Admin Dashboard */
 
 .admin-container {
-    --primary-color: var(--bgColor-accent-emphasis, #0969da);
-    --danger-color: var(--bgColor-danger-emphasis, #cf222e);
-    --success-color: var(--bgColor-success-emphasis, #1f883d);
-    --background-color: var(--bgColor-inset, #f6f8fa);
-    --sidebar-bg: var(--bgColor-default, #ffffff);
-    --header-bg: var(--bgColor-default, #ffffff);
-    --card-bg: var(--bgColor-default, #ffffff);
-    --text-color: var(--fgColor-default, #1f2328);
-    --text-light-color: var(--fgColor-muted, #59636e);
-    --border-color: var(--borderColor-default, #d1d9e0);
+    --primary-color: var(--bgColor-accent-emphasis);
+    --danger-color: var(--bgColor-danger-emphasis);
+    --success-color: var(--bgColor-success-emphasis);
+    --background-color: var(--bgColor-inset);
+    --sidebar-bg: var(--bgColor-default);
+    --header-bg: var(--bgColor-default);
+    --card-bg: var(--bgColor-default);
+    --text-color: var(--fgColor-default);
+    --text-light-color: var(--fgColor-muted);
+    --border-color: var(--borderColor-default);
 
     display: flex;
     flex-direction: column;
@@ -55,7 +55,7 @@
 }
 
 .admin-logo:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 /* 공통 모양은 shared.css 의 .brand-mark */
@@ -117,12 +117,12 @@
 }
 
 .admin-menu-btn:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .admin-menu-btn.active {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
     font-weight: 600;
 }
 
@@ -134,7 +134,7 @@
     bottom: 6px;
     width: 3px;
     border-radius: 999px;
-    background-color: var(--bgColor-accent-emphasis, #0969da);
+    background-color: var(--bgColor-accent-emphasis);
 }
 
 /* 메인 컨텐츠 영역 */
@@ -186,7 +186,7 @@
 .admin-section-divider-title {
     margin-top: 12px;
     padding-top: 16px;
-    border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-top: 1px solid var(--borderColor-muted);
 }
 
 .admin-muted-text {
@@ -223,7 +223,7 @@
     padding: 16px;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
     text-align: left;
     font-family: inherit;
     cursor: pointer;
@@ -231,8 +231,8 @@
 }
 
 .admin-shortcut-card:hover {
-    border-color: var(--borderColor-accent-emphasis, #0969da);
-    background-color: var(--bgColor-default, #ffffff);
+    border-color: var(--borderColor-accent-emphasis);
+    background-color: var(--bgColor-default);
 }
 
 .admin-shortcut-icon {
@@ -242,8 +242,8 @@
     width: 34px;
     height: 34px;
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
 }
 
 .admin-shortcut-title {
@@ -295,8 +295,8 @@
     flex-wrap: wrap;
     gap: 12px;
     padding: 12px 14px;
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-    background-color: var(--bgColor-default, #ffffff);
+    border-bottom: 1px solid var(--borderColor-muted);
+    background-color: var(--bgColor-default);
 }
 
 .admin-board-row:last-child {
@@ -368,7 +368,7 @@
 }
 
 .admin-table thead tr {
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
 }
 
 .admin-table th {
@@ -378,12 +378,12 @@
     border-bottom: 1px solid var(--border-color);
     text-align: left;
     color: var(--text-light-color);
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
 }
 
 .admin-table td {
     padding: 10px 14px;
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-bottom: 1px solid var(--borderColor-muted);
     font-size: var(--text-ui);
     color: var(--text-color);
     vertical-align: middle;
@@ -424,7 +424,7 @@
     width: 30px;
     height: 30px;
     padding: 0;
-    background: var(--bgColor-default, #ffffff);
+    background: var(--bgColor-default);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -436,19 +436,19 @@
 }
 
 .admin-icon-button:hover {
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-color: var(--borderColor-emphasis, #818b98);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-muted);
+    border-color: var(--borderColor-emphasis);
+    color: var(--fgColor-accent);
 }
 
 .admin-icon-button-danger {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
 }
 
 .admin-icon-button-danger:hover {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-    border-color: var(--borderColor-danger-muted, #ff8182);
-    color: var(--fgColor-danger, #cf222e);
+    background-color: var(--bgColor-danger-muted);
+    border-color: var(--borderColor-danger-muted);
+    color: var(--fgColor-danger);
 }
 
 .admin-btn-inner {
@@ -489,7 +489,7 @@
     font-size: var(--text-ui);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-default, #ffffff);
+    background-color: var(--bgColor-default);
     color: var(--text-color);
 }
 
@@ -506,8 +506,8 @@
 .admin-input:focus,
 .admin-select:focus {
     outline: none;
-    border-color: var(--borderColor-accent-emphasis, #0969da);
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .admin-image-preview-wrap {
@@ -559,15 +559,15 @@
 }
 
 .admin-message.success {
-    background-color: var(--bgColor-success-muted, #dafbe1);
-    color: var(--fgColor-success, #1a7f37);
-    border-color: var(--borderColor-success-muted, #4ac26b);
+    background-color: var(--bgColor-success-muted);
+    color: var(--fgColor-success);
+    border-color: var(--borderColor-success-muted);
 }
 
 .admin-message.error {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-    color: var(--fgColor-danger, #cf222e);
-    border-color: var(--borderColor-danger-muted, #ff8182);
+    background-color: var(--bgColor-danger-muted);
+    color: var(--fgColor-danger);
+    border-color: var(--borderColor-danger-muted);
 }
 
 .form-hint {
@@ -605,7 +605,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--overlay-backdrop-bgColor, rgba(27, 31, 36, 0.5));
+    background-color: var(--overlay-backdrop-bgColor);
     z-index: 99;
 }
 

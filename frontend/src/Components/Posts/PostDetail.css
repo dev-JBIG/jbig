@@ -1,11 +1,11 @@
 /* GitHub Primer styled PostDetail & RecruitmentDetail */
 
 .postdetail-container {
-    background-color: var(--bgColor-default, var(--color-bg-primary));
+    background-color: var(--bgColor-default);
     border-radius: var(--radius-md);
     padding: var(--space-lg);
     max-width: 100%;
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border: 1px solid var(--borderColor-default);
     box-shadow: var(--shadow-sm);
 }
 
@@ -34,13 +34,13 @@
 .post-not-found h2 {
     margin: 0;
     font-size: var(--text-title);
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .post-not-found p {
     margin: 0 0 8px;
     font-size: var(--text-ui);
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 /* 스켈레톤 */
@@ -102,14 +102,14 @@
     background: transparent;
     font-family: inherit;
     font-size: var(--text-label);
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
     font-weight: 600;
     cursor: pointer;
     transition: background-color var(--transition-fast);
 }
 
 .postdetail-category-link:hover {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
+    background-color: var(--bgColor-accent-muted);
 }
 
 .postdetail-tag-label {
@@ -119,7 +119,7 @@
 .postdetail-title {
     font-size: var(--font-size-xl);
     font-weight: 600;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     margin: 2px 0 4px 0;
     line-height: 1.3;
     letter-spacing: -0.015em;
@@ -141,7 +141,7 @@
 
 .postdetail-info-row {
     font-size: var(--text-label);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -162,28 +162,28 @@
     font-family: inherit;
     font-size: inherit;
     font-weight: 600;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     cursor: pointer;
     transition: color var(--transition-fast);
 }
 
 .postdetail-author:hover {
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
     text-decoration: underline;
 }
 
 .postdetail-updated-time {
-    color: var(--fgColor-muted, var(--color-text-tertiary));
+    color: var(--fgColor-muted);
     margin-left: 4px;
 }
 
 /* 첨부파일 박스 (GitHub Release Asset Box 스타일) */
 .postdetail-attachments {
     margin: var(--space-lg) 0;
-    border: 1px solid var(--borderColor-default, #d1d9e0);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     overflow: hidden;
-    background-color: var(--bgColor-default, #ffffff);
+    background-color: var(--bgColor-default);
 }
 
 .postdetail-attachments-header {
@@ -191,11 +191,11 @@
     align-items: center;
     gap: 6px;
     padding: 12px 16px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-bottom: 1px solid var(--borderColor-default, #d1d9e0);
+    background-color: var(--bgColor-muted);
+    border-bottom: 1px solid var(--borderColor-default);
     font-size: var(--text-ui);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .postdetail-attachments-count {
@@ -206,8 +206,8 @@
     height: 18px;
     padding: 0 6px;
     border-radius: 999px;
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.16));
-    color: var(--fgColor-muted, #59636e);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-muted);
     font-size: var(--text-caption);
     font-weight: 600;
 }
@@ -219,7 +219,7 @@
 }
 
 .postdetail-attachment-item {
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .postdetail-attachment-item:last-child {
@@ -232,17 +232,17 @@
     gap: 8px;
     padding: 10px 14px;
     font-size: var(--text-ui);
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     transition: background-color var(--transition-fast);
 }
 
 .postdetail-attachment-link:hover {
-    background-color: var(--bgColor-muted, #f6f8fa);
+    background-color: var(--bgColor-muted);
     text-decoration: none;
 }
 
 .postdetail-attachment-icon {
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     flex-shrink: 0;
 }
 
@@ -264,7 +264,7 @@
 }
 
 .postdetail-attachment-download {
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     flex-shrink: 0;
 }
 
@@ -276,12 +276,12 @@
 }
 
 .postdetail-floating-heart {
-    stroke: var(--fgColor-muted, #59636e);
+    stroke: var(--fgColor-muted);
 }
 
 .postdetail-heart-icon.is-liked {
-    fill: var(--fgColor-danger, #cf222e);
-    stroke: var(--fgColor-danger, #cf222e);
+    fill: var(--fgColor-danger);
+    stroke: var(--fgColor-danger);
 }
 
 /* 좋아요 버튼 & 애니메이션 */
@@ -298,12 +298,12 @@
 }
 
 .postdetail-like-btn:hover {
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    background-color: var(--bgColor-muted);
 }
 
 .postdetail-like-btn:focus-visible,
 .postdetail-inline-like-btn:focus-visible {
-    outline: 2px solid var(--focus-outlineColor, var(--color-primary));
+    outline: 2px solid var(--focus-outlineColor);
     outline-offset: 2px;
 }
 
@@ -340,7 +340,7 @@
     animation: none;
     animation-delay: var(--delay);
     transform-origin: center;
-    color: var(--fgColor-sponsors, #bf3989);
+    color: var(--fgColor-sponsors);
 }
 
 .postdetail-heart-burst.is-active span {
@@ -353,11 +353,11 @@
     color: currentColor;
 }
 
-.postdetail-heart-burst span:nth-child(1) { --tx: -28px; --ty: -6px; --delay: 0ms; color: var(--fgColor-danger, #d1242f); }
-.postdetail-heart-burst span:nth-child(2) { --tx: -10px; --ty: -36px; --delay: 50ms; color: var(--fgColor-sponsors, #bf3989); }
-.postdetail-heart-burst span:nth-child(3) { --tx: 12px; --ty: -28px; --delay: 90ms; color: var(--fgColor-danger, #d1242f); }
-.postdetail-heart-burst span:nth-child(4) { --tx: 30px; --ty: -12px; --delay: 40ms; color: var(--fgColor-sponsors, #bf3989); }
-.postdetail-heart-burst span:nth-child(5) { --tx: 10px; --ty: -44px; --delay: 0ms; color: var(--fgColor-attention, #9a6700); }
+.postdetail-heart-burst span:nth-child(1) { --tx: -28px; --ty: -6px; --delay: 0ms; color: var(--fgColor-danger); }
+.postdetail-heart-burst span:nth-child(2) { --tx: -10px; --ty: -36px; --delay: 50ms; color: var(--fgColor-sponsors); }
+.postdetail-heart-burst span:nth-child(3) { --tx: 12px; --ty: -28px; --delay: 90ms; color: var(--fgColor-danger); }
+.postdetail-heart-burst span:nth-child(4) { --tx: 30px; --ty: -12px; --delay: 40ms; color: var(--fgColor-sponsors); }
+.postdetail-heart-burst span:nth-child(5) { --tx: 10px; --ty: -44px; --delay: 0ms; color: var(--fgColor-attention); }
 
 .postdetail-like-floating {
     position: fixed;
@@ -383,8 +383,8 @@
 
 .postdetail-like-floating .postdetail-like-btn {
     margin-left: 0;
-    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    background: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     padding: var(--space-sm) var(--space-lg);
     border-radius: 999px;
     box-shadow: var(--shadow-lg);
@@ -398,7 +398,7 @@
     transform: translateX(-50%) translateY(0);
     font-size: var(--text-label);
     font-weight: 700;
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
     opacity: 0;
     pointer-events: none;
     white-space: nowrap;
@@ -409,7 +409,7 @@
 }
 
 .postdetail-like-plusone.minus {
-    color: var(--fgColor-muted, var(--color-text-tertiary));
+    color: var(--fgColor-muted);
 }
 
 .postdetail-inline-like {
@@ -417,8 +417,8 @@
     justify-content: center;
     margin: var(--space-xl) 0;
     padding: var(--space-lg) var(--space-md);
-    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-top: 1px solid var(--borderColor-muted);
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .postdetail-inline-like-btn {
@@ -429,9 +429,9 @@
     justify-content: center;
     gap: var(--space-sm);
     padding: 8px 22px;
-    color: var(--fgColor-default, var(--color-text-primary));
-    background: var(--bgColor-muted, var(--color-bg-secondary));
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    color: var(--fgColor-default);
+    background: var(--bgColor-muted);
+    border: 1px solid var(--borderColor-default);
     border-radius: 999px;
     font: inherit;
     font-size: var(--text-ui);
@@ -441,13 +441,13 @@
 }
 
 .postdetail-inline-like-btn:hover:not(:disabled) {
-    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
+    border-color: var(--borderColor-accent-emphasis);
 }
 
 .postdetail-inline-like-btn.liked {
-    color: var(--fgColor-danger, #cf222e);
-    background: var(--bgColor-danger-muted, #ffebe9);
-    border-color: var(--borderColor-danger-muted, #ff8182);
+    color: var(--fgColor-danger);
+    background: var(--bgColor-danger-muted);
+    border-color: var(--borderColor-danger-muted);
 }
 
 .postdetail-inline-like-count {
@@ -466,7 +466,7 @@
 }
 
 .postdetail-divider {
-    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-top: 1px solid var(--borderColor-muted);
     margin: var(--space-md) 0 var(--space-lg);
 }
 
@@ -474,13 +474,13 @@
 .postdetail-content {
     font-size: var(--text-body);
     line-height: 1.7;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     min-height: 200px;
     word-wrap: break-word;
 }
 
 .postdetail-content a {
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
     text-decoration: underline;
     text-underline-offset: 2px;
 }
@@ -491,19 +491,19 @@
     border-spacing: 0;
     margin: 20px 0;
     font-size: var(--text-ui);
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
 
 .postdetail-content th {
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    color: var(--fgColor-default, var(--color-text-primary));
+    background-color: var(--bgColor-muted);
+    color: var(--fgColor-default);
     font-weight: 600;
     padding: 8px 10px;
     text-align: center;
-    border-bottom: 1px solid var(--borderColor-default, var(--color-border-light));
-    border-right: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-default);
+    border-right: 1px solid var(--borderColor-default);
     font-size: var(--text-label);
 }
 
@@ -516,7 +516,7 @@
     text-align: left;
     line-height: 1.6;
     font-size: var(--text-label);
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .postdetail-content tr:last-child td {
@@ -526,9 +526,9 @@
 .postdetail-content td:first-child {
     width: 140px;
     font-weight: 500;
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    background-color: var(--bgColor-muted);
     text-align: center;
-    border-right: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-right: 1px solid var(--borderColor-default);
 }
 
 .postdetail-content td:last-child {
@@ -542,10 +542,10 @@
 
 .postdetail-content.form-style td:first-child {
     width: 140px;
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    background-color: var(--bgColor-muted);
     font-weight: 600;
     text-align: center !important;
-    border-right: 1px solid var(--borderColor-default, var(--color-border-light));
+    border-right: 1px solid var(--borderColor-default);
 }
 
 @media (max-width: 480px) {
@@ -556,19 +556,19 @@
 }
 
 .postdetail-content blockquote {
-    border-left: 4px solid var(--borderColor-default, var(--color-border-medium));
+    border-left: 4px solid var(--borderColor-default);
     padding: 8px 16px;
     margin: 16px 0;
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    background-color: var(--bgColor-muted);
+    color: var(--fgColor-muted);
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
 }
 
 .postdetail-content p code,
 .postdetail-content li code,
 .postdetail-content blockquote code {
-    color: var(--fgColor-default, var(--color-text-primary));
-    background-color: var(--bgColor-neutral-muted, rgba(175, 184, 193, 0.2));
+    color: var(--fgColor-default);
+    background-color: var(--bgColor-neutral-muted);
     padding: 0.2em 0.4em;
     border-radius: var(--radius-sm);
     font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
@@ -579,14 +579,14 @@
 .postdetail-content hr {
     height: 1px;
     border: 0;
-    background-color: var(--borderColor-muted, var(--color-border-light));
+    background-color: var(--borderColor-muted);
     margin: 24px 0;
 }
 
 .postdetail-content pre {
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    color: var(--fgColor-default, var(--color-text-primary));
-    border: 1px solid var(--borderColor-muted, var(--color-border-light));
+    background-color: var(--bgColor-muted);
+    color: var(--fgColor-default);
+    border: 1px solid var(--borderColor-muted);
     padding: 16px;
     border-radius: var(--radius-md);
     overflow-x: auto;
@@ -606,7 +606,7 @@
 .postdetail-content h1 {
     font-size: var(--text-title-l);
     font-weight: 600;
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-muted);
     padding-bottom: 0.3em;
     margin-top: 24px;
     margin-bottom: 16px;
@@ -617,7 +617,7 @@
 .postdetail-content h2 {
     font-size: var(--text-title);
     font-weight: 600;
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-muted);
     padding-bottom: 0.3em;
     margin-top: 24px;
     margin-bottom: 14px;
@@ -658,15 +658,15 @@
     height: auto;
     border-radius: var(--radius-md);
     margin: 12px 0;
-    border: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border: 1px solid var(--borderColor-muted);
 }
 
 .postdetail-back-btn {
     margin-top: var(--space-lg);
     padding: 8px 18px;
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    color: var(--fgColor-default, var(--color-text-primary));
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    background-color: var(--bgColor-muted);
+    color: var(--fgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     font-size: var(--text-ui);
     font-weight: 500;
@@ -675,11 +675,11 @@
 }
 
 .postdetail-back-btn:hover {
-    background-color: var(--bgColor-neutral-muted, var(--color-bg-tertiary));
+    background-color: var(--bgColor-neutral-muted);
 }
 
 .comment-owner-badge {
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
     font-weight: 600;
     margin-left: 4px;
     font-size: var(--text-caption);
@@ -689,9 +689,9 @@
 .recruitment-detail-card {
     margin: 16px 0 20px;
     padding: 16px 20px;
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    background-color: var(--bgColor-muted);
 }
 
 .recruitment-detail-badges {
@@ -712,17 +712,17 @@
 
 .recruitment-detail-grid dt {
     font-weight: 600;
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
 }
 
 .recruitment-detail-grid dd {
     margin: 0;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     word-break: break-word;
 }
 
 .recruitment-detail-grid dd.is-closed {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
     font-weight: 500;
 }
 
@@ -735,7 +735,7 @@
 .recruitment-detail-footer {
     margin-top: 14px;
     padding-top: 12px;
-    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-top: 1px solid var(--borderColor-muted);
 }
 
 .recruitment-status-row,
@@ -748,22 +748,22 @@
 
 .recruitment-status-label {
     font-size: var(--text-label);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-weight: 500;
 }
 
 .recruitment-manager-panel {
     margin-top: 14px;
     padding: 14px;
-    background-color: var(--bgColor-default, var(--color-bg-primary));
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
 }
 
 .recruitment-manager-tabs {
     display: flex;
     gap: 6px;
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-muted);
     padding-bottom: 10px;
     margin-bottom: 12px;
     flex-wrap: wrap;
@@ -774,28 +774,28 @@
     border-radius: var(--radius-md);
     border: 1px solid transparent;
     background: transparent;
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-size: var(--text-label);
     font-weight: 500;
     cursor: pointer;
 }
 
 .recruitment-manager-tab:hover {
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
-    color: var(--fgColor-default, var(--color-text-primary));
+    background-color: var(--bgColor-muted);
+    color: var(--fgColor-default);
 }
 
 .recruitment-manager-tab.is-active {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, var(--color-primary));
-    border-color: var(--borderColor-accent-muted, #54aeff);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
+    border-color: var(--borderColor-accent-muted);
     font-weight: 600;
 }
 
 .recruitment-empty {
     text-align: center;
     padding: 20px 12px;
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-size: var(--text-label);
 }
 
@@ -807,9 +807,9 @@
 
 .recruitment-app-card {
     padding: 12px 14px;
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background-color: var(--bgColor-muted, var(--color-bg-secondary));
+    background-color: var(--bgColor-muted);
 }
 
 .recruitment-app-header {
@@ -819,23 +819,23 @@
     gap: 8px;
     margin-bottom: 6px;
     font-size: var(--text-label);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
 }
 
 .recruitment-app-header strong {
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
 }
 
 .recruitment-app-message {
     font-size: var(--text-ui);
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     margin-bottom: 6px;
     white-space: pre-wrap;
 }
 
 .recruitment-app-resume {
     font-size: var(--text-caption);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     margin-bottom: 8px;
 }
 
@@ -856,8 +856,8 @@
 }
 
 .recruitment-modal-card {
-    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    background: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
     padding: 20px;
     width: 100%;
@@ -869,16 +869,16 @@
     margin: 0 0 12px;
     font-size: var(--text-lead);
     font-weight: 600;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
 }
 
 .recruitment-apply-textarea {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--borderColor-default, var(--color-border-medium));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background: var(--bgColor-default, var(--color-bg-primary));
-    color: var(--fgColor-default, var(--color-text-primary));
+    background: var(--bgColor-default);
+    color: var(--fgColor-default);
     font-size: var(--text-ui);
     font-family: inherit;
     resize: vertical;
@@ -887,8 +887,8 @@
 
 .recruitment-apply-textarea:focus {
     outline: none;
-    border-color: var(--borderColor-accent-emphasis, var(--color-primary));
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--color-primary));
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .recruitment-modal-actions {

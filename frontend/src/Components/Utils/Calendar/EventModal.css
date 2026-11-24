@@ -13,7 +13,7 @@
     margin: 0;
     font-size: var(--text-lead);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .event-modal-form {
@@ -32,7 +32,7 @@
 .event-modal-field label {
     font-size: var(--text-label);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .event-modal-label-row {
@@ -48,13 +48,13 @@
     gap: 6px;
     font-weight: 500 !important;
     font-size: var(--text-caption) !important;
-    color: var(--fgColor-muted, #59636e) !important;
+    color: var(--fgColor-muted) !important;
     cursor: pointer;
 }
 
 .event-modal-counter {
     font-size: var(--text-caption);
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
 }
 
 .event-modal-input,
@@ -63,9 +63,9 @@
     padding: 7px 12px;
     font-size: var(--text-ui);
     border-radius: var(--radius-md);
-    border: 1px solid var(--borderColor-default, #d1d9e0);
-    background-color: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-default, #1f2328);
+    border: 1px solid var(--borderColor-default);
+    background-color: var(--bgColor-default);
+    color: var(--fgColor-default);
 }
 
 .event-modal-textarea {
@@ -99,7 +99,7 @@
 }
 
 .event-color-swatch.selected {
-    box-shadow: 0 0 0 2px var(--bgColor-default, #ffffff), 0 0 0 4px var(--fgColor-default, #1f2328);
+    box-shadow: 0 0 0 2px var(--bgColor-default), 0 0 0 4px var(--fgColor-default);
 }
 
 .event-modal-actions {
@@ -107,21 +107,21 @@
     justify-content: flex-end;
     gap: 8px;
     padding-top: 8px;
-    border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-top: 1px solid var(--borderColor-muted);
 }
 
 /* react-datepicker Primer 토큰 다크/라이트 대응 */
 .react-datepicker {
     font-family: inherit !important;
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff)) !important;
-    border-color: var(--borderColor-default, #d1d9e0) !important;
-    color: var(--fgColor-default, #1f2328) !important;
-    box-shadow: var(--shadow-floating-medium, 0 3px 6px rgba(66, 74, 83, 0.15));
+    background-color: var(--overlay-bgColor) !important;
+    border-color: var(--borderColor-default) !important;
+    color: var(--fgColor-default) !important;
+    box-shadow: var(--shadow-floating-medium);
 }
 
 .react-datepicker__header {
-    background-color: var(--bgColor-muted, #f6f8fa) !important;
-    border-bottom-color: var(--borderColor-default, #d1d9e0) !important;
+    background-color: var(--bgColor-muted) !important;
+    border-bottom-color: var(--borderColor-default) !important;
 }
 
 .react-datepicker__current-month,
@@ -129,23 +129,23 @@
 .react-datepicker__day-name,
 .react-datepicker__day,
 .react-datepicker__time-list-item {
-    color: var(--fgColor-default, #1f2328) !important;
+    color: var(--fgColor-default) !important;
 }
 
 .react-datepicker__time-container,
 .react-datepicker__time,
 .react-datepicker__time-box {
-    background-color: var(--overlay-bgColor, var(--bgColor-default, #ffffff)) !important;
-    border-left-color: var(--borderColor-default, #d1d9e0) !important;
+    background-color: var(--overlay-bgColor) !important;
+    border-left-color: var(--borderColor-default) !important;
 }
 
 .react-datepicker__day:hover,
 .react-datepicker__time-list-item:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.14)) !important;
+    background-color: var(--bgColor-neutral-muted) !important;
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__time-list-item--selected {
-    background-color: var(--bgColor-accent-emphasis, #0969da) !important;
-    color: var(--fgColor-onEmphasis, #ffffff) !important;
+    background-color: var(--bgColor-accent-emphasis) !important;
+    color: var(--fgColor-onEmphasis) !important;
 }

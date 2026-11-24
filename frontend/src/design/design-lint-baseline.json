@@ -32,15 +32,12 @@
   "important": {
     "src/Components/Competitions/Arena.css": 9,
     "src/Components/Home/Home-mobile.css": 1,
-    "src/Components/Note/Note.css": 23,
     "src/Components/Posts/PostDetail-comments.css": 3,
     "src/Components/Posts/PostDetail.css": 5,
     "src/Components/Posts/PostList-mobile.css": 16,
     "src/Components/Posts/PostList.css": 19,
-    "src/Components/Posts/PostWrite.css": 13,
-    "src/Components/Profile/Profile.css": 14,
-    "src/Components/Profile/ProfileBlockEditor/ProfileBlockEditor.css": 4,
-    "src/Components/Utils/Calendar/EventModal.css": 16
+    "src/Components/Profile/ProfileBlockEditor/ProfileBlockEditor.css": 3,
+    "src/Components/Utils/Calendar/EventModal.css": 4
   },
   "inline-style-static": {
     "src/Components/Profile/ProfileBlockEditor/editors/HeaderBlockEditor.tsx": 1,

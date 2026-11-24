@@ -5,8 +5,8 @@
     flex-direction: column;
     align-items: center;
     padding: 16px 24px 40px;
-    background-color: var(--bgColor-inset, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-inset);
+    color: var(--fgColor-default);
     min-height: 100vh;
     box-sizing: border-box;
 }
@@ -19,7 +19,7 @@
     max-width: 900px;
     padding: 8px 0 14px 0;
     margin-bottom: 16px;
-    border-bottom: 1px solid var(--borderColor-default, #d0d7de);
+    border-bottom: 1px solid var(--borderColor-default);
     box-sizing: border-box;
 }
 
@@ -27,15 +27,15 @@
     font-size: var(--text-title);
     font-weight: 700;
     text-decoration: none;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     cursor: pointer;
 }
 
 .note-content {
     width: 100%;
     max-width: 900px;
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     overflow: hidden;
 }
@@ -49,16 +49,16 @@
     width: 100%;
     max-width: 900px;
     height: 360px;
-    background-color: var(--bgColor-default, #ffffff);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background-color: var(--bgColor-default);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     font-size: var(--text-body);
-    color: var(--fgColor-muted, #656d76);
+    color: var(--fgColor-muted);
     gap: 12px;
 }
 
 .note-error {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
 }
 
 /* react-notion-x 스타일 오버라이드 */
@@ -108,7 +108,7 @@
 }
 
 .notion-link {
-    color: var(--fgColor-accent, #0969da);
+    color: var(--fgColor-accent);
     text-decoration: none;
 }
 
@@ -119,8 +119,8 @@
 .notion-table-of-contents {
     margin: 16px 0;
     padding: 14px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border: 1px solid var(--borderColor-muted, #d0d7de);
+    background-color: var(--bgColor-muted);
+    border: 1px solid var(--borderColor-muted);
     border-radius: var(--radius-md);
 }
 

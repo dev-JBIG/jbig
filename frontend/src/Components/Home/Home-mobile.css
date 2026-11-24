@@ -3,7 +3,7 @@
 @media (max-width: 767px) {
     .home-wrapper {
         min-height: 100vh;
-        background-color: var(--bgColor-inset, #f6f8fa);
+        background-color: var(--bgColor-inset);
     }
 
     .home-header {

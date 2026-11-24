@@ -1,35 +1,6 @@
-/* GitHub Primer 디자인 토큰 브리지 및 적응형 기본 스타일 */
+/* GitHub Primer 디자인 토큰 위의 앱 토큰(간격, 글자, 그림자 등)과 적응형 기본 스타일 */
 :root {
-  /* Primer 시맨틱 토큰 기반 브리지 (라이트/다크 자동 대응) */
-  --color-primary: var(--fgColor-accent, #0969da);
-  --color-primary-hover: var(--bgColor-accent-emphasis, #0860ca);
-  --color-primary-light: var(--bgColor-accent-muted, #ddf4ff);
-  --color-secondary: var(--fgColor-muted, #59636e);
-  --color-accent: var(--bgColor-success-emphasis, #1f883d);
-  --color-accent-hover: var(--button-primary-bgColor-hover, #1c8139);
-  --color-danger: var(--fgColor-danger, #d1242f);
-  --color-danger-bg: var(--bgColor-danger-muted, #ffebe9);
-  --color-attention: var(--fgColor-attention, #9a6700);
-  --color-attention-bg: var(--bgColor-attention-muted, #fff8c5);
-  --color-success: var(--fgColor-success, #1a7f37);
-  --color-success-bg: var(--bgColor-success-muted, #dafbe1);
-
-  /* 텍스트 색상 */
-  --color-text-primary: var(--fgColor-default, #1f2328);
-  --color-text-secondary: var(--fgColor-muted, #59636e);
-  --color-text-tertiary: var(--fgColor-disabled, #818b98);
-  --color-text-inverse: var(--fgColor-onEmphasis, #ffffff);
-
-  /* 배경 색상 */
-  --color-bg-primary: var(--bgColor-default, #ffffff);
-  --color-bg-secondary: var(--bgColor-muted, #f6f8fa);
-  --color-bg-tertiary: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
-  --color-bg-inset: var(--bgColor-inset, #f6f8fa);
-
-  /* 보더 색상 */
-  --color-border-light: var(--borderColor-muted, rgba(209, 217, 224, 0.7));
-  --color-border-medium: var(--borderColor-default, #d1d9e0);
-  --color-border-dark: var(--borderColor-emphasis, #818b98);
+  /* 색은 Primer 기능 토큰(--fgColor-*, --bgColor-*, --borderColor-*)을 직접 쓴다. 예전 --color-* 별칭은 2026-11-24에 정리했다 */
 
   /* 간격 시스템 - 모바일 */
   --space-xs: 0.25rem;

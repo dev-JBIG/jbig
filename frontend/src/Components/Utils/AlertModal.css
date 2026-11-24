@@ -24,7 +24,7 @@
     align-items: center;
     gap: 10px;
     padding: 16px 20px 12px;
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .alert-modal-icon {
@@ -38,29 +38,29 @@
 }
 
 .alert-modal-icon.is-info {
-    background-color: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
+    background-color: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
 }
 
 .alert-modal-icon.is-success {
-    background-color: var(--bgColor-success-muted, #dafbe1);
-    color: var(--fgColor-success, #1a7f37);
+    background-color: var(--bgColor-success-muted);
+    color: var(--fgColor-success);
 }
 
 .alert-modal-icon.is-warning {
-    background-color: var(--bgColor-attention-muted, #fff8c5);
-    color: var(--fgColor-attention, #9a6700);
+    background-color: var(--bgColor-attention-muted);
+    color: var(--fgColor-attention);
 }
 
 .alert-modal-icon.is-danger {
-    background-color: var(--bgColor-danger-muted, #ffebe9);
-    color: var(--fgColor-danger, #d1242f);
+    background-color: var(--bgColor-danger-muted);
+    color: var(--fgColor-danger);
 }
 
 .alert-modal-title {
     font-size: var(--text-lead);
     font-weight: 600;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     line-height: 1.35;
 }
 
@@ -68,7 +68,7 @@
     padding: 16px 20px;
     font-size: var(--text-ui);
     line-height: 1.6;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     white-space: pre-wrap;
     word-break: keep-all;
 }
@@ -78,6 +78,6 @@
     justify-content: flex-end;
     gap: 8px;
     padding: 12px 20px 16px;
-    background-color: var(--bgColor-muted, #f6f8fa);
-    border-top: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background-color: var(--bgColor-muted);
+    border-top: 1px solid var(--borderColor-muted);
 }

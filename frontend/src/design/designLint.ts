@@ -154,7 +154,9 @@ const blankComments = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, m => m.r
 const COLOR_PROP = /^(color|background(-color)?|border(-(top|right|bottom|left))?(-color)?|outline(-color)?|fill|stroke|caret-color|text-decoration-color|box-shadow|column-rule(-color)?)$/;
 const RAW_COLOR = /#[0-9a-fA-F]{3,8}\b|\b(rgba?|hsla?)\(/;
 const OVERLAY_SELECTOR = /modal|dialog|overlay|dropdown|popup|popover|menu|toast|sheet|tooltip|lightbox|backdrop/i;
-const RADIUS_OK = /^(var\(--radius-(sm|md|lg)\)|999px|50%|0)$/;
+/** 자체 스타일(인라인 포함)을 넣어 !important 없이는 덮을 수 없는 외부 라이브러리 요소 */
+const THIRD_PARTY_SELECTOR = /\.(w-md-editor|wmde-markdown|react-datepicker|notion)/;
+const RADIUS_OK =/^(var\(--radius-(sm|md|lg)\)|999px|50%|0)$/;
 
 export interface LintResult {
     violations: Violation[];
@@ -204,7 +206,8 @@ export function lintDesign(frontendRoot: string): LintResult {
             const atRules = selectorStack.filter(s => s.startsWith("@")).join(" ");
             if (prop.startsWith("--")) continue;
 
-            if (/important/.test(value) && !/prefers-reduced-motion/.test(atRules))
+            // 예외: 동작 줄이기 전역 리셋, 인쇄 전용 스타일, 인라인 스타일을 넣는 외부 라이브러리 덮어쓰기
+            if (/important/.test(value) && !/prefers-reduced-motion|\bprint\b/.test(atRules) && !THIRD_PARTY_SELECTOR.test(selector))
                 push("important", file, line, `${prop}: ${value}`, lines);
 
             const v = value.replace(/\s*!important\s*$/, "");

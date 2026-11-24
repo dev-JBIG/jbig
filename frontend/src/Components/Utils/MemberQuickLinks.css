@@ -17,7 +17,7 @@ a.member-quick-link,
     border: none;
     border-radius: var(--radius-md);
     background: transparent;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
     font-size: var(--text-ui);
     font-weight: 500;
     text-decoration: none;
@@ -26,7 +26,7 @@ a.member-quick-link,
 
 .member-quick-link-icon {
     flex-shrink: 0;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     transition: color var(--transition-fast);
 }
 
@@ -40,21 +40,21 @@ a.member-quick-link,
 
 .member-quick-link-ext {
     flex-shrink: 0;
-    color: var(--fgColor-muted, #59636e);
+    color: var(--fgColor-muted);
     opacity: 0.45;
     transition: opacity var(--transition-fast), transform var(--transition-fast), color var(--transition-fast);
 }
 
 a.member-quick-link:hover,
 .member-quick-link:hover {
-    background-color: var(--bgColor-neutral-muted, rgba(129, 139, 152, 0.12));
-    color: var(--fgColor-default, #1f2328);
+    background-color: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
     text-decoration: none;
 }
 
 a.member-quick-link:hover .member-quick-link-icon,
 .member-quick-link:hover .member-quick-link-icon {
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 a.member-quick-link:hover .member-quick-link-ext,
@@ -64,6 +64,6 @@ a.member-quick-link:hover .member-quick-link-ext,
 }
 
 .member-quick-link:focus-visible {
-    outline: 2px solid var(--focus-outlineColor, #0969da);
+    outline: 2px solid var(--focus-outlineColor);
     outline-offset: 2px;
 }

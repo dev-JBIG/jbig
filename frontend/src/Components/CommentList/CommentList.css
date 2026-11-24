@@ -4,16 +4,16 @@
 .user-comment-list {
     width: 100%;
     font-family: inherit;
-    border: 1px solid var(--borderColor-default, var(--color-border-light));
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
     overflow: hidden;
-    background: var(--bgColor-default, var(--color-bg-primary));
+    background: var(--bgColor-default);
 }
 
 .user-comment-item {
-    border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-bottom: 1px solid var(--borderColor-muted);
     padding: 12px 16px;
-    background: var(--bgColor-default, var(--color-bg-primary));
+    background: var(--bgColor-default);
     transition: background-color var(--transition-fast);
 }
 
@@ -22,7 +22,7 @@
 }
 
 .user-comment-item:hover {
-    background: var(--bgColor-muted, var(--color-bg-secondary));
+    background: var(--bgColor-muted);
     cursor: pointer;
 }
 
@@ -33,7 +33,7 @@
 .user-comment-item .user-comment-post {
     font-weight: 600;
     margin-bottom: 4px;
-    color: var(--fgColor-default, var(--color-text-primary));
+    color: var(--fgColor-default);
     font-size: var(--text-ui);
     white-space: nowrap;
     overflow: hidden;
@@ -41,7 +41,7 @@
 }
 
 .user-comment-item .user-comment-content {
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     margin-bottom: 4px;
     font-size: var(--text-ui);
     white-space: nowrap;
@@ -51,14 +51,14 @@
 
 .user-comment-item .user-comment-date {
     font-size: var(--text-caption);
-    color: var(--fgColor-muted, var(--color-text-tertiary));
+    color: var(--fgColor-muted);
 }
 
 .user-comment-list .loading,
 .user-comment-list .end {
     text-align: center;
     padding: 14px;
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
     font-size: var(--text-label);
-    border-top: 1px solid var(--borderColor-muted, var(--color-border-light));
+    border-top: 1px solid var(--borderColor-muted);
 }

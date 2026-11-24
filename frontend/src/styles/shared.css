@@ -18,7 +18,7 @@
     display: block;
     border-radius: var(--radius-md);
     border: 1px solid var(--borderColor-muted);
-    background-color: var(--bgColor-white, #ffffff);
+    background-color: var(--bgColor-white);
     object-fit: cover;
     object-position: center 14%;
     flex-shrink: 0;

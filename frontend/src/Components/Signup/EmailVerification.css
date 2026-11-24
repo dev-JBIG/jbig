@@ -11,19 +11,19 @@
     align-items: center;
     gap: var(--space-md);
     font-size: var(--text-label);
-    color: var(--fgColor-muted, var(--color-text-secondary));
+    color: var(--fgColor-muted);
 }
 
 .verification-expiring {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
     font-weight: 600;
 }
 
 .verification-expired-hint {
     font-size: var(--text-label);
-    color: var(--fgColor-attention, #9a6700);
-    background-color: var(--bgColor-attention-muted, #fff8c5);
-    border: 1px solid var(--borderColor-attention-muted, #d4a72c);
+    color: var(--fgColor-attention);
+    background-color: var(--bgColor-attention-muted);
+    border: 1px solid var(--borderColor-attention-muted);
     border-radius: var(--radius-md);
     padding: 8px 10px;
 }
@@ -32,7 +32,7 @@
     flex-shrink: 0;
     background: none;
     border: none;
-    color: var(--fgColor-accent, var(--color-primary));
+    color: var(--fgColor-accent);
     cursor: pointer;
     text-decoration: underline;
     font-family: inherit;

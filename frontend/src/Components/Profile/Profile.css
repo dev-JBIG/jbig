@@ -11,13 +11,13 @@
     --resume-gap-section: 28px;
     --resume-gap-item: 14px;
 
-    --resume-color-text: var(--fgColor-default, #1f2328);
-    --resume-color-muted: var(--fgColor-muted, #656d76);
-    --resume-color-meta: var(--fgColor-muted, #656d76);
-    --resume-color-border: var(--borderColor-default, #d0d7de);
-    --resume-color-bg: var(--bgColor-default, #ffffff);
-    --resume-color-bg-soft: var(--bgColor-muted, #f6f8fa);
-    --resume-color-accent: var(--fgColor-accent, #0969da);
+    --resume-color-text: var(--fgColor-default);
+    --resume-color-muted: var(--fgColor-muted);
+    --resume-color-meta: var(--fgColor-muted);
+    --resume-color-border: var(--borderColor-default);
+    --resume-color-bg: var(--bgColor-default);
+    --resume-color-bg-soft: var(--bgColor-muted);
+    --resume-color-accent: var(--fgColor-accent);
 }
 
 .profile-container {
@@ -36,7 +36,7 @@
     align-items: center;
     justify-content: center;
     min-height: 400px;
-    color: var(--fgColor-muted, #656d76);
+    color: var(--fgColor-muted);
 }
 
 /* 스피너는 앱 공통 Primer Spinner */
@@ -48,14 +48,14 @@
     /* design-lint-allow font-size-token: 오류 화면의 큰 상태 숫자 표시 */
     font-size: 48px;
     margin-bottom: 16px;
-    color: var(--fgColor-default, #1f2328);
+    color: var(--fgColor-default);
 }
 
 .profile-error button {
     margin-top: 20px;
     padding: 8px 20px;
-    background: var(--bgColor-accent-emphasis, #0969da);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background: var(--bgColor-accent-emphasis);
+    color: var(--fgColor-onEmphasis);
     border: 1px solid rgba(31, 35, 40, 0.15);
     border-radius: var(--radius-md);
     cursor: pointer;
@@ -79,14 +79,14 @@
     width: 96px;
     height: 96px;
     border-radius: 50%;
-    background: var(--bgColor-accent-emphasis, #0969da);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background: var(--bgColor-accent-emphasis);
+    border: 1px solid var(--borderColor-default);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: var(--text-display);
     font-weight: 600;
-    color: var(--fgColor-onEmphasis, #ffffff);
+    color: var(--fgColor-onEmphasis);
     flex-shrink: 0;
     overflow: hidden;
 }
@@ -137,9 +137,9 @@
 }
 
 .profile-semester {
-    background: var(--bgColor-accent-muted, #ddf4ff);
-    color: var(--fgColor-accent, #0969da);
-    border: 1px solid var(--borderColor-accent-muted, #54aeff);
+    background: var(--bgColor-accent-muted);
+    color: var(--fgColor-accent);
+    border: 1px solid var(--borderColor-accent-muted);
     padding: 2px 10px;
     border-radius: 999px;
     font-size: var(--text-caption);
@@ -169,7 +169,7 @@
 }
 
 .profile-last-login {
-    color: var(--fgColor-success, #1a7f37);
+    color: var(--fgColor-success);
 }
 
 .profile-actions {
@@ -191,13 +191,13 @@
     font-weight: 500;
     cursor: pointer;
     transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    border: 1px solid var(--borderColor-default);
     white-space: nowrap;
 }
 
 .btn-edit {
-    background: var(--bgColor-accent-emphasis, #0969da);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background: var(--bgColor-accent-emphasis);
+    color: var(--fgColor-onEmphasis);
     border-color: rgba(31, 35, 40, 0.15);
 }
 
@@ -208,20 +208,20 @@
 .btn-print,
 .btn-cancel,
 .btn-password {
-    background: var(--bgColor-muted, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
-    border-color: var(--borderColor-default, #d0d7de);
+    background: var(--bgColor-muted);
+    color: var(--fgColor-default);
+    border-color: var(--borderColor-default);
 }
 
 .btn-print:hover,
 .btn-cancel:hover,
 .btn-password:hover {
-    background: var(--bgColor-neutral-muted, #eaeef2);
+    background: var(--bgColor-neutral-muted);
 }
 
 .btn-save {
-    background: var(--bgColor-success-emphasis, #1f883d);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background: var(--bgColor-success-emphasis);
+    color: var(--fgColor-onEmphasis);
     border-color: rgba(31, 35, 40, 0.15);
 }
 
@@ -235,16 +235,16 @@
 }
 
 .btn-delete-account {
-    background: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-danger, #cf222e);
-    border-color: var(--borderColor-danger-muted, #ff8182);
+    background: var(--bgColor-default);
+    color: var(--fgColor-danger);
+    border-color: var(--borderColor-danger-muted);
     margin-top: 8px;
 }
 
 .btn-delete-account:hover {
-    background: var(--bgColor-danger-emphasis, #cf222e);
-    color: var(--fgColor-onEmphasis, #ffffff);
-    border-color: var(--bgColor-danger-emphasis, #cf222e);
+    background: var(--bgColor-danger-emphasis);
+    color: var(--fgColor-onEmphasis);
+    border-color: var(--bgColor-danger-emphasis);
 }
 
 /* ============================================================
@@ -335,8 +335,8 @@
 
 .resume-editor textarea:focus {
     outline: none;
-    border-color: var(--borderColor-accent-emphasis, var(--resume-color-accent));
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, var(--resume-color-accent));
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .editor-hint {
@@ -373,24 +373,24 @@
 }
 
 .resume-content code {
-    background: var(--bgColor-neutral-muted, rgba(175, 184, 193, 0.2));
-    color: var(--fgColor-default, #1f2328);
+    background: var(--bgColor-neutral-muted);
+    color: var(--fgColor-default);
     padding: 2px 6px;
     border-radius: var(--radius-sm);
     font-size: var(--text-label);
 }
 
 .resume-content pre {
-    background: var(--bgColor-muted, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
-    border: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    background: var(--bgColor-muted);
+    color: var(--fgColor-default);
+    border: 1px solid var(--borderColor-muted);
     padding: 16px;
     border-radius: var(--radius-md);
     overflow-x: auto;
 }
 
 .resume-content blockquote {
-    border-left: 2px solid var(--borderColor-default, #d0d7de);
+    border-left: 2px solid var(--borderColor-default);
     padding-left: 16px;
     margin: 16px 0;
     color: var(--resume-color-muted);
@@ -431,7 +431,7 @@
 }
 
 .profile-list-item:not(:last-child) {
-    border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+    border-bottom: 1px solid var(--borderColor-muted);
 }
 
 .item-title {
@@ -531,8 +531,8 @@
 }
 
 .modal-content {
-    background: var(--overlay-bgColor, var(--bgColor-default, #ffffff));
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background: var(--overlay-bgColor);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-lg);
     padding: 28px;
     max-width: 450px;
@@ -549,7 +549,7 @@
 }
 
 .modal-warning {
-    color: var(--fgColor-danger, #cf222e);
+    color: var(--fgColor-danger);
     font-size: var(--text-ui);
     line-height: 1.6;
     margin-bottom: 18px;
@@ -560,8 +560,8 @@
     padding: 10px 12px;
     border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
-    background: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-default, #1f2328);
+    background: var(--bgColor-default);
+    color: var(--fgColor-default);
     font-size: var(--text-ui);
     margin-bottom: 18px;
     box-sizing: border-box;
@@ -569,8 +569,8 @@
 
 .modal-input:focus {
     outline: none;
-    border-color: var(--borderColor-accent-emphasis, #0969da);
-    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis, #0969da);
+    border-color: var(--borderColor-accent-emphasis);
+    box-shadow: inset 0 0 0 1px var(--borderColor-accent-emphasis);
 }
 
 .modal-actions {
@@ -590,18 +590,18 @@
 }
 
 .modal-btn-cancel {
-    background: var(--bgColor-muted, #f6f8fa);
-    color: var(--fgColor-default, #1f2328);
-    border-color: var(--borderColor-default, #d0d7de);
+    background: var(--bgColor-muted);
+    color: var(--fgColor-default);
+    border-color: var(--borderColor-default);
 }
 
 .modal-btn-cancel:hover {
-    background: var(--bgColor-neutral-muted, #eaeef2);
+    background: var(--bgColor-neutral-muted);
 }
 
 .modal-btn-delete {
-    background: var(--bgColor-danger-emphasis, #cf222e);
-    color: var(--fgColor-onEmphasis, #ffffff);
+    background: var(--bgColor-danger-emphasis);
+    color: var(--fgColor-onEmphasis);
 }
 
 .modal-btn-delete:hover {
@@ -669,8 +669,8 @@
     gap: 4px;
     padding: 4px;
     margin-bottom: 16px;
-    background: var(--bgColor-muted, #f6f8fa);
-    border: 1px solid var(--borderColor-default, #d0d7de);
+    background: var(--bgColor-muted);
+    border: 1px solid var(--borderColor-default);
     border-radius: var(--radius-md);
 }
 
@@ -681,13 +681,13 @@
     border-radius: var(--radius-sm);
     font-size: var(--text-ui);
     font-weight: 500;
-    color: var(--fgColor-muted, #656d76);
+    color: var(--fgColor-muted);
     cursor: pointer;
 }
 
 .profile-edit-mode.is-active {
-    background: var(--bgColor-default, #ffffff);
-    color: var(--fgColor-accent, #0969da);
+    background: var(--bgColor-default);
+    color: var(--fgColor-accent);
     font-weight: 600;
     box-shadow: var(--shadow-sm);
 }
@@ -711,7 +711,7 @@
     width: 100%;
     min-height: 90vh;
     border: 0;
-    background: var(--bgColor-default, #ffffff);
+    background: var(--bgColor-default);
 }
 
 @media print {
@@ -726,7 +726,7 @@
     }
 
     body {
-        background: var(--bgColor-default, #ffffff) !important;
+        background: var(--bgColor-default) !important;
     }
 
     /* 헤더/푸터/사이드네비 등 페이지 외 UI 제거 */
@@ -759,15 +759,15 @@
     .profile-header {
         padding-bottom: 12px;
         margin-bottom: 14px;
-        border-bottom: 2px solid var(--fgColor-default, #0f172a);
+        border-bottom: 2px solid var(--fgColor-default);
     }
 
     .profile-avatar {
         width: 72px;
         height: 72px;
         font-size: var(--text-title-l);
-        background: var(--bgColor-muted, #e2e8f0) !important;
-        color: var(--fgColor-default, #0f172a) !important;
+        background: var(--bgColor-muted) !important;
+        color: var(--fgColor-default) !important;
     }
 
     .profile-name {
@@ -804,7 +804,7 @@
     .resume-sidebar {
         margin-bottom: 12px;
         padding-bottom: 12px;
-        border-bottom: 1px solid var(--borderColor-default, #e2e8f0);
+        border-bottom: 1px solid var(--borderColor-default);
     }
 
     .profile-section,

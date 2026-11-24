@@ -4,16 +4,16 @@
     .postdetail-container {
         padding: 16px;
         margin: 0;
-        background-color: var(--bgColor-default, var(--color-bg-primary));
+        background-color: var(--bgColor-default);
         border-radius: var(--radius-md);
-        border: 1px solid var(--borderColor-default, var(--color-border-light));
+        border: 1px solid var(--borderColor-default);
         padding-bottom: calc(var(--space-2xl) + 96px);
     }
 
     .postdetail-header {
         margin-bottom: var(--space-md);
         padding-bottom: var(--space-md);
-        border-bottom: 1px solid var(--borderColor-muted, var(--color-border-light));
+        border-bottom: 1px solid var(--borderColor-muted);
     }
 
     .postdetail-actions {

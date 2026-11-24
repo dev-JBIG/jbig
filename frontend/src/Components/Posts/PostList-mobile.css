@@ -13,7 +13,7 @@
         margin-bottom: 0;
         border: none;
         border-radius: 0;
-        border-bottom: 1px solid var(--borderColor-muted, rgba(209, 217, 224, 0.7));
+        border-bottom: 1px solid var(--borderColor-muted);
         box-shadow: none;
     }
 
@@ -75,8 +75,8 @@
         position: relative;
         margin-bottom: 10px;
         padding: 14px 16px;
-        background-color: var(--bgColor-default, var(--color-bg-primary));
-        border: 1px solid var(--borderColor-default, var(--color-border-light));
+        background-color: var(--bgColor-default);
+        border: 1px solid var(--borderColor-default);
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-sm);
         cursor: pointer;
@@ -84,13 +84,13 @@
     }
 
     .postlist-table tbody tr:hover {
-        border-color: var(--borderColor-accent-emphasis, var(--color-primary));
-        background-color: var(--bgColor-muted, var(--color-bg-secondary));
+        border-color: var(--borderColor-accent-emphasis);
+        background-color: var(--bgColor-muted);
     }
 
     .postlist-table tbody tr.announcement-row {
-        background-color: var(--bgColor-attention-muted, #fff8c5) !important;
-        border: 1px solid var(--borderColor-attention-muted, #d4a72c) !important;
+        background-color: var(--bgColor-attention-muted) !important;
+        border: 1px solid var(--borderColor-attention-muted) !important;
     }
 
     .announcement-badge.mobile-only {
@@ -100,7 +100,7 @@
 
     .announcement-title {
         font-weight: 600;
-        color: var(--fgColor-default, var(--color-text-primary));
+        color: var(--fgColor-default);
     }
 
     .postlist-table td.th-category {
@@ -124,7 +124,7 @@
     .postlist-table tbody .title-cell {
         font-size: var(--text-body);
         font-weight: 600;
-        color: var(--fgColor-default, var(--color-text-primary));
+        color: var(--fgColor-default);
         line-height: 1.45;
         margin-bottom: 8px;
         word-break: break-word;
@@ -134,7 +134,7 @@
     .postlist-table tbody .author-cell {
         display: inline-block !important;
         font-size: var(--text-label);
-        color: var(--fgColor-accent, var(--color-primary));
+        color: var(--fgColor-accent);
         font-weight: 500;
         margin-right: 12px;
         margin-bottom: 2px;
@@ -143,7 +143,7 @@
     .postlist-table td.th-date {
         display: inline-block !important;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
+        color: var(--fgColor-muted);
         margin-right: 12px;
     }
 
@@ -151,19 +151,19 @@
     .postlist-table td.th-likes {
         display: inline-block !important;
         font-size: var(--text-caption);
-        color: var(--fgColor-muted, var(--color-text-secondary));
+        color: var(--fgColor-muted);
         margin-right: 10px;
         font-weight: 400;
     }
 
     .postlist-table td.th-views::before {
         content: "조회 ";
-        color: var(--fgColor-muted, var(--color-text-tertiary));
+        color: var(--fgColor-muted);
     }
 
     .postlist-table td.th-likes::before {
         content: "좋아요 ";
-        color: var(--fgColor-muted, var(--color-text-tertiary));
+        color: var(--fgColor-muted);
     }
 
     .postlist-table td.th-likes {
