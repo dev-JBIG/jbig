@@ -19,11 +19,11 @@ import AbsenceForm from "./AbsenceForm";
 import FeedbackForm from "./FeedbackForm";
 import StudyForm from "./StudyForm";
 import RecruitmentForm from "./RecruitmentForm";
+import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, UPLOAD_MESSAGES } from "../../Utils/uploadRules";
 
 const BLOCKED_EXTENSIONS = ["jsp", "php", "asp", "cgi"];
 const MAX_FILES = 3;
 const MAX_PHOTO_FILES = 12;
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const BLOCKED_BOARD_KEYWORDS = ["공지사항", "admin", "어드민", "운영진", "관리자"];
 const BRAG_BOARD_NAME = "자랑게시판";
 const STUDY_BOARD_NAME_KEYWORDS = ["스터디", "소모임"];
@@ -217,8 +217,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             showAlert({ message: "로그인이 필요합니다.", type: 'warning' });
             return false;
         }
-        if (file.size > MAX_FILE_SIZE) {
-            showAlert({ message: `${MAX_FILE_SIZE / 1024 / 1024}MB를 초과하는 이미지는 업로드할 수 없습니다.`, type: 'warning' });
+        if (file.size > MAX_UPLOAD_BYTES) {
+            showAlert({ message: UPLOAD_MESSAGES.imageTooLarge, type: 'warning' });
             return false;
         }
 
@@ -507,7 +507,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         for (const file of willProcess) {
             const ext = file.name.split(".").pop()?.toLowerCase() || "";
             if (BLOCKED_EXTENSIONS.includes(ext)) { blockedFile = true; continue; }
-            if (file.size > MAX_FILE_SIZE) { overSize = true; continue; }
+            if (file.size > MAX_UPLOAD_BYTES) { overSize = true; continue; }
             if (isPhotoBoard && !(file.type.startsWith("image/") || isImageByName(file.name))) {
                 blockedFile = true;
                 continue;
@@ -547,7 +547,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 type: 'warning'
             });
         }
-        if (overSize) showAlert({ message: `${MAX_FILE_SIZE / 1024 / 1024}MB를 초과하는 파일은 첨부할 수 없습니다.`, type: 'warning' });
+        if (overSize) showAlert({ message: UPLOAD_MESSAGES.fileTooLarge, type: 'warning' });
         if (candidates.length > willProcess.length) {
             showAlert({ message: `최대 ${maxFiles}개까지 가능해서 ${candidates.length - willProcess.length}개는 제외되었습니다.`, type: 'info' });
         }
@@ -960,7 +960,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             className="postwrite-hidden-input"
                         />
                         <div className="postwrite-img-hint">
-                            (최대 {maxFiles}장, 파일당 {MAX_FILE_SIZE / 1024 / 1024}MB 제한)
+                            (최대 {maxFiles}장, 파일당 {MAX_UPLOAD_MB}MB 제한)
                         </div>
                         <div className="photo-grid">
                             {existingAttachments.filter(a => attachments.some(att => att.path === a.path)).map((a) => (
@@ -1014,7 +1014,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             </div>
                         ))}
                     </div>
-                    <div className="postwrite-img-hint">(최대 {maxFiles}개, 파일당 {MAX_FILE_SIZE / 1024 / 1024}MB 제한)</div>
+                    <div className="postwrite-img-hint">(최대 {maxFiles}개, 파일당 {MAX_UPLOAD_MB}MB 제한)</div>
                 </div>
             )}
 

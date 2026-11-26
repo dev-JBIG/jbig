@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
+import { getSubmitType, getTableValue, toTableCell, useMarkdownTemplateForm } from './markdownTemplateForm';
 import { useUser } from '../Utils/UserContext';
 import './PostWrite.css'; // 기존 CSS 재활용
 
@@ -7,90 +8,50 @@ interface FeedbackFormProps {
   initialContent: string;
 }
 
-// 마크다운에서 폼 데이터 추출 (수정 시 사용)
-const parseMarkdownToForm = (md: string) => {
-  const initialState = {
-    reasonType: '에러/피드백 제보',
-    reportType: '에러',
-    reportDate: '',
-    reportTime: '',
-    location: '',
-    description: '',
-    reproductionSteps: '',
-    expectedBehavior: '',
-  };
-
-  if (!md) return initialState;
-
-  // 정규식을 사용하여 테이블의 각 항목 값을 추출
-  const getValue = (key: string) => {
-    const regex = new RegExp(`\\| \\*\\*${key}\\*\\* \\| (.*?) \\|`);
-    const match = md.match(regex);
-    // <br /> 태그를 다시 \n (줄바꿈)으로 복원
-    return match ? match[1].replace(/<br \/>/g, '\n') : '';
-  };
-
-  return {
-    reasonType: md.match(/.* (.*?) 제출합니다\./)?.[1] || '에러/피드백 제보',
-    reportType: getValue('제보 유형') || '에러',
-    reportDate: getValue('발생 날짜') || '',
-    reportTime: getValue('발생 시간') || '',
-    location: getValue('발생 위치/페이지') || '',
-    description: getValue('상세 내용') || '',
-    reproductionSteps: getValue('재현 방법') || '',
-    expectedBehavior: getValue('기대 동작') || '',
-  };
+type FeedbackState = {
+  reasonType: string;
+  reportType: string;
+  reportDate: string;
+  reportTime: string;
+  location: string;
+  description: string;
+  reproductionSteps: string;
+  expectedBehavior: string;
 };
 
+// 마크다운에서 폼 데이터 추출 (수정 시 사용)
+const parseMarkdownToForm = (md: string): FeedbackState => ({
+  reasonType: getSubmitType(md) || '에러/피드백 제보',
+  reportType: getTableValue(md, '제보 유형') || '에러',
+  reportDate: getTableValue(md, '발생 날짜'),
+  reportTime: getTableValue(md, '발생 시간'),
+  location: getTableValue(md, '발생 위치/페이지'),
+  description: getTableValue(md, '상세 내용'),
+  reproductionSteps: getTableValue(md, '재현 방법'),
+  expectedBehavior: getTableValue(md, '기대 동작'),
+});
+
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ setContent, initialContent }) => {
-  // 1. useUser 훅을 사용해 로그인한 유저 정보 가져오기
   const { user } = useUser();
   const userName = user?.username || '자동입력실패';
 
-  // 2. 폼 데이터를 관리할 state
-  const [formState, setFormState] = useState(parseMarkdownToForm(initialContent));
-
-  // 3. 폼 내용이 변경될 때마다 마크다운 텍스트를 생성하여 부모(PostWrite)의 content state 업데이트
-  useEffect(() => {
-    const { reasonType, reportType, reportDate, reportTime, location, description, reproductionSteps, expectedBehavior } = formState;
-
-    // 4. 입력된 줄바꿈(\n)을 HTML <br /> 태그로 변경 (마크다운 테이블 내 줄바꿈)
-    const descriptionWithBreaks = description.replace(/\n/g, '<br />');
-    const reproductionStepsWithBreaks = reproductionSteps.replace(/\n/g, '<br />');
-    const expectedBehaviorWithBreaks = expectedBehavior.replace(/\n/g, '<br />');
-
-    const generatedMarkdown = `${userName} ${reasonType} 제출합니다.
+  // 글 본문 형식은 기존 글과 같아야 한다(수정 화면에서 다시 읽음). 재현 방법, 기대 동작은 에러 제보일 때만
+  const generate = useCallback((f: FeedbackState) => `${userName} ${f.reasonType} 제출합니다.
 
 | 항목 | 내용 |
 | --- | --- |
 | **성명** | ${userName} |
-| **제보 유형** | ${reportType} |
-| **발생 날짜** | ${reportDate} |
-| **발생 시간** | ${reportTime} |
-| **발생 위치/페이지** | ${location} |
-| **상세 내용** | ${descriptionWithBreaks} |
-${reportType === '에러' ? `| **재현 방법** | ${reproductionStepsWithBreaks} |\n| **기대 동작** | ${expectedBehaviorWithBreaks} |` : ''}
-`;
-    setContent(generatedMarkdown);
-  }, [formState, userName, setContent]);
+| **제보 유형** | ${f.reportType} |
+| **발생 날짜** | ${f.reportDate} |
+| **발생 시간** | ${f.reportTime} |
+| **발생 위치/페이지** | ${f.location} |
+| **상세 내용** | ${toTableCell(f.description)} |
+${f.reportType === '에러' ? `| **재현 방법** | ${toTableCell(f.reproductionSteps)} |\n| **기대 동작** | ${toTableCell(f.expectedBehavior)} |` : ''}
+`, [userName]);
 
-  // 5. 수정 모드일 때, initialContent가 비동기로 로드되면 폼 상태 업데이트
-  useEffect(() => {
-    if (initialContent) {
-      setFormState(parseMarkdownToForm(initialContent));
-    }
-  }, [initialContent]);
-
-  // 6. 폼 입력 핸들러
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const { state: formState, handleChange } = useMarkdownTemplateForm(
+    initialContent, setContent, parseMarkdownToForm, generate,
+  );
 
   // 7. 렌더링
   return (

@@ -4,30 +4,28 @@ import { ImageBlock } from '../../types';
 import { uploadAttachment } from '../../../../API/req';
 import { useUser } from '../../../Utils/UserContext';
 import { sanitizeMediaUrl } from '../../../Utils/safeUrl';
+import { useAlert } from '../../../Utils/AlertContext';
+import { getImageUploadError, PROFILE_IMAGE_EXT_RE, UPLOAD_MESSAGES } from '../../../../Utils/uploadRules';
 
 interface Props {
   block: ImageBlock;
   onChange: (block: ImageBlock) => void;
 }
 
-const ALLOWED_IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp)$/i;
-const MAX_BLOCK_IMAGE_BYTES = 10 * 1024 * 1024;
 
 const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const { accessToken } = useUser();
+  const { showAlert } = useAlert();
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file || !accessToken) return;
-    if (!ALLOWED_IMAGE_EXT_RE.test(file.name)) {
-      alert('PNG, JPG, GIF, WebP, BMP 이미지만 업로드할 수 있습니다.');
-      return;
-    }
-    if (file.size > MAX_BLOCK_IMAGE_BYTES) {
-      alert('이미지는 최대 10MB까지 업로드할 수 있습니다.');
+    const fileError = getImageUploadError(file, PROFILE_IMAGE_EXT_RE);
+    if (fileError) {
+      showAlert({ message: fileError, type: 'warning' });
       return;
     }
     setUploading(true);
@@ -38,7 +36,7 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
         data: { ...block.data, path: result.path, url: result.url || '', alt: file.name },
       });
     } catch {
-      alert('이미지 업로드에 실패했습니다.');
+      showAlert({ message: UPLOAD_MESSAGES.uploadFailed, type: 'error' });
     } finally {
       setUploading(false);
     }

@@ -1,5 +1,5 @@
 import { AxiosError, isAxiosError } from "axios";
-import axios from "./client";
+import axios, { authHeaders } from "./client";
 import { BASE_URL } from "./auth";
 import { optimizeImageForUpload } from "../Utils/imageOptimize";
 import {
@@ -170,7 +170,7 @@ export const signupUser = async (
 
 // sidebar 게시판 목록 조회 함수
 export const getBoards = async (token?: string | null) => {
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+    const config = { headers: authHeaders(token) };
     const response = await axios.get(`${BASE_URL}/api/categories/`, config);
     return response.data;
 };
@@ -263,7 +263,7 @@ export const fetchBoardPosts = async (
     const makeRequest = async (useToken: boolean) => {
         const reqConfig = { ...config };
         if (useToken && token) {
-            reqConfig.headers = { ...reqConfig.headers, Authorization: `Bearer ${token}` };
+            reqConfig.headers = { ...reqConfig.headers, ...authHeaders(token) };
         }
         return axios.get(url, reqConfig);
     };
@@ -328,7 +328,7 @@ export const fetchPhotoAlbumPosts = async (
 // 퀴즈 url 반환
 export const fetchQuizUrl = async (token: string): Promise<string | null> => {
     const res = await axios.get(`${BASE_URL}/api/quiz-url/`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
     const quizUrl = typeof res.data?.quiz_url === "string" ? res.data.quiz_url.trim() : "";
     return quizUrl || null;
@@ -354,7 +354,7 @@ export const fetchSiteSettings = async (token?: string | null): Promise<SiteSett
     
     try {
         const res = await axios.get(url, {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: authHeaders(token),
         });
         return res.data;
     } catch (err) {
@@ -371,9 +371,7 @@ export const updateSiteSettings = async (
     
     try {
         const res = await axios.put(url, settings, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            headers: authHeaders(token),
         });
         return res.data;
     } catch (err) {
@@ -428,7 +426,7 @@ export const fetchBoardSearchPosts = async (
 export const fetchPostDetail = async (postId: number, token?: string | null) => {
     try {
         const response = await axios.get(`${BASE_URL}/api/posts/${postId}/`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+            headers: authHeaders(token),
         });
         return response.data;
     } catch (error) {
@@ -448,9 +446,7 @@ export const togglePostLike = async (postId: number, token: string) => {
         url,
         {},
         {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            headers: authHeaders(token),
         }
     );
     return res.data;
@@ -463,9 +459,7 @@ export const toggleCommentLike = async (commentId: number, token: string) => {
         url,
         {},
         {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            headers: authHeaders(token),
         }
     );
     return res.data;
@@ -482,9 +476,7 @@ export const fetchUserPosts = async (
         Accept: "application/json",
     };
     
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+    Object.assign(headers, authHeaders(token));
 
     const res = await axios.get(`${BASE_URL}/api/users/${encodeURIComponent(userId)}/posts/`, {
         params: { page, page_size: pageSize },
@@ -515,7 +507,7 @@ export const uploadAttachment = async (file: File, token: string): Promise<{ pat
         generateUrlResponse = await axios.post(
             `${BASE_URL}/api/boards/files/generate-upload-url/`,
             { filename: preparedFile.name },
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            { headers: { "Content-Type": "application/json", ...authHeaders(token) } }
         );
     } catch (error: unknown) {
         return { path: "", name: preparedFile.name, message: getErrorMessage(error, "업로드 URL 요청에 실패했습니다.") };
@@ -539,7 +531,7 @@ export const uploadAttachment = async (file: File, token: string): Promise<{ pat
         await axios.post(
             `${BASE_URL}/api/boards/files/confirm-upload/`,
             { file_key },
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            { headers: { "Content-Type": "application/json", ...authHeaders(token) } }
         );
     } catch {
         // ACL 적용 실패해도 파일 자체는 업로드됨
@@ -559,7 +551,7 @@ export const deleteUploadedFile = async (path: string, token: string): Promise<{
             data: { path },
             headers: {
                 "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
+                ...authHeaders(token),
             },
         });
         return { success: true };
@@ -590,7 +582,7 @@ export interface AdminBoard {
 
 export const getAdminBoards = async (token: string): Promise<AdminBoard[]> => {
     const response = await axios.get(`${BASE_URL}/api/admin/boards/`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
     return response.data as AdminBoard[];
 };
@@ -605,7 +597,7 @@ export const updateBoardPermissions = async (
         await axios.patch(
             `${BASE_URL}/api/admin/boards/${boardId}/`,
             patch,
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            { headers: { "Content-Type": "application/json", ...authHeaders(token) } }
         );
         return { success: true };
     } catch (error: unknown) {
@@ -628,7 +620,7 @@ export const downloadGatedAttachment = async (
             return { success: false, message: "허용되지 않는 다운로드 경로입니다." };
         }
         const response = await axios.get(resolved, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: authHeaders(token),
             responseType: "blob",
         });
         const blobUrl = window.URL.createObjectURL(response.data);
@@ -657,7 +649,7 @@ export const createPost = async (
     token: string
 ) => {
     const response = await axios.post(`${BASE_URL}/api/boards/${boardId}/posts/`, postData, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
     return response.data;
 };
@@ -674,7 +666,7 @@ export const deletePost = async (
 ): Promise<{ deleted?: boolean; status?: number; notFound?: boolean; message?: string }> => {
     try {
         const res = await axios.delete<DeletePostResponse>(`${BASE_URL}/api/posts/${postId}/`, {
-            headers: { Accept: "application/json", Authorization: `Bearer ${token}` },
+            headers: { Accept: "application/json", ...authHeaders(token) },
             withCredentials: true,
         });
 
@@ -711,7 +703,7 @@ export const modifyPost = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
         withCredentials: true,
         responseType: "json",
@@ -725,7 +717,7 @@ export const modifyPost = async (
 export const deleteComment = async (commentId: number, token: string): Promise<void> => {
     const url = `${BASE_URL}/api/comments/${commentId}/`;
     await axios.delete(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
         withCredentials: true,
     });
 };
@@ -741,9 +733,7 @@ export const createComment = async (
         Accept: "application/json",
         "Content-Type": "application/json",
     };
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+    Object.assign(headers, authHeaders(token));
     const res = await axios.post(url, payload, {
         headers,
         withCredentials: true,
@@ -811,7 +801,7 @@ export const updateComment = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
         withCredentials: true,
         responseType: "json",
@@ -877,7 +867,7 @@ export const fetchUserInfo = async (
     const res = await axios.get(url, {
         headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
         withCredentials: true,
         responseType: "json",
@@ -919,9 +909,7 @@ export const fetchUserComments = async (
         Accept: "application/json",
     };
     
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+    Object.assign(headers, authHeaders(token));
 
     const res = await axios.get(url, {
         params: { page, page_size: pageSize },
@@ -982,7 +970,7 @@ export async function changePassword(
         const res = await axios.post<{ detail?: string }>(
             `${BASE_URL}/api/users/password/change/`,
             { old_password: oldPassword, new_password1: newPassword1, new_password2: newPassword2 },
-            { headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } }
+            { headers: { ...authHeaders(token), "Content-Type": "application/json" } }
         );
         return { success: true, message: res.data?.detail || "비밀번호 변경 성공" };
     } catch (error: unknown) {
@@ -1035,7 +1023,7 @@ export const createCalendarEvent = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
         withCredentials: true,
         responseType: "json",
@@ -1069,7 +1057,7 @@ export const updateCalendarEvent = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
         withCredentials: true,
         responseType: "json",
@@ -1092,7 +1080,7 @@ export const deleteCalendarEvent = async (
     await axios.delete(url, {
         headers: {
             Accept: "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
         withCredentials: true,
         responseType: "json",
@@ -1144,7 +1132,7 @@ export const fetchPublicProfile = async (
 ): Promise<PublicProfile> => {
     const url = `${BASE_URL}/api/users/profile/${encodeURIComponent(username)}/`;
     const res = await axios.get(url, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: authHeaders(token),
         params: includeActivity ? { include_activity: "1" } : undefined,
     });
     return res.data;
@@ -1167,7 +1155,7 @@ export const updateResume = async (resume: string, token: string): Promise<{ res
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
     });
     return res.data;
@@ -1179,7 +1167,7 @@ export const updateProfileBlocks = async (blocks: ProfileBlockData[], token: str
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
     });
     return res.data;
@@ -1194,7 +1182,7 @@ export const updateProfileHtml = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
         },
     });
     return res.data;
@@ -1218,7 +1206,7 @@ export interface NotificationItem {
 export const fetchNotifications = async (token: string): Promise<NotificationItem[]> => {
     const url = `${BASE_URL}/api/notifications/`;
     const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
     // 페이지네이션 응답일 경우 results 배열 반환, 아니면 그대로 반환
     if (Array.isArray(res.data)) {
@@ -1230,7 +1218,7 @@ export const fetchNotifications = async (token: string): Promise<NotificationIte
 export const fetchUnreadNotificationCount = async (token: string): Promise<number> => {
     const url = `${BASE_URL}/api/notifications/unread-count/`;
     const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
     return res.data.unread_count;
 };
@@ -1240,7 +1228,7 @@ export const markNotificationRead = async (token: string, notificationId?: numbe
         ? `${BASE_URL}/api/notifications/${notificationId}/mark-read/`
         : `${BASE_URL}/api/notifications/mark-read/`;
     await axios.post(url, {}, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
 };
 
@@ -1260,7 +1248,7 @@ export const fetchDraft = async (token: string): Promise<DraftData | null> => {
     const url = `${BASE_URL}/api/draft/`;
     try {
         const res = await axios.get(url, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: authHeaders(token),
         });
         return res.data;
     } catch (err) {
@@ -1279,7 +1267,7 @@ export const saveDraft = async (
     const url = `${BASE_URL}/api/draft/`;
     const res = await axios.post(url, data, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
             "Content-Type": "application/json",
         },
     });
@@ -1290,7 +1278,7 @@ export const saveDraft = async (
 export const deleteDraft = async (token: string): Promise<void> => {
     const url = `${BASE_URL}/api/draft/delete/`;
     await axios.delete(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
 };
 
@@ -1302,7 +1290,7 @@ export const deleteAccount = async (password: string, token: string): Promise<{ 
             { password },
             {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    ...authHeaders(token),
                     "Content-Type": "application/json"
                 }
             }
@@ -1346,9 +1334,7 @@ export interface PopupCreate {
 export const fetchActivePopups = async (token?: string | null): Promise<PopupItem[]> => {
     const url = `${BASE_URL}/api/popups/`;
     const headers: any = {};
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
+    Object.assign(headers, authHeaders(token));
     const res = await axios.get(url, { headers });
     return res.data;
 };
@@ -1356,7 +1342,7 @@ export const fetchActivePopups = async (token?: string | null): Promise<PopupIte
 // 팝업 dismiss (다시 보지 않기)
 export const dismissPopup = async (popupId: number, token: string): Promise<void> => {
     await axios.post(`${BASE_URL}/api/popups/${popupId}/dismiss/`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
 };
 
@@ -1364,7 +1350,7 @@ export const dismissPopup = async (popupId: number, token: string): Promise<void
 export const fetchAllPopups = async (token: string): Promise<PopupItem[]> => {
     const url = `${BASE_URL}/api/popups/`;
     const res = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: authHeaders(token),
     });
     return res.data;
 };
@@ -1374,7 +1360,7 @@ export const createPopup = async (data: PopupCreate, token: string): Promise<Pop
     const url = `${BASE_URL}/api/popups/`;
     const res = await axios.post(url, data, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
             "Content-Type": "application/json"
         }
     });
@@ -1386,7 +1372,7 @@ export const updatePopup = async (id: number, data: Partial<PopupCreate>, token:
     const url = `${BASE_URL}/api/popups/${id}/`;
     const res = await axios.patch(url, data, {
         headers: {
-            Authorization: `Bearer ${token}`,
+            ...authHeaders(token),
             "Content-Type": "application/json"
         }
     });
@@ -1397,7 +1383,7 @@ export const updatePopup = async (id: number, data: Partial<PopupCreate>, token:
 export const deletePopup = async (id: number, token: string): Promise<void> => {
     const url = `${BASE_URL}/api/popups/${id}/`;
     await axios.delete(url, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: authHeaders(token)
     });
 };
 
@@ -1407,7 +1393,7 @@ export const deletePopup = async (id: number, token: string): Promise<void> => {
 export const fetchRecruitmentDetail = async (postId: number, token?: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/`;
     const headers: Record<string, string> = {};
-    if (token) headers.Authorization = `Bearer ${token}`;
+    Object.assign(headers, authHeaders(token));
     const res = await axios.get(url, { headers });
     return res.data;
 };
@@ -1416,7 +1402,7 @@ export const fetchRecruitmentDetail = async (postId: number, token?: string): Pr
 export const updateRecruitment = async (postId: number, data: any, token: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/`;
     const res = await axios.patch(url, data, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+        headers: { ...authHeaders(token), "Content-Type": "application/json" }
     });
     return res.data;
 };
@@ -1425,7 +1411,7 @@ export const updateRecruitment = async (postId: number, data: any, token: string
 export const changeRecruitmentStatus = async (postId: number, action: string, token: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/${action}/`;
     const res = await axios.post(url, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: authHeaders(token)
     });
     return res.data;
 };
@@ -1434,7 +1420,7 @@ export const changeRecruitmentStatus = async (postId: number, action: string, to
 export const applyToRecruitment = async (postId: number, message: string, token: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/apply/`;
     const res = await axios.post(url, { message }, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+        headers: { ...authHeaders(token), "Content-Type": "application/json" }
     });
     return res.data;
 };
@@ -1443,7 +1429,7 @@ export const applyToRecruitment = async (postId: number, message: string, token:
 export const fetchMyApplication = async (postId: number, token: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/my-application/`;
     try {
-        const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await axios.get(url, { headers: authHeaders(token) });
         return res.data;
     } catch {
         return null;
@@ -1453,13 +1439,13 @@ export const fetchMyApplication = async (postId: number, token: string): Promise
 // 지원 철회
 export const withdrawApplication = async (postId: number, token: string): Promise<void> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/my-application/`;
-    await axios.delete(url, { headers: { Authorization: `Bearer ${token}` } });
+    await axios.delete(url, { headers: authHeaders(token) });
 };
 
 // 지원자 목록 조회
 export const fetchApplications = async (postId: number, token: string): Promise<any[]> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/applications/`;
-    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await axios.get(url, { headers: authHeaders(token) });
     return res.data;
 };
 
@@ -1469,7 +1455,7 @@ export const updateApplicationStatus = async (
 ): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/applications/${appId}/${action}/`;
     const res = await axios.post(url, { recruiter_note: recruiterNote }, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }
+        headers: { ...authHeaders(token), "Content-Type": "application/json" }
     });
     return res.data;
 };
@@ -1477,14 +1463,14 @@ export const updateApplicationStatus = async (
 // 내가 만든 모집 목록
 export const fetchMyRecruitments = async (token: string): Promise<any[]> => {
     const url = `${BASE_URL}/api/recruitments/my-recruitments/`;
-    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await axios.get(url, { headers: authHeaders(token) });
     return res.data;
 };
 
 // 내가 지원한 목록
 export const fetchMyApplications = async (token: string): Promise<any[]> => {
     const url = `${BASE_URL}/api/recruitments/my-applications/`;
-    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await axios.get(url, { headers: authHeaders(token) });
     return res.data;
 };
 
@@ -1492,6 +1478,6 @@ export const fetchMyApplications = async (token: string): Promise<any[]> => {
 
 export const fetchNotionPage = async (pageId: string, token: string): Promise<any> => {
     const url = `${BASE_URL}/api/notion/${encodeURIComponent(pageId)}/`;
-    const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await axios.get(url, { headers: authHeaders(token) });
     return res.data;
 };
