@@ -1,6 +1,6 @@
 import React from 'react';
 import { getTableValue, toTableCell, useMarkdownTemplateForm } from './markdownTemplateForm';
-import MDEditor from '@uiw/react-md-editor/nohighlight';
+import MDEditor from '@uiw/react-md-editor';
 import { safeSanitizePlugin } from '../Utils/safeMarkdown';
 import { useColorMode } from '../Utils/ThemeContext';
 import './PostWrite.css';

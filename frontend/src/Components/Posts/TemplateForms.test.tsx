@@ -15,7 +15,7 @@ jest.mock("../Utils/ThemeContext", () => ({
     useColorMode: () => ({ resolvedColorMode: "light" }),
 }));
 jest.mock("../Utils/safeMarkdown", () => ({ safeSanitizePlugin: () => undefined }));
-jest.mock("@uiw/react-md-editor/nohighlight", () => {
+jest.mock("@uiw/react-md-editor", () => {
     const Editor = ({ value, onChange }: { value?: string; onChange?: (v?: string) => void }) => (
         <textarea aria-label="활동 계획" value={value} onChange={(e) => onChange?.(e.target.value)} />
     );

@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState, useMemo, useCallback} from "react";
 import "./PostWrite.css";
 import {useNavigate, useParams} from "react-router-dom";
-import MDEditor, { commands, ICommand } from '@uiw/react-md-editor/nohighlight';
+import MDEditor, { commands, ICommand } from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import '@uiw/react-markdown-preview/markdown.css';
 import remarkMath from 'remark-math';

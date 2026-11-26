@@ -52,7 +52,6 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@uiw/react-md-editor/nohighlight$": "<rootDir>/node_modules/@uiw/react-md-editor/lib/index.nohighlight.js",
       "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
       "^@oddbird/popover-polyfill/fn$": "<rootDir>/node_modules/@oddbird/popover-polyfill/dist/popover-fn.cjs.js",
       "^@github/relative-time-element$": "<rootDir>/src/__mocks__/relativeTimeMock.js",

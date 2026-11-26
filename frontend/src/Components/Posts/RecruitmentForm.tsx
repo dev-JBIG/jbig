@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import MDEditor from '@uiw/react-md-editor/nohighlight';
+import MDEditor from '@uiw/react-md-editor';
 import { Button } from '@primer/react';
 import { safeSanitizePlugin } from '../Utils/safeMarkdown';
 import { useColorMode } from '../Utils/ThemeContext';
