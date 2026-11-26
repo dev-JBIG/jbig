@@ -1,4 +1,5 @@
 import re
+import hashlib
 import logging
 
 import bleach
@@ -6,9 +7,9 @@ from botocore.exceptions import ClientError
 
 from django.conf import settings
 from django.db import transaction
-from django.db.models import Prefetch
 from django.urls import reverse
 from rest_framework import serializers
+from rest_framework.response import Response
 
 from .models import Category, Board, Post, Comment, CommentLike, Notification, Draft, generate_anonymous_nickname
 from jbig_backend.storage import get_s3_client, is_safe_upload_key, public_media_url
@@ -271,7 +272,113 @@ class CategoryWithBoardsSerializer(serializers.ModelSerializer):
         model = Category
         fields = ['category', 'boards']
 
-class CommentSerializer(serializers.ModelSerializer):
+# 댓글 직렬화에 쓰는 관계. 작성자, 글(제목, 게시판, 글쓴이 = 삭제 권한 판정)
+COMMENT_RELATED = ('author', 'post', 'post__author', 'post__board')
+
+
+def load_comment_trees(comments, user=None):
+    """댓글 목록과 그 아래 모든 대댓글을 단계마다 쿼리 한 번씩 읽어 트리 캐시를 채운다.
+
+    CommentSerializer 의 children(RecursiveField)과 likes 는 여기서 채운 캐시를 쓰므로
+    댓글 수와 상관없이 쿼리 수가 일정하다. 반환값은 직렬화 context 에 넣을
+    "내가 좋아요 누른 댓글 id 집합"(로그인 안 했으면 None).
+    """
+    level = list(comments)
+    all_comments = []
+    while level:
+        all_comments.extend(level)
+        children = list(
+            Comment.objects.filter(parent_id__in=[c.id for c in level])
+            .select_related(*COMMENT_RELATED)
+            .prefetch_related('likes')
+            .order_by('created_at', 'id')
+        )
+        by_parent = {}
+        for child in children:
+            by_parent.setdefault(child.parent_id, []).append(child)
+        for c in level:
+            cache = getattr(c, '_prefetched_objects_cache', None)
+            if cache is None:
+                cache = c._prefetched_objects_cache = {}
+            cache['children'] = by_parent.get(c.id, [])
+        level = children
+
+    if not (user and user.is_authenticated):
+        return None
+    return set(
+        CommentLike.objects
+        .filter(user=user, comment_id__in=[c.id for c in all_comments])
+        .values_list('comment_id', flat=True)
+    )
+
+
+def comment_list_queryset(queryset):
+    """댓글 목록 뷰의 기본 쿼리셋에 직렬화용 관계를 붙인다."""
+    return queryset.select_related(*COMMENT_RELATED).prefetch_related('likes')
+
+
+class CommentTreeListMixin:
+    """댓글 목록 뷰 공통: 페이지 단위로 트리를 미리 읽고 좋아요 여부를 한 번에 계산한다."""
+
+    def list(self, request, *args, **kwargs):
+        queryset = comment_list_queryset(self.filter_queryset(self.get_queryset()))
+        page = self.paginate_queryset(queryset)
+        comments = list(page) if page is not None else list(queryset)
+        liked_ids = load_comment_trees(comments, request.user)
+        context = self.get_serializer_context()
+        if liked_ids is not None:
+            context['liked_comment_ids'] = liked_ids
+        data = self.get_serializer_class()(comments, many=True, context=context).data
+        if page is not None:
+            return self.get_paginated_response(data)
+        return Response(data)
+
+
+class AuthorDisplayMixin:
+    """글, 댓글 시리얼라이저 공통 작성자 표시(author, user_id, author_semester).
+
+    - 탈퇴한 사용자: '탈퇴한 사용자' / '탈퇴한사용자' / ''
+    - 익명 글: 로그인한 회원에게는 실명, 비회원에게는 글마다 같은 무작위 닉네임과 '익명', 학기 숨김
+    """
+    # 학기가 비어 있을 때 ''로 줄지(댓글) None 그대로 둘지(글)
+    semester_none_as_blank = False
+
+    def _viewer_is_member(self):
+        request = self.context.get('request')
+        user = request.user if request else None
+        return bool(user and user.is_authenticated)
+
+    def _anonymous_post_id(self, obj):
+        """익명 닉네임을 글마다 다르게 만드는 기준 글 id. 글은 자기 id, 댓글은 글 id"""
+        return obj.id
+
+    def _hides_identity(self, obj):
+        return obj.is_anonymous and not self._viewer_is_member()
+
+    def get_author(self, obj):
+        if not obj.author:
+            return "탈퇴한 사용자"
+        if self._hides_identity(obj):
+            return generate_anonymous_nickname(obj.author.id, self._anonymous_post_id(obj))
+        return obj.author.username
+
+    def get_user_id(self, obj):
+        if not obj.author:
+            return '탈퇴한사용자'
+        if self._hides_identity(obj):
+            return '익명'
+        return obj.author.email.split('@')[0]
+
+    def get_author_semester(self, obj):
+        if not obj.author or self._hides_identity(obj):
+            return ''
+        semester = obj.author.semester
+        if semester is None and self.semester_none_as_blank:
+            return ''
+        return semester
+
+
+class CommentSerializer(AuthorDisplayMixin, serializers.ModelSerializer):
     user_id = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     author_semester = serializers.SerializerMethodField()
@@ -291,70 +398,23 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('user_id', 'author', 'author_semester', 'created_at', 'children', 'is_owner', 'is_deleted', 'post_id', 'post_title', 'board_id', 'likes', 'isLiked', 'can_delete')
 
 
-    # 작성자 이름 파싱 로직
-    def get_author(self, obj):
-        # author가 None인 경우 처리
-        if not obj.author:
-            # guest_id가 있으면 비회원 댓글
-            if obj.guest_id:
-                # guest_id의 해시값을 user_id처럼 사용하여 무작위 닉네임 생성
-                import hashlib
-                guest_hash = int(hashlib.md5(obj.guest_id.encode()).hexdigest()[:8], 16)
-                return generate_anonymous_nickname(guest_hash, obj.post.id)
-            # guest_id가 없으면 탈퇴한 사용자
-            return "탈퇴한 사용자"
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글인 경우
-        if obj.is_anonymous:
-            # 로그인한 회원은 실명을 볼 수 있음
-            if user and user.is_authenticated:
-                return obj.author.username
-            else:
-                # 비회원은 무작위 닉네임을 봄 (익명성 보장을 위해 실제 semester 사용 안 함)
-                # 같은 게시글 내에서는 동일한 닉네임 유지를 위해 post.id 사용
-                return generate_anonymous_nickname(obj.author.id, obj.post.id)
-        else:
-            # 익명이 아닌 경우 실명 표시
-            return obj.author.username
+    # 비회원 댓글(author 없음 + guest_id)만 댓글 전용으로 처리하고 나머지는 AuthorDisplayMixin
+    semester_none_as_blank = True
 
+    def get_author(self, obj):
+        if not obj.author and obj.guest_id:
+            # guest_id 해시를 회원 id 처럼 써서 글마다 같은 무작위 닉네임
+            guest_hash = int(hashlib.md5(obj.guest_id.encode()).hexdigest()[:8], 16)
+            return generate_anonymous_nickname(guest_hash, obj.post_id)
+        return super().get_author(obj)
 
     def get_user_id(self, obj):
-        # author가 None인 경우 처리
-        if not obj.author:
-            # guest_id가 있으면 비회원, 없으면 탈퇴한 사용자
-            return '비회원' if obj.guest_id else '탈퇴한사용자'
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글인 경우
-        if obj.is_anonymous:
-            # 로그인한 회원은 실제 user_id를 볼 수 있음
-            if user and user.is_authenticated:
-                return obj.author.email.split('@')[0]
-            else:
-                # 비회원은 익명으로 표시
-                return '익명'
-        else:
-            return obj.author.email.split('@')[0]
-    
-    def get_author_semester(self, obj):
-        # author가 None인 경우 빈 문자열 반환 (비회원 또는 탈퇴한 사용자)
-        if not obj.author:
-            return ''
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글이고 비회원인 경우 학기 정보 숨김 (빈 문자열 반환)
-        if obj.is_anonymous and not (user and user.is_authenticated):
-            return ''
-        
-        # semester가 None이면 빈 문자열 반환
-        return obj.author.semester if obj.author.semester is not None else ''
+        if not obj.author and obj.guest_id:
+            return '비회원'
+        return super().get_user_id(obj)
+
+    def _anonymous_post_id(self, obj):
+        return obj.post_id
 
     def get_is_owner(self, obj):
         # 탈퇴한 사용자의 게시글/댓글은 소유자가 없음
@@ -449,7 +509,7 @@ class CommentSerializer(serializers.ModelSerializer):
             representation['user_id'] = '알 수 없는 사용자'
         return representation
 
-class PostSummarySerializer(serializers.ModelSerializer):
+class PostSummarySerializer(AuthorDisplayMixin, serializers.ModelSerializer):
     user_id = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     author_semester = serializers.SerializerMethodField()
@@ -489,59 +549,6 @@ class PostSummarySerializer(serializers.ModelSerializer):
             'deadline': recruitment.deadline,
         }
 
-    def get_author(self, obj):
-        # 탈퇴한 사용자 처리
-        if not obj.author:
-            return "탈퇴한 사용자"
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글인 경우
-        if obj.is_anonymous:
-            # 로그인한 회원은 실명을 볼 수 있음
-            if user and user.is_authenticated:
-                return obj.author.username
-            else:
-                # 비회원은 무작위 닉네임을 봄 (익명성 보장을 위해 실제 semester 사용 안 함)
-                return generate_anonymous_nickname(obj.author.id, obj.id)
-        else:
-            # 익명이 아닌 경우 실명 표시
-            return obj.author.username
-
-
-    def get_user_id(self, obj):
-        # 탈퇴한 사용자 처리
-        if not obj.author:
-            return '탈퇴한사용자'
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글인 경우
-        if obj.is_anonymous:
-            # 로그인한 회원은 실제 user_id를 볼 수 있음
-            if user and user.is_authenticated:
-                return obj.author.email.split('@')[0]
-            else:
-                # 비회원은 익명으로 표시
-                return '익명'
-        else:
-            return obj.author.email.split('@')[0]
-    
-    def get_author_semester(self, obj):
-        # 탈퇴한 사용자 처리
-        if not obj.author:
-            return ''
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글이고 비회원인 경우 학기 정보 숨김 (빈 문자열 반환)
-        if obj.is_anonymous and not (user and user.is_authenticated):
-            return ''
-        
-        return obj.author.semester
 
 class PostListSerializer(PostSummarySerializer):
     attachment_paths = serializers.SerializerMethodField()
@@ -770,7 +777,7 @@ class PostCreateUpdateSerializer(serializers.ModelSerializer):
             instance.save(update_fields=['search_vector'])
         return instance
 
-class PostDetailSerializer(serializers.ModelSerializer):
+class PostDetailSerializer(AuthorDisplayMixin, serializers.ModelSerializer):
     user_id = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     author_semester = serializers.SerializerMethodField()
@@ -805,94 +812,17 @@ class PostDetailSerializer(serializers.ModelSerializer):
         from recruitments.serializers import RecruitmentDetailSerializer
         return RecruitmentDetailSerializer(rec, context=self.context).data
 
-    def get_author(self, obj):
-        # 탈퇴한 사용자 처리
-        if not obj.author:
-            return "탈퇴한 사용자"
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글인 경우
-        if obj.is_anonymous:
-            # 로그인한 회원은 실명을 볼 수 있음
-            if user and user.is_authenticated:
-                return obj.author.username
-            else:
-                # 비회원은 무작위 닉네임을 봄 (익명성 보장을 위해 실제 semester 사용 안 함)
-                return generate_anonymous_nickname(obj.author.id, obj.id)
-        else:
-            # 익명이 아닌 경우 실명 표시
-            return obj.author.username
-
-
-    def get_user_id(self, obj):
-        # 탈퇴한 사용자 처리
-        if not obj.author:
-            return '탈퇴한사용자'
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글인 경우
-        if obj.is_anonymous:
-            # 로그인한 회원은 실제 user_id를 볼 수 있음
-            if user and user.is_authenticated:
-                return obj.author.email.split('@')[0]
-            else:
-                # 비회원은 익명으로 표시
-                return '익명'
-        else:
-            return obj.author.email.split('@')[0]
-    
-    def get_author_semester(self, obj):
-        # 탈퇴한 사용자 처리
-        if not obj.author:
-            return ''
-        
-        request = self.context.get('request')
-        user = request.user if request else None
-        
-        # 익명 작성글이고 비회원인 경우 학기 정보 숨김 (빈 문자열 반환)
-        if obj.is_anonymous and not (user and user.is_authenticated):
-            return ''
-        
-        return obj.author.semester
-
     def get_comments(self, obj):
         # 최상위 댓글만 가져오고 created_at 기준 오래된 순으로 정렬 (최신 댓글이 아래에).
         # author/post/board 를 select_related, likes·children 을 prefetch 해서
         # 댓글 트리 직렬화 중 per-comment N+1(작성자·게시글·좋아요)을 제거한다.
-        child_qs = (
-            Comment.objects
-            .select_related('author', 'post', 'post__board')
-            .prefetch_related('likes')
-            .order_by('created_at')
-        )
-        comments = list(
-            obj.comments.filter(parent__isnull=True)
-            .select_related('author', 'post', 'post__board')
-            .prefetch_related('likes', Prefetch('children', queryset=child_qs))
-            .order_by('created_at')
-        )
-
-        # "내가 좋아요 누른 댓글 id"를 트리 전체에 대해 1쿼리로 미리 계산 →
-        # 각 댓글의 isLiked 가 exists() 쿼리를 반복하지 않도록 context 로 전달.
+        comments = list(comment_list_queryset(obj.comments.filter(parent__isnull=True)).order_by('created_at', 'id'))
+        # 대댓글 전 단계와 "내가 좋아요 누른 댓글"을 단계마다 1쿼리로 미리 읽는다
+        request = self.context.get('request')
+        liked_ids = load_comment_trees(comments, request.user if request else None)
         context = self.context
-        request = context.get('request')
-        user = request.user if request else None
-        if user and user.is_authenticated:
-            all_ids = []
-            for c in comments:
-                all_ids.append(c.id)
-                all_ids.extend(child.id for child in c.children.all())
-            liked_ids = set(
-                CommentLike.objects
-                .filter(user=user, comment_id__in=all_ids)
-                .values_list('comment_id', flat=True)
-            )
+        if liked_ids is not None:
             context = {**context, 'liked_comment_ids': liked_ids}
-
         return CommentSerializer(comments, many=True, context=context).data
 
     def get_comments_count(self, obj):

@@ -1293,3 +1293,79 @@ class PopularPostListTest(APITestCase):
         first = res.data['results'][0]
         self.assertEqual(first['likes_count'], 3)
         self.assertEqual(first['views'], 10)
+
+
+class QueryCountScalingTest(APITestCase):
+    """댓글, 게시판, 설정 API 의 쿼리 수가 데이터 양에 따라 늘지 않는지(N+1) 확인한다."""
+
+    def setUp(self):
+        self.users = [
+            User.objects.create_user(
+                username=f'qc{i}', email=f'qc{i}@jbnu.ac.kr', password='pw',
+                is_verified=True, is_active=True,
+            )
+            for i in range(4)
+        ]
+        self.category = Category.objects.create(name='QC')
+        self.board = Board.objects.create(name='QC board', category=self.category)
+        self.post = Post.objects.create(author=self.users[0], board=self.board, title='t', content_md='x')
+
+    def _add_comments(self, n):
+        for i in range(n):
+            parent = Comment.objects.create(post=self.post, author=self.users[i % 4], content='c')
+            reply = Comment.objects.create(post=self.post, author=self.users[(i + 1) % 4], content='r', parent=parent)
+            parent.likes.add(self.users[0])
+            reply.likes.add(self.users[1])
+
+    def _count(self, url):
+        with CaptureQueriesContext(connection) as ctx:
+            res = self.client.get(url)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        return len(ctx.captured_queries)
+
+    def _assert_flat(self, urls):
+        self._add_comments(2)
+        small = {u: self._count(u) for u in urls}
+        self._add_comments(8)
+        Board.objects.create(name='QC board 2', category=Category.objects.create(name='QC2'))
+        large = {u: self._count(u) for u in urls}
+        self.assertEqual(small, large)
+
+    def test_anonymous_counts_do_not_grow(self):
+        self._assert_flat([
+            reverse('comment-list-create', kwargs={'post_id': self.post.id}),
+            reverse('post-detail-update-destroy', kwargs={'post_id': self.post.id}),
+            reverse('user-comments', kwargs={'user_id': 'qc0'}),
+            reverse('board-list'),
+        ])
+
+    def test_member_counts_do_not_grow(self):
+        token = RefreshToken.for_user(self.users[0])
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        self._assert_flat([
+            reverse('comment-list-create', kwargs={'post_id': self.post.id}),
+            reverse('post-detail-update-destroy', kwargs={'post_id': self.post.id}),
+            reverse('user-comments', kwargs={'user_id': 'qc0'}),
+        ])
+
+    def test_comment_tree_and_like_state(self):
+        self._add_comments(1)
+        token = RefreshToken.for_user(self.users[0])
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {token.access_token}')
+        res = self.client.get(reverse('comment-list-create', kwargs={'post_id': self.post.id}))
+        top = res.data['results'][0]
+        self.assertTrue(top['isLiked'])
+        self.assertEqual(top['likes'], 1)
+        self.assertEqual(len(top['children']), 1)
+        self.assertFalse(top['children'][0]['isLiked'])
+        self.assertEqual(top['children'][0]['likes'], 1)
+
+    def test_site_settings_single_query(self):
+        from jbig_backend.models import SiteSettings
+        SiteSettings.set('jbig_email', 'a@jbnu.ac.kr')
+        SiteSettings.set('quiz_url', 'https://example.com/q')
+        with CaptureQueriesContext(connection) as ctx:
+            res = self.client.get('/api/settings/')
+        self.assertEqual(len(ctx.captured_queries), 1)
+        self.assertEqual(res.data['jbig_email'], 'a@jbnu.ac.kr')
+        self.assertEqual(res.data['quiz_url'], '')  # 퀴즈 주소는 로그인한 회원에게만

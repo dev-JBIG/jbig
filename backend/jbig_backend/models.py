@@ -22,6 +22,12 @@ class SiteSettings(models.Model):
             return default
 
     @classmethod
+    def get_many(cls, keys, default=''):
+        """여러 설정을 쿼리 한 번으로 읽는다. 없는 키는 default."""
+        found = dict(cls.objects.filter(key__in=keys).values_list('key', 'value'))
+        return {key: found.get(key, default) for key in keys}
+
+    @classmethod
     def set(cls, key, value):
         obj, _ = cls.objects.update_or_create(key=key, defaults={'value': value})
         return obj

@@ -41,7 +41,7 @@ from .serializers import (
     BoardSerializer, PostListSerializer, PostSummarySerializer, PhotoPostSummarySerializer,
     PostDetailSerializer, PostCreateUpdateSerializer,
     CommentSerializer, CategoryListResponseSerializer, PostListResponseSerializer, NotificationSerializer,
-    DraftSerializer, BoardAdminSerializer
+    DraftSerializer, BoardAdminSerializer, CommentTreeListMixin
 )
 from .permissions import (
     IsOwnerOrReadOnly,
@@ -70,6 +70,26 @@ def _with_post_list_summary(queryset):
         likes_count=Count('likes', distinct=True),
         comment_count=Count('comments', distinct=True),
     )
+
+
+def _post_attachment_keys(post):
+    """글 첨부 목록(attachment_paths)의 파일 키를 / 구분자로 맞춰 돌려준다."""
+    keys = set()
+    if post.attachment_paths and isinstance(post.attachment_paths, list):
+        for att in post.attachment_paths:
+            if isinstance(att, dict) and isinstance(att.get('path'), str):
+                keys.add(att['path'].replace('\\', '/'))
+    return keys
+
+
+def _post_content_keys(post):
+    """본문의 media-key://uploads/... 이미지 키를 / 구분자로 맞춰 돌려준다."""
+    if not post.content_md:
+        return set()
+    return {
+        k.replace('\\', '/')
+        for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', post.content_md)
+    }
 
 
 def _is_upload_owned_by(file_key, owner_id):
@@ -568,7 +588,8 @@ class BoardListAPIView(generics.ListAPIView):
     serializer_class = BoardSerializer
     
     def get_queryset(self):
-        return Board.objects.all()
+        # 게시판마다 카테고리를 따로 읽지 않게 함께 읽는다. 정렬은 페이지 나눔이 흔들리지 않게 id 순
+        return Board.objects.select_related('category').order_by('id')
 
 
 @extend_schema(tags=['게시판'])
@@ -825,22 +846,8 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
                     )
 
         # 수정 전 파일 키 수집
-        old_attachment_keys = set()
-        if instance.attachment_paths and isinstance(instance.attachment_paths, list):
-            for att in instance.attachment_paths:
-                if isinstance(att, dict) and 'path' in att:
-                    file_key = att['path']
-                    if isinstance(file_key, str):
-                        normalized_key = file_key.replace('\\', '/')
-                        if normalized_key.startswith('uploads/'):
-                            old_attachment_keys.add(normalized_key)
-
-        old_content_keys = set()
-        if instance.content_md:
-            old_content_keys = {
-                k.replace('\\', '/')
-                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
-            }
+        old_attachment_keys = {k for k in _post_attachment_keys(instance) if k.startswith('uploads/')}
+        old_content_keys = _post_content_keys(instance)
 
         # 실제 수정 수행
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
@@ -849,22 +856,8 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
 
         # 수정 후 파일 키 수집
         instance.refresh_from_db()
-        new_attachment_keys = set()
-        if instance.attachment_paths and isinstance(instance.attachment_paths, list):
-            for att in instance.attachment_paths:
-                if isinstance(att, dict) and 'path' in att:
-                    file_key = att['path']
-                    if isinstance(file_key, str):
-                        normalized_key = file_key.replace('\\', '/')
-                        if normalized_key.startswith('uploads/'):
-                            new_attachment_keys.add(normalized_key)
-
-        new_content_keys = set()
-        if instance.content_md:
-            new_content_keys = {
-                k.replace('\\', '/')
-                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
-            }
+        new_attachment_keys = {k for k in _post_attachment_keys(instance) if k.startswith('uploads/')}
+        new_content_keys = _post_content_keys(instance)
 
         # 삭제할 파일 키 계산 (기존에 있었지만 새로운 버전에 없는 것)
         removed_keys = (old_attachment_keys - new_attachment_keys) | (old_content_keys - new_content_keys)
@@ -890,22 +883,11 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         author_id = getattr(instance.author, 'id', None)
 
-        candidate_keys = set()
-        if instance.attachment_paths and isinstance(instance.attachment_paths, list):
-            for att in instance.attachment_paths:
-                if isinstance(att, dict) and 'path' in att:
-                    file_key = att['path']
-                    if isinstance(file_key, str):
-                        normalized_key = file_key.replace('\\', '/')
-                        if _is_upload_owned_by(normalized_key, author_id):
-                            candidate_keys.add(normalized_key)
-
-        if instance.content_md:
-            content_keys = (
-                k.replace('\\', '/')
-                for k in re.findall(r'media-key://(uploads[\\/][^\s\)]+)', instance.content_md)
-            )
-            candidate_keys.update(k for k in content_keys if _is_upload_owned_by(k, author_id))
+        # 글쓴이 본인이 올린 파일만 지운다(남의 파일 키를 넣어 지우게 하는 공격 방지)
+        candidate_keys = {
+            k for k in _post_attachment_keys(instance) | _post_content_keys(instance)
+            if _is_upload_owned_by(k, author_id)
+        }
 
         response = super().destroy(request, *args, **kwargs)
 
@@ -926,7 +908,7 @@ class PostRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
         description="""특정 게시글에 새로운 댓글을 작성합니다.\n- **권한 (Board Level)**: 게시판의 `comment_permission` 설정에 따라 접근이 제어됩니다.\n  - `all`: 비회원 포함 누구나 작성 가능\n  - `staff`: 스태프만 작성 가능\n- **비회원 댓글**: 비회원은 자동으로 IP 기반 익명 닉네임이 부여됩니다.\n- **회원 익명 작성**: 회원은 `is_anonymous` 필드를 true로 설정하면 익명으로 작성됩니다 (기본값: true).""",
     )
 )
-class CommentListCreateAPIView(generics.ListCreateAPIView):
+class CommentListCreateAPIView(CommentTreeListMixin, generics.ListCreateAPIView):
     serializer_class = CommentSerializer
 
     def get_permissions(self):
@@ -943,7 +925,7 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
             post_id=post_id,
             post__in=readable_posts,
             parent__isnull=True,
-        ).order_by('created_at')
+        ).order_by('created_at', 'id')
 
     def perform_create(self, serializer):
         from rest_framework.exceptions import ValidationError
