@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'; // useRef 추가
-import MDEditor from '@uiw/react-md-editor';
+import MDEditor from '@uiw/react-md-editor/nohighlight';
 import { safeSanitizePlugin } from '../Utils/safeMarkdown';
 import { useColorMode } from '../Utils/ThemeContext';
 import './PostWrite.css';

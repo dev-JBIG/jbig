@@ -14,7 +14,7 @@ jest.mock("react-router-dom", () => ({
     useParams: () => ({ category: "10", id: "42" }),
 }), { virtual: true });
 
-jest.mock("@uiw/react-md-editor", () => {
+jest.mock("@uiw/react-md-editor/nohighlight", () => {
     const React = require("react");
     return {
         __esModule: true,

@@ -1,7 +1,5 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import type { IconProp } from "@fortawesome/fontawesome-svg-core";
-import { faInstagram } from "@fortawesome/free-brands-svg-icons";
+import SvgIcon from "../Utils/SvgIcon";
 import "./Footer.css";
 import "./Footer-mobile.css";
 import BrandMark from "../Utils/BrandMark";
@@ -25,7 +23,7 @@ const Footer: React.FC = () => (
                     aria-label="JBIG 공식 인스타그램 (@jbig.jbnu)"
                     title="JBIG 공식 인스타그램 (@jbig.jbnu)"
                 >
-                    <FontAwesomeIcon icon={faInstagram as IconProp} className="footer-social-icon" aria-hidden="true" />
+                    <SvgIcon name="instagram" className="footer-social-icon" />
                     <span>@jbig.jbnu</span>
                 </a>
                 <span className="footer-meta-sep" aria-hidden="true">·</span>

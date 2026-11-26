@@ -1,5 +1,5 @@
 import React from 'react';
-import MDEditor from '@uiw/react-md-editor';
+import MDEditor from '@uiw/react-md-editor/nohighlight';
 import { TextBlock } from '../../types';
 import { safeSanitizePlugin } from '../../../Utils/safeMarkdown';
 import { useColorMode } from '../../../Utils/ThemeContext';

@@ -6,10 +6,6 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@fortawesome/fontawesome-svg-core": "^7.0.0",
-    "@fortawesome/free-brands-svg-icons": "^7.0.1",
-    "@fortawesome/free-solid-svg-icons": "^7.0.0",
-    "@fortawesome/react-fontawesome": "^0.2.3",
     "@marsidev/react-turnstile": "^1.4.1",
     "@primer/primitives": "^11.10.0",
     "@primer/react": "^38.46.0",
@@ -56,6 +52,7 @@
   },
   "jest": {
     "moduleNameMapper": {
+      "^@uiw/react-md-editor/nohighlight$": "<rootDir>/node_modules/@uiw/react-md-editor/lib/index.nohighlight.js",
       "^react-router/dom$": "<rootDir>/node_modules/react-router/dist/development/dom-export.js",
       "^@oddbird/popover-polyfill/fn$": "<rootDir>/node_modules/@oddbird/popover-polyfill/dist/popover-fn.cjs.js",
       "^@github/relative-time-element$": "<rootDir>/src/__mocks__/relativeTimeMock.js",

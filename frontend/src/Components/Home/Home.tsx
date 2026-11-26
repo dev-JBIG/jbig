@@ -35,12 +35,10 @@ import {CalendarEventCreate, Section} from "../Utils/interfaces";
 import { useUser } from "../Utils/UserContext";
 import { ThemePreference, useColorMode } from "../Utils/ThemeContext";
 import Calendar from "../Utils/Calendar/Calendar";
-import EventModal from "../Utils/Calendar/EventModal";
 import LoginModal from "../Utils/LoginModal";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
 import JbigInfo from "./JbigInfo";
-import PopupSlider from "../Utils/PopupSlider";
 import PhotoAlbumSlider from "./PhotoAlbumSlider";
 import scheduleIdleTask from "../Utils/scheduleIdleTask";
 import BrandMark from "../Utils/BrandMark";
@@ -52,6 +50,10 @@ const PostWrite = lazy(() => import("../Posts/PostWrite"));
 const Search = lazy(() => import("../Posts/Search"));
 const Profile = lazy(() => import("../Profile/Profile"));
 const Arena = lazy(() => import("../Competitions/Arena"));
+// 첫 화면 JS 를 줄이려고 필요할 때 불러온다: 일정 편집 창은 날짜 선택기(약 140KB)를 담고 운영진만 열며,
+// 팝업은 마크다운 해석기(약 60KB)를 담고 활성 팝업이 있을 때만 보인다
+const EventModal = lazy(() => import("../Utils/Calendar/EventModal"));
+const PopupSlider = lazy(() => import("../Utils/PopupSlider"));
 const routeFallback = (
     <div className="route-loading-fallback">
         <span className="sr-only" role="status">페이지를 불러오는 중입니다.</span>
@@ -867,16 +869,22 @@ const Home: React.FC = () => {
                 </Routes>
             </div>
             {isModalOpen && (
-                <EventModal
-                    mode={modalMode}
-                    initial={initialEvent}
-                    onClose={handleCloseModal}
-                    onSave={handleSaveEvent}
-                />
+                <Suspense fallback={null}>
+                    <EventModal
+                        mode={modalMode}
+                        initial={initialEvent}
+                        onClose={handleCloseModal}
+                        onSave={handleSaveEvent}
+                    />
+                </Suspense>
             )}
 
             {/* 팝업 슬라이더 */}
-            {!isPostWorkRoute && !isArenaPage && <PopupSlider />}
+            {!isPostWorkRoute && !isArenaPage && (
+                <Suspense fallback={null}>
+                    <PopupSlider />
+                </Suspense>
+            )}
             </>
             )}
             {isLoginModalOpen && (

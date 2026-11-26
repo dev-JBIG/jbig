@@ -2,8 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@primer/react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import SvgIcon from '../Utils/SvgIcon';
 import PostList from "../Posts/PostList";
 import { Section } from "../Utils/interfaces";
 import "./Search.css";
@@ -104,7 +103,7 @@ const Search: React.FC<{ boards?: Section[] }> = ({ boards }) => {
                 </select>
 
                 <Button type="submit" variant="primary" className="search-button" aria-label="검색">
-                    <FontAwesomeIcon icon={faMagnifyingGlass} />
+                    <SvgIcon name="search" />
                 </Button>
             </form>
 
