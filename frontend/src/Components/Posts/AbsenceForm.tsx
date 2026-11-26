@@ -8,6 +8,9 @@ interface AbsenceFormProps {
   initialContent: string;
 }
 
+// 사유서 종류(선택칸 값과 같게. 조퇴, 기타는 지금 선택칸에서 숨겨 둠)
+const ABSENCE_TYPES = ['결석사유서', '조퇴사유서', '기타사유서'] as const;
+
 type AbsenceState = {
   reasonType: string;
   absenceDate: string;
@@ -19,7 +22,7 @@ type AbsenceState = {
 
 // 마크다운에서 폼 데이터 추출 (수정 시 사용)
 const parseMarkdownToForm = (md: string): AbsenceState => ({
-  reasonType: getSubmitType(md) || '결석사유서',
+  reasonType: getSubmitType(md, ABSENCE_TYPES) || '결석사유서',
   absenceDate: getTableValue(md, '결석 날짜'),
   institution: getTableValue(md, '관련 기관'),
   schedule: getTableValue(md, '일정'),

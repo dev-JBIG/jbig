@@ -78,3 +78,13 @@ describe("양식 본문", () => {
         expect(lastCall(again)).toBe(md);
     });
 });
+
+describe("getSubmitType", () => {
+    const { getSubmitType } = jest.requireActual("./markdownTemplateForm");
+    test("이름과 종류에 띄어쓰기가 있어도 아는 종류로 읽는다", () => {
+        expect(getSubmitType("Kim Min Su 에러/피드백 제보 제출합니다.\n\n| a |", ["에러/피드백 제보"])).toBe("에러/피드백 제보");
+        expect(getSubmitType("홍 길동 결석사유서 제출합니다.", ["결석사유서", "조퇴사유서"])).toBe("결석사유서");
+        expect(getSubmitType("홍길동 모르는종류 제출합니다.", ["결석사유서"])).toBe("");
+        expect(getSubmitType("", ["결석사유서"])).toBe("");
+    });
+});

@@ -21,7 +21,7 @@ type FeedbackState = {
 
 // 마크다운에서 폼 데이터 추출 (수정 시 사용)
 const parseMarkdownToForm = (md: string): FeedbackState => ({
-  reasonType: getSubmitType(md) || '에러/피드백 제보',
+  reasonType: getSubmitType(md, ['에러/피드백 제보']) || '에러/피드백 제보',
   reportType: getTableValue(md, '제보 유형') || '에러',
   reportDate: getTableValue(md, '발생 날짜'),
   reportTime: getTableValue(md, '발생 시간'),

@@ -16,10 +16,14 @@ export const getTableValue = (md: string, key: string) => {
 };
 
 /**
- * 첫 줄 "{이름} {종류} 제출합니다." 의 종류. 종류에 띄어쓰기가 있어도(에러/피드백 제보) 그대로 읽는다.
- * 예전 정규식은 마지막 띄어쓰기 앞을 모두 이름으로 봐서 "제보"만 남았다.
+ * 첫 줄 "{이름} {종류} 제출합니다." 의 종류를 양식이 아는 종류(knownTypes) 중에서 찾는다.
+ * 이름과 종류 모두 띄어쓰기가 있을 수 있어(에러/피드백 제보) 띄어쓰기로 자르지 않고 문장 끝을 맞춰 본다.
+ * 예전 정규식은 마지막 띄어쓰기 앞을 모두 이름으로 봐서 "제보"만 남았다. 못 찾으면 ''.
  */
-export const getSubmitType = (md: string) => md.match(/^\S+ (.+?) 제출합니다\./m)?.[1] ?? "";
+export const getSubmitType = (md: string, knownTypes: readonly string[]) => {
+    const firstLine = md.split("\n", 1)[0].trim();
+    return knownTypes.find((type) => firstLine.endsWith(` ${type} 제출합니다.`)) ?? "";
+};
 
 /**
  * 양식 값 <-> 글 본문 동기화.
