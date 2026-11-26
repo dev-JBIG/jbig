@@ -1,13 +1,10 @@
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { Button } from "@primer/react";
 import "./LoginModal.css";
-import { signin } from "../../API/req";
-import { useUser } from "./UserContext";
 import { useNavigate } from "react-router-dom";
-import { useJbnuEmail } from "./useJbnuEmail";
 import JbnuEmailInput from "./JbnuEmailInput";
 import Dialog from "./Dialog";
-import { getEmailError, getPasswordError } from "./authValidation";
+import { useSigninForm } from "./useSigninForm";
 import PasswordInput from "./PasswordInput";
 import { sanitizeInternalPath } from "./safeUrl";
 
@@ -18,69 +15,17 @@ interface LoginModalProps {
 
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) => {
-    const { email: userId, value: userIdLocal, onChange: onUserIdChange } = useJbnuEmail();
     const userIdRef = useRef<HTMLInputElement | null>(null);
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
-    const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
-    const [loading, setLoading] = useState(false);
-
     const navigate = useNavigate();
-    const { setAuth } = useUser();
-
-    const validateEmail = getEmailError;
-    const validatePassword = getPasswordError;
-
-    const handleEmailBlur = () => {
-        const err = validateEmail(userId);
-        setFieldErrors(prev => ({ ...prev, email: err }));
-    };
-
-    const handlePasswordBlur = () => {
-        const err = validatePassword(password);
-        setFieldErrors(prev => ({ ...prev, password: err }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError(null);
-
-        const emailErr = validateEmail(userId);
-        const pwdErr = validatePassword(password);
-
-        if (emailErr || pwdErr) {
-            setFieldErrors({ email: emailErr, password: pwdErr });
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const result = await signin(userId, password);
-            if (result.access && result.username && result.semester) {
-                setAuth(
-                    {
-                        username: result.username,
-                        semester: result.semester,
-                        email: userId,
-                        is_staff: !!result.is_staff,
-                    },
-                    result.access,
-                    result.refresh
-                );
-                onClose();
-                const safeRedirect = sanitizeInternalPath(redirectTo, "/");
-                if (window.location.pathname !== safeRedirect) {
-                    navigate(safeRedirect);
-                }
-            } else {
-                setError(result.message || "로그인에 실패했습니다.");
+    const { emailFieldProps, passwordFieldProps, fieldErrors, error, loading, handleSubmit } = useSigninForm({
+        onSuccess: () => {
+            onClose();
+            const safeRedirect = sanitizeInternalPath(redirectTo, "/");
+            if (window.location.pathname !== safeRedirect) {
+                navigate(safeRedirect);
             }
-        } catch {
-            setError("로그인 요청 중 오류가 발생했습니다.");
-        } finally {
-            setLoading(false);
-        }
-    };
+        },
+    });
 
     const handleSignupClick = () => {
         onClose();
@@ -119,15 +64,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     ref={userIdRef}
                     className="login-modal-input"
                     placeholder="학교메일"
-                    invalid={!!fieldErrors.email}
                     id="modal-userid"
                     aria-describedby={fieldErrors.email ? "modal-userid-error" : undefined}
-                    value={userIdLocal}
-                    onChange={(e) => {
-                        onUserIdChange(e);
-                        if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
-                    }}
-                    onBlur={handleEmailBlur}
+                    {...emailFieldProps}
                 />
                 {fieldErrors.email && <span id="modal-userid-error" className="login-modal-field-error">{fieldErrors.email}</span>}
 
@@ -141,12 +80,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, redirectTo = '/' }) =>
                     id="modal-password"
                     aria-invalid={!!fieldErrors.password || undefined}
                     aria-describedby={fieldErrors.password ? "modal-password-error" : undefined}
-                    value={password}
-                    onChange={(e) => {
-                        setPassword(e.target.value);
-                        if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
-                    }}
-                    onBlur={handlePasswordBlur}
+                    {...passwordFieldProps}
                 />
                 {fieldErrors.password && <span id="modal-password-error" className="login-modal-field-error">{fieldErrors.password}</span>}
 

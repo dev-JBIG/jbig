@@ -41,6 +41,7 @@ import {
 import "./Admin.css";
 import BrandMark from "../Utils/BrandMark";
 import EmptyState from "../Utils/EmptyState";
+import { getImageUploadError } from "../../Utils/uploadRules";
 
 function SettingsManagement({ accessToken }: { accessToken: string }) {
     const [notionPageId, setNotionPageId] = useState("");
@@ -594,18 +595,10 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // 이미지 파일 검증
-        if (!file.type.startsWith('image/')) {
-            showAlert({ message: '이미지 파일만 업로드할 수 있습니다.', type: 'warning' });
-            if (imageInputRef.current) {
-                imageInputRef.current.value = "";
-            }
-            return;
-        }
-
-        // 10MB 제한
-        if (file.size > 10 * 1024 * 1024) {
-            showAlert({ message: '이미지 파일은 10MB 이하만 업로드할 수 있습니다.', type: 'warning' });
+        // 이미지 종류, 크기(10MB) 검사
+        const fileError = getImageUploadError(file);
+        if (fileError) {
+            showAlert({ message: fileError, type: 'warning' });
             if (imageInputRef.current) {
                 imageInputRef.current.value = "";
             }

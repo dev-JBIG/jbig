@@ -2,9 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Button, CounterLabel } from "@primer/react";
 import { Menu, X, FileText, SquareCheckBig, Lock } from "lucide-react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faDiscord, faGithub, faInstagram } from '@fortawesome/free-brands-svg-icons';
+import SvgIcon from './SvgIcon';
 import { Section, Board } from "./interfaces";
 import { getBoardIcon } from "./boardIcons";
 import { useUser } from "./UserContext";
@@ -240,7 +238,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   className="sidebar-external-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <FontAwesomeIcon icon={faInstagram as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                  <SvgIcon name="instagram" className="sidebar-discord-icon" />
                   <span className="sidebar-external-text">JBIG 인스타그램</span>
                 </a>
 
@@ -251,7 +249,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   className="sidebar-external-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                  <SvgIcon name="discord" className="sidebar-discord-icon" />
                   <span className="sidebar-external-text">비밀 게임 소모임</span>
                 </a>
 
@@ -262,7 +260,7 @@ const MobileNav: React.FC<MobileNavProps> = ({
                   className="sidebar-external-link"
                   onClick={() => setIsOpen(false)}
                 >
-                  <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                  <SvgIcon name="github" className="sidebar-discord-icon" />
                   <span className="sidebar-external-text">BigTech AI News</span>
                 </a>
               </div>

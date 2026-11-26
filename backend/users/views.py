@@ -46,7 +46,7 @@ from django.shortcuts import get_object_or_404
 import pytz
 
 from rest_framework_simplejwt.exceptions import TokenError
-from boards.serializers import PostSummarySerializer, CommentSerializer
+from boards.serializers import PostSummarySerializer, CommentSerializer, CommentTreeListMixin
 from boards.models import Post, Comment
 
 logger = logging.getLogger(__name__)
@@ -95,6 +95,15 @@ class UserPostListView(generics.ListAPIView):
         ).order_by('-created_at')
 
 
+def _invalid_verification_response():
+    """인증 코드 확인 실패 응답. 계정 유무, 인증 상태, 코드 만료를 구분하지 않는 한 가지 400
+    (회원 열거 방지). 응답 객체는 요청마다 새로 만든다."""
+    return Response(
+        {"error": "인증 정보가 유효하지 않거나 만료되었습니다."},
+        status=status.HTTP_400_BAD_REQUEST,
+    )
+
+
 @extend_schema(
     tags=["사용자"],
     summary="특정 사용자가 작성한 댓글 목록 조회",
@@ -112,7 +121,7 @@ class UserPostListView(generics.ListAPIView):
         )
     ]
 )
-class UserCommentListView(generics.ListAPIView):
+class UserCommentListView(CommentTreeListMixin, generics.ListAPIView):
     serializer_class = CommentSerializer
     permission_classes = [AllowAny]
 
@@ -131,7 +140,7 @@ class UserCommentListView(generics.ListAPIView):
         if not request_user.is_authenticated:
             queryset = queryset.filter(is_anonymous=False)
         
-        return queryset.order_by('-created_at')
+        return queryset.order_by('-created_at', '-id')
 
 @extend_schema(
     tags=["사용자"],
@@ -447,10 +456,7 @@ class EmailVerifyView(APIView):
 
         # 사용자 존재/상태/코드 유효성을 구분하는 3-way 응답은 회원 enumeration을 허용하므로
         # 성공 여부 외에는 전부 동일한 400으로 통일한다.
-        generic_error = Response(
-            {"error": "인증 정보가 유효하지 않거나 만료되었습니다."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        generic_error = _invalid_verification_response()
 
         try:
             user = User.objects.get(email__iexact=email)
@@ -668,10 +674,7 @@ class VerifyPasswordCodeView(APIView):
         verification_code = serializer.validated_data['verification_code']
 
         # 사용자 열거 및 코드 상태 노출을 방지하기 위해 실패 경로 응답을 단일화한다.
-        generic_error = Response(
-            {"error": "인증 정보가 유효하지 않거나 만료되었습니다."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        generic_error = _invalid_verification_response()
 
         try:
             user = User.objects.get(email__iexact=email)

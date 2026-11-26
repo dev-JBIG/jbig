@@ -410,3 +410,13 @@ body .w-md-editor {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-sm);
 }
+
+/* 9. SVG 아이콘 (SvgIcon). 예전 FontAwesome 기본 크기와 같게: 높이 1em, 폭 1.25em, 글자 기준선 보정 */
+.svg-icon {
+    box-sizing: content-box;
+    display: inline-block;
+    height: 1em;
+    width: 1.25em;
+    overflow: visible;
+    vertical-align: -0.125em;
+}

@@ -4,9 +4,7 @@ import { Button, CounterLabel } from "@primer/react";
 import "../Home/Home.css";
 import { SidebarProps, Board } from "./interfaces";
 import { FileText, SquareCheckBig, Lock, ArrowUpRight } from "lucide-react";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import type { IconProp } from '@fortawesome/fontawesome-svg-core';
-import { faDiscord, faGithub, faInstagram } from '@fortawesome/free-brands-svg-icons';
+import SvgIcon from './SvgIcon';
 import { getBoardIcon } from "./boardIcons";
 import { useUser } from "./UserContext";
 import { useAlert } from "./AlertContext";
@@ -168,7 +166,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         rel="noopener noreferrer"
                         className="sidebar-external-link"
                     >
-                        <FontAwesomeIcon icon={faInstagram as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                        <SvgIcon name="instagram" className="sidebar-discord-icon" />
                         <span className="sidebar-external-text">JBIG 인스타그램</span>
                         <ArrowUpRight size={13} className="sidebar-external-arrow" aria-hidden="true" />
                     </a>
@@ -179,7 +177,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         rel="noopener noreferrer"
                         className="sidebar-external-link"
                     >
-                        <FontAwesomeIcon icon={faDiscord as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                        <SvgIcon name="discord" className="sidebar-discord-icon" />
                         <span className="sidebar-external-text">비밀 게임 소모임</span>
                         <ArrowUpRight size={13} className="sidebar-external-arrow" aria-hidden="true" />
                     </a>
@@ -190,7 +188,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         rel="noopener noreferrer"
                         className="sidebar-external-link"
                     >
-                        <FontAwesomeIcon icon={faGithub as IconProp} className="sidebar-discord-icon" aria-hidden="true" />
+                        <SvgIcon name="github" className="sidebar-discord-icon" />
                         <span className="sidebar-external-text">BigTech AI News</span>
                         <ArrowUpRight size={13} className="sidebar-external-arrow" aria-hidden="true" />
                     </a>

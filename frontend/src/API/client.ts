@@ -26,6 +26,14 @@ function stripAuthorizationHeader(headers: InternalAxiosRequestConfig["headers"]
     }
 }
 
+/**
+ * 이 요청에 로그인 세션을 쓴다는 표시. 아래 요청 가로채기가 /api/ 요청에서만
+ * 이 헤더를 지금 세션의 최신 토큰으로 바꿔 넣고, 바깥 주소로 가는 요청에서는 지운다.
+ * 토큰이 없으면 아무것도 붙이지 않는다(비회원 요청).
+ */
+export const authHeaders = (token?: string | null): Record<string, string> =>
+    token ? { Authorization: `Bearer ${token}` } : {};
+
 client.interceptors.request.use(config => {
     if (!isApiRequest(config)) {
         stripAuthorizationHeader(config.headers);

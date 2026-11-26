@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
+import { getSubmitType, getTableValue, toTableCell, useMarkdownTemplateForm } from './markdownTemplateForm';
 import { useUser } from '../Utils/UserContext';
 import './PostWrite.css'; // 기존 CSS 재활용
 
@@ -7,85 +8,48 @@ interface AbsenceFormProps {
   initialContent: string;
 }
 
-// 마크다운에서 폼 데이터 추출 (수정 시 사용)
-const parseMarkdownToForm = (md: string) => {
-  const initialState = {
-    reasonType: '결석사유서',
-    absenceDate: '',
-    institution: '',
-    schedule: '',
-    location: '',
-    reason: '',
-  };
+// 사유서 종류(선택칸 값과 같게. 조퇴, 기타는 지금 선택칸에서 숨겨 둠)
+const ABSENCE_TYPES = ['결석사유서', '조퇴사유서', '기타사유서'] as const;
 
-  if (!md) return initialState;
-
-  // 정규식을 사용하여 테이블의 각 항목 값을 추출
-  const getValue = (key: string) => {
-    const regex = new RegExp(`\\| \\*\\*${key}\\*\\* \\| (.*?) \\|`);
-    const match = md.match(regex);
-    // <br /> 태그를 다시 \n (줄바꿈)으로 복원
-    return match ? match[1].replace(/<br \/>/g, '\n') : '';
-  };
-
-  return {
-    reasonType: md.match(/.* (.*?) 제출합니다\./)?.[1] || '결석사유서',
-    absenceDate: getValue('결석 날짜'),
-    institution: getValue('관련 기관'),
-    schedule: getValue('일정'),
-    location: getValue('장소'),
-    reason: getValue('결석 사유'),
-  };
+type AbsenceState = {
+  reasonType: string;
+  absenceDate: string;
+  institution: string;
+  schedule: string;
+  location: string;
+  reason: string;
 };
 
+// 마크다운에서 폼 데이터 추출 (수정 시 사용)
+const parseMarkdownToForm = (md: string): AbsenceState => ({
+  reasonType: getSubmitType(md, ABSENCE_TYPES) || '결석사유서',
+  absenceDate: getTableValue(md, '결석 날짜'),
+  institution: getTableValue(md, '관련 기관'),
+  schedule: getTableValue(md, '일정'),
+  location: getTableValue(md, '장소'),
+  reason: getTableValue(md, '결석 사유'),
+});
+
 const AbsenceForm: React.FC<AbsenceFormProps> = ({ setContent, initialContent }) => {
-  // 1. useUser 훅을 사용해 로그인한 유저 정보 가져오기
   const { user } = useUser();
-  // (user 객체 구조에 맞게 수정 필요. user.username, user.name 등)
   const userName = user?.username || '자동입력실패';
 
-  // 2. 폼 데이터를 관리할 state
-  const [formState, setFormState] = useState(parseMarkdownToForm(initialContent));
-
-  // 3. 폼 내용이 변경될 때마다 마크다운 텍스트를 생성하여 부모(PostWrite)의 content state 업데이트
-  useEffect(() => {
-    const { reasonType, absenceDate, institution, schedule, location, reason } = formState;
-
-    // 4. 입력된 줄바꿈(\n)을 HTML <br /> 태그로 변경 (마크다운 테이블 내 줄바꿈)
-    const reasonWithBreaks = reason.replace(/\n/g, '<br />');
-
-    const generatedMarkdown = `${userName} ${reasonType} 제출합니다.
+  // 글 본문 형식은 기존 글과 같아야 한다(수정 화면에서 다시 읽음)
+  const generate = useCallback((f: AbsenceState) => `${userName} ${f.reasonType} 제출합니다.
 
 | 항목 | 내용 |
 | --- | --- |
 | **성명** | ${userName} |
-| **결석 날짜** | ${absenceDate} |
-| **관련 기관** | ${institution} |
-| **일정** | ${schedule} |
-| **장소** | ${location} |
-| **결석 사유** | ${reasonWithBreaks} |
-`;
-    setContent(generatedMarkdown);
-  }, [formState, userName, setContent]);
+| **결석 날짜** | ${f.absenceDate} |
+| **관련 기관** | ${f.institution} |
+| **일정** | ${f.schedule} |
+| **장소** | ${f.location} |
+| **결석 사유** | ${toTableCell(f.reason)} |
+`, [userName]);
 
-  // 5. 수정 모드일 때, initialContent가 비동기로 로드되면 폼 상태 업데이트
-  useEffect(() => {
-    if (initialContent) {
-      setFormState(parseMarkdownToForm(initialContent));
-    }
-  }, [initialContent]);
-
-
-  // 6. 폼 입력 핸들러
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const { state: formState, handleChange } = useMarkdownTemplateForm(
+    initialContent, setContent, parseMarkdownToForm, generate,
+  );
 
   // 7. 렌더링
   return (

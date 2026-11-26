@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react'; // useRef 추가
+import React from 'react';
+import { getTableValue, toTableCell, useMarkdownTemplateForm } from './markdownTemplateForm';
 import MDEditor from '@uiw/react-md-editor';
 import { safeSanitizePlugin } from '../Utils/safeMarkdown';
 import { useColorMode } from '../Utils/ThemeContext';
@@ -9,111 +10,61 @@ interface StudyFormProps {
   initialContent: string;
 }
 
-const parseMarkdownToForm = (md: string) => {
-  const initialState = {
-    leaderIntro: '',
-    groupName: '',
-    studyType: '학술',
-    deadline: '',
-    isDeadlineTbd: false,
-    duration: '',
-    headcount: '',
-    schedule: '',
-    plan: '',
-  };
+type StudyState = {
+  leaderIntro: string;
+  groupName: string;
+  studyType: string;
+  deadline: string;
+  isDeadlineTbd: boolean;
+  duration: string;
+  headcount: string;
+  schedule: string;
+  plan: string;
+};
 
-  if (!md) return initialState;
-
-  const getValue = (key: string) => {
-    const regex = new RegExp(`\\| \\*\\*${key}\\*\\* \\| (.*?) \\|`);
-    const match = md.match(regex);
-    return match ? match[1].replace(/<br \/>/g, '\n') : '';
-  };
-
-  const deadlineValue = getValue('지원 마감일');
+const parseMarkdownToForm = (md: string): StudyState => {
+  const deadlineValue = getTableValue(md, '지원 마감일');
   const planSplit = md.split('## 활동 계획');
-  const planContent = planSplit.length > 1 ? planSplit[1].trimStart() : '';
+  // 본문 끝 줄바꿈 하나는 양식이 붙인 것이라 뺀다(예전에는 수정할 때마다 빈 줄이 하나씩 늘었다)
+  const planContent = planSplit.length > 1 ? planSplit[1].trimStart().replace(/\n$/, '') : '';
 
   return {
-    leaderIntro: getValue('소모임장 소개'),
-    groupName: getValue('소모임 이름'),
-    studyType: getValue('분류') || '학술',
+    leaderIntro: getTableValue(md, '소모임장 소개'),
+    groupName: getTableValue(md, '소모임 이름'),
+    studyType: getTableValue(md, '분류') || '학술',
     deadline: deadlineValue === '미정' ? '' : deadlineValue,
     isDeadlineTbd: deadlineValue === '미정',
-    duration: getValue('활동 기간'),
-    headcount: getValue('활동 예상 인원'),
-    schedule: getValue('모임 장소 및 시간'),
+    duration: getTableValue(md, '활동 기간'),
+    headcount: getTableValue(md, '활동 예상 인원'),
+    schedule: getTableValue(md, '모임 장소 및 시간'),
     plan: planContent,
   };
 };
 
-const StudyForm: React.FC<StudyFormProps> = ({ setContent, initialContent }) => {
-  const { resolvedColorMode } = useColorMode();
-  const [formState, setFormState] = useState(parseMarkdownToForm(initialContent));
-
-  const lastGeneratedRef = useRef('');
-
-  useEffect(() => {
-    const {
-      leaderIntro,
-      groupName,
-      studyType,
-      deadline,
-      isDeadlineTbd,
-      duration,
-      headcount,
-      schedule,
-      plan,
-    } = formState;
-
-    const introWithBreaks = leaderIntro.replace(/\n/g, '<br />');
-    const finalDeadline = isDeadlineTbd ? '미정' : deadline;
-
-    // [핵심 변경] 표의 정렬을 가운데로 설정합니다 (:---:)
-    const generatedMarkdown = `[${studyType}] ${groupName} 모집합니다.
+// 글 본문 형식은 기존 글과 같아야 한다(수정 화면에서 다시 읽음). 표는 가운데 정렬(:---:)
+const generateMarkdown = (f: StudyState) => `[${f.studyType}] ${f.groupName} 모집합니다.
 
 | 항목 | 내용 |
 | :---: | :---: |
-| **소모임 이름** | ${groupName} |
-| **분류** | ${studyType} |
-| **소모임장 소개** | ${introWithBreaks} |
-| **지원 마감일** | ${finalDeadline} |
-| **활동 기간** | ${duration} |
-| **활동 예상 인원** | ${headcount} |
-| **모임 장소 및 시간** | ${schedule} |
+| **소모임 이름** | ${f.groupName} |
+| **분류** | ${f.studyType} |
+| **소모임장 소개** | ${toTableCell(f.leaderIntro)} |
+| **지원 마감일** | ${f.isDeadlineTbd ? '미정' : f.deadline} |
+| **활동 기간** | ${f.duration} |
+| **활동 예상 인원** | ${f.headcount} |
+| **모임 장소 및 시간** | ${f.schedule} |
 
 <br />
 
 ## 활동 계획
-${plan}
+${f.plan}
 `;
-    lastGeneratedRef.current = generatedMarkdown;
-    setContent(generatedMarkdown);
-  }, [formState, setContent]);
 
-  useEffect(() => {
-    if (!initialContent) return;
-
-    if (initialContent === lastGeneratedRef.current) return;
-
-    const nextState = parseMarkdownToForm(initialContent);
-
-    setFormState((prev) => {
-      // 💡 핵심: 현재 상태(prev)와 새로 파싱한 상태(nextState)가 완전히 똑같다면?
-      // 굳이 업데이트를 하지 않아서(return prev) 무한 렌더링을 끊어줍니다.
-      if (JSON.stringify(prev) === JSON.stringify(nextState)) {
-        return prev;
-      }
-      return nextState;
-    });
-  }, [initialContent]);
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-  };
+const StudyForm: React.FC<StudyFormProps> = ({ setContent, initialContent }) => {
+  const { resolvedColorMode } = useColorMode();
+  const { state: formState, setState: setFormState, handleChange } = useMarkdownTemplateForm(
+    initialContent, setContent, parseMarkdownToForm, generateMarkdown,
+  );
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { checked } = e.target;

@@ -141,3 +141,11 @@ test('fetchBoardPosts calls /api/posts/all/ with trailing slash when boardId is 
     expect(new URL(adapter.mock.calls[1][0].url ?? '').pathname).toBe('/api/posts/all/');
 });
 
+
+test('authHeaders: 토큰이 있을 때만 인증 헤더를 붙인다', () => {
+    const { authHeaders } = jest.requireActual('./client');
+    expect(authHeaders('abc')).toEqual({ Authorization: 'Bearer abc' });
+    expect(authHeaders(null)).toEqual({});
+    expect(authHeaders(undefined)).toEqual({});
+    expect(authHeaders('')).toEqual({});
+});

@@ -96,6 +96,13 @@ class QuizUrlView(APIView):
     description="Retrieve or update site settings. Only admins can update.",
 )
 class SiteSettingsView(APIView):
+    PUBLIC_KEYS = (
+        'notion_page_id', 'jbig_description',
+        'jbig_president', 'jbig_president_dept',
+        'jbig_vice_president', 'jbig_vice_president_dept',
+        'jbig_email', 'jbig_advisor', 'jbig_advisor_dept',
+    )
+
     def get_permissions(self):
         if self.request.method in ['PUT', 'PATCH']:
             return [IsAdminUser()]
@@ -123,18 +130,13 @@ class SiteSettingsView(APIView):
         ]
     )
     def get(self, request):
-        quiz_url = SiteSettings.get('quiz_url', '') if request.user.is_authenticated else ''
+        # 설정 값들을 쿼리 한 번으로 읽는다. 퀴즈 주소는 로그인한 회원에게만 준다
+        keys = self.PUBLIC_KEYS + (('quiz_url',) if request.user.is_authenticated else ())
+        values = SiteSettings.get_many(keys)
         return Response({
-            'notion_page_id': SiteSettings.get('notion_page_id', ''),
-            'quiz_url': quiz_url,
-            'jbig_description': SiteSettings.get('jbig_description', ''),
-            'jbig_president': SiteSettings.get('jbig_president', ''),
-            'jbig_president_dept': SiteSettings.get('jbig_president_dept', ''),
-            'jbig_vice_president': SiteSettings.get('jbig_vice_president', ''),
-            'jbig_vice_president_dept': SiteSettings.get('jbig_vice_president_dept', ''),
-            'jbig_email': SiteSettings.get('jbig_email', ''),
-            'jbig_advisor': SiteSettings.get('jbig_advisor', ''),
-            'jbig_advisor_dept': SiteSettings.get('jbig_advisor_dept', ''),
+            'notion_page_id': values['notion_page_id'],
+            'quiz_url': values.get('quiz_url', ''),
+            **{key: values[key] for key in self.PUBLIC_KEYS if key != 'notion_page_id'},
         })
 
     @extend_schema(
