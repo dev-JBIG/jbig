@@ -41,6 +41,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
     const [applications, setApplications] = useState<ApplicationItem[]>([]);
     const [managerTab, setManagerTab] = useState<number>(1); // PENDING
     const [loadingApps, setLoadingApps] = useState(false);
+    const [loadAppsFailed, setLoadAppsFailed] = useState(false);
 
     const r = recruitment;
 
@@ -105,20 +106,22 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
     const loadApplications = useCallback(async () => {
         if (!accessToken) return;
         setLoadingApps(true);
+        setLoadAppsFailed(false);
         try {
             const apps = await fetchApplications(postId, accessToken);
             setApplications(apps);
         } catch {
             setApplications([]);
+            setLoadAppsFailed(true);
         } finally {
             setLoadingApps(false);
         }
     }, [accessToken, postId]);
 
     const handleToggleManager = useCallback(() => {
-        if (!showManager) loadApplications();
+        if (!showManager && !loadingApps) loadApplications();
         setShowManager(prev => !prev);
-    }, [showManager, loadApplications]);
+    }, [showManager, loadingApps, loadApplications]);
 
     const handleAppAction = useCallback(async (appId: number, action: string) => {
         if (!accessToken) return;
@@ -232,7 +235,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
                                 모집 취소
                             </Button>
                         )}
-                        <Button size="small" variant="default" onClick={handleToggleManager}>
+                        <Button type="button" size="small" variant="default" onClick={handleToggleManager}>
                             {showManager ? '지원자 관리 닫기' : `지원자 관리${r.total_applicants != null ? ` (${r.total_applicants}명)` : ''}`}
                         </Button>
                     </div>
@@ -261,6 +264,12 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
 
                             {loadingApps ? (
                                 <div className="recruitment-empty">불러오는 중...</div>
+                            ) : loadAppsFailed ? (
+                                <div className="recruitment-empty" role="alert">
+                                    지원자 목록을 불러오지 못했습니다.
+                                    {' '}
+                                    <Button type="button" size="small" onClick={loadApplications}>다시 시도</Button>
+                                </div>
                             ) : filteredApps.length === 0 ? (
                                 <EmptyState compact icon={<Users size={22} />} title="해당 상태의 지원자가 없습니다." />
                             ) : (
