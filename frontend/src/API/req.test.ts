@@ -1,7 +1,7 @@
 import { AxiosError, AxiosAdapter } from "axios";
 import client from "./client";
 import { authTransport, getAuthState, readAuth, setAuth, signOutLocal, subscribeAuth } from "./auth";
-import { createPost, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
+import { createPost, fetchApplications, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
 
 const user = { username: "회원", semester: "3", email: "member@jbnu.ac.kr", is_staff: false };
 const token = (seconds: number) => `header.${btoa(JSON.stringify({ exp: Date.now() / 1000 + seconds }))}.signature`;
@@ -25,6 +25,45 @@ beforeEach(() => {
     authTransport.defaults.adapter = refreshAdapter;
 });
 afterEach(() => { signOutLocal(); jest.restoreAllMocks(); });
+
+test('recruitment with no applicants returns an empty array', async () => {
+    adapter.mockImplementation(async config => ok(config, {
+        count: 0, next: null, previous: null, results: [],
+    }));
+
+    await expect(fetchApplications(1, freshAccess)).resolves.toEqual([]);
+});
+
+test('fetches every applicant page from the recruitment endpoint', async () => {
+    const pending = { id: 1, status: 1 };
+    const accepted = { id: 2, status: 2 };
+    adapter.mockImplementationOnce(async config => ok(config, {
+        count: 2, next: 'https://pagination.example/?page=2', previous: null, results: [pending],
+    }));
+    adapter.mockImplementationOnce(async config => ok(config, {
+        count: 2, next: null, previous: 'https://pagination.example/', results: [accepted],
+    }));
+
+    await expect(fetchApplications(1, freshAccess)).resolves.toEqual([pending, accepted]);
+    expect(adapter).toHaveBeenCalledTimes(2);
+    const [first, second] = adapter.mock.calls.map(([config]) => config);
+    expect(second.url).toBe(first.url);
+    expect(second.params).toMatchObject({ page: 2 });
+});
+
+test('fetches an unpaginated applicant response', async () => {
+    const rejected = { id: 3, status: 3 };
+    adapter.mockImplementation(async config => ok(config, [rejected]));
+
+    await expect(fetchApplications(1, freshAccess)).resolves.toEqual([rejected]);
+    expect(adapter).toHaveBeenCalledTimes(1);
+});
+
+test('rejects a response without an applicant list', async () => {
+    adapter.mockImplementation(async config => ok(config, '<html></html>'));
+
+    await expect(fetchApplications(1, freshAccess)).rejects.toThrow('지원자 목록 응답 형식이 올바르지 않습니다.');
+});
 
 test.each(['ACCOUNT_NOT_VERIFIED', 'INVALID_CREDENTIALS', 'ACCOUNT_INACTIVE'])(
     'signin preserves %s without refreshing an existing session', async errorCode => {

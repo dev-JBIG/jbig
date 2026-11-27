@@ -1,6 +1,6 @@
 import { AxiosError, isAxiosError } from "axios";
 import axios, { authHeaders } from "./client";
-import { BASE_URL } from "./auth";
+import { BASE_URL, readAuth, SessionChangedError } from "./auth";
 import { optimizeImageForUpload } from "../Utils/imageOptimize";
 import {
     PostItem,
@@ -10,7 +10,8 @@ import {
     UserComment,
     CalendarEvent,
     CalendarEventCreate,
-    AttachmentData
+    AttachmentData,
+    ApplicationItem,
 } from "../Components/Utils/interfaces";
 
 export { signout } from "./auth";
@@ -43,6 +44,7 @@ function getErrorMessage(error: unknown, defaultMsg: string): string {
 interface PaginatedResponse<T> {
     results?: T[];
     count?: number;
+    next?: string | null;
 }
 
 export interface PhotoPostItem {
@@ -1443,10 +1445,29 @@ export const withdrawApplication = async (postId: number, token: string): Promis
 };
 
 // 지원자 목록 조회
-export const fetchApplications = async (postId: number, token: string): Promise<any[]> => {
+export const fetchApplications = async (postId: number, token: string): Promise<ApplicationItem[]> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/applications/`;
-    const res = await axios.get(url, { headers: authHeaders(token) });
-    return res.data;
+    const sessionId = readAuth().session?.id;
+    const applications: ApplicationItem[] = [];
+    let page = 1;
+    let hasNextPage: boolean;
+
+    do {
+        const { data } = await axios.get<PaginatedResponse<ApplicationItem> | ApplicationItem[]>(url, {
+            headers: authHeaders(token),
+            params: { page },
+        });
+        if (readAuth().session?.id !== sessionId) throw new SessionChangedError();
+        if (!Array.isArray(data) && !Array.isArray(data?.results)) {
+            throw new Error('지원자 목록 응답 형식이 올바르지 않습니다.');
+        }
+
+        applications.push(...extractResults(data));
+        hasNextPage = !Array.isArray(data) && Boolean(data.next);
+        page += 1;
+    } while (hasNextPage);
+
+    return applications;
 };
 
 // 지원 수락/거절
