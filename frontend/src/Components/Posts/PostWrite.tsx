@@ -11,6 +11,7 @@ import { safeSanitizePlugin } from "../Utils/safeMarkdown";
 import { Button } from '@primer/react';
 import {createPost, fetchPostDetail, modifyPost, updateRecruitment, uploadAttachment, deleteUploadedFile, fetchDraft, saveDraft, deleteDraft} from "../../API/req"
 import {Board, Section, UploadFile, RecruitmentFormData, FormType} from "../Utils/interfaces";
+import { currentSessionId, SESSION_CHANGED_MESSAGE } from "../../API/req";
 import {useUser} from "../Utils/UserContext";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
@@ -156,9 +157,15 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         }
 
         try {
+            const sessionId = currentSessionId();
             const res = await uploadAttachment(file);
             if (res.message || !res.path) {
                 showAlert({ message: `이미지 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
+                return false;
+            }
+            // 올리는 동안 계정이 바뀌었으면 이전 계정 파일을 이 글에 넣지 않는다
+            if (currentSessionId() !== sessionId) {
+                showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
                 return false;
             }
 
@@ -267,6 +274,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         (async () => {
             try {
+                const draftSessionId = currentSessionId();
                 const draft = await fetchDraft();
                 if (!draft || (!draft.title && !draft.content_md)) {
                     return;
@@ -279,6 +287,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     confirmText: '불러오기',
                     cancelText: '취소',
                     onConfirm: async () => {
+                        // 확인창이 열린 동안 계정이 바뀌었으면 이전 계정의 초안을 넣지 않는다
+                        if (currentSessionId() !== draftSessionId) return;
                         if (draft.title) setTitle(draft.title);
                         if (draft.content_md) setContent(draft.content_md);
                         draft.uploaded_paths?.forEach(p => uploadedPathsRef.current.add(p));
@@ -289,6 +299,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         }
                     },
                     onCancel: async () => {
+                        // 확인창이 열린 동안 계정이 바뀌었으면 지금 계정의 초안을 지우지 않는다
+                        if (currentSessionId() !== draftSessionId) return;
                         // 임시저장 거부 시 DB에서 삭제 및 업로드된 파일도 삭제
                         await deleteDraft();
                         if (draft.uploaded_paths) {
@@ -455,10 +467,16 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             }
 
             try {
+                const sessionId = currentSessionId();
                 const res = await uploadAttachment(file);
                 if (res.message || !res.path) {
                     showAlert({ message: `"${file.name}" 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
                     continue;
+                }
+                // 올리는 동안 계정이 바뀌었으면 이전 계정 파일을 이 글에 넣지 않고 멈춘다
+                if (currentSessionId() !== sessionId) {
+                    showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
+                    break;
                 }
 
                 const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";
@@ -627,9 +645,10 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     show_applicants: recruitmentData.show_applicants,
                 };
             }
+            const submitSessionId = currentSessionId();
             await createPost(activeBoard!.id, postPayload);
-            // 게시글 등록 성공 시 DB 임시저장 삭제
-            if (canUseDraft) {
+            // 게시글 등록 성공 시 DB 임시저장 삭제(등록하는 동안 계정이 바뀌었으면 지금 계정의 초안은 두고)
+            if (canUseDraft && currentSessionId() === submitSessionId) {
                 await deleteDraft().catch(() => {});
             }
             savedRef.current = true;

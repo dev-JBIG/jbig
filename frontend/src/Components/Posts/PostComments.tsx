@@ -311,7 +311,11 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
         }
     };
 
+    // 수정 창을 열거나 닫을 때마다 늘어나는 번호. 저장 응답이 왔을 때 같은 수정 창일 때만 닫는다
+    const editSessionRef = useRef(0);
+
     const cancelEdit = () => {
+        editSessionRef.current += 1;
         setEditingCommentId(null);
         setEditingReplyKey(null);
         setEditText("");
@@ -328,11 +332,13 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
         if (!content) return;
 
         const is_anonymous = !editShowRealName;
+        const session = editSessionRef.current;
 
         try {
             await updateComment(id, { content, parent, is_anonymous });
             updateItem(id, { content, is_anonymous });
-            cancelEdit();
+            // 기다리는 동안 다른 댓글 수정을 열었다면 그 초안은 남겨 둔다
+            if (editSessionRef.current === session) cancelEdit();
         } catch {
             showAlert({ message: failMessage, type: 'error' });
         }
@@ -351,6 +357,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
 
         setOpenMenu(null);               // 더보기 닫기
         setEditingReplyKey(null);        // 답글 편집 모드 해제
+        editSessionRef.current += 1;
         setEditingCommentId(commentId);  // 댓글 편집 모드 진입
         setEditText(target.content);     // 현재 내용으로 에디터 채우기
         setEditShowRealName(!target.is_anonymous);  // 현재 실명 표시 여부 로드
@@ -366,6 +373,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
 
         setOpenMenu(null);                     // 더보기 닫기
         setEditingCommentId(null);             // 댓글 편집 모드 해제
+        editSessionRef.current += 1;
         setEditingReplyKey({ cId: commentId, rId: replyId }); // 답글 편집 모드 진입
         setEditText(target.content);           // 현재 내용으로 에디터 채우기
         setEditShowRealName(!target.is_anonymous);  // 현재 실명 표시 여부 로드

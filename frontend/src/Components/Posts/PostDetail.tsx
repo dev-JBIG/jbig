@@ -2,6 +2,7 @@ import React, {useEffect, useMemo, useRef, useState, useCallback, memo} from "re
 import { useParams, useNavigate } from "react-router-dom";
 import { PostDetailData, FormType } from "../Utils/interfaces";
 import { deletePost, fetchPostDetail, togglePostLike, downloadGatedAttachment } from "../../API/req";
+import { currentSessionId, SESSION_CHANGED_MESSAGE } from "../../API/req";
 import "./PostDetail.css";
 import "./PostDetail-mobile.css";
 import "./PostDetail-comments.css";
@@ -327,6 +328,7 @@ const PostDetail: React.FC = () => {
             return; 
         }
 
+        const sessionId = currentSessionId();
         const confirmed = await showConfirm({
             message: "게시글을 삭제하시겠습니까?",
             title: "게시글 삭제",
@@ -335,6 +337,11 @@ const PostDetail: React.FC = () => {
             cancelText: '취소'
         });
         if (!confirmed) return;
+        // 확인창이 열린 동안 다른 탭에서 계정이 바뀌었으면 보내지 않는다
+        if (currentSessionId() !== sessionId) {
+            showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
+            return;
+        }
 
         try {
             const res = await deletePost(post.id);

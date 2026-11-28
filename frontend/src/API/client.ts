@@ -26,6 +26,15 @@ function stripAuthorizationHeader(headers: InternalAxiosRequestConfig["headers"]
     }
 }
 
+/**
+ * 지금 로그인 세션의 id(없으면 null). 토큰을 갱신해도 같고, 로그아웃하거나 다른 계정으로 로그인하면 바뀐다.
+ * 확인창, 업로드처럼 기다리는 동작은 시작할 때 이 값을 적어 두고, 요청 직전에 같을 때만 보낸다.
+ */
+export const currentSessionId = (): string | null => readAuth().session?.id ?? null;
+
+/** 기다리는 동안 계정이 바뀌어 요청을 멈췄을 때 보여줄 문구 */
+export const SESSION_CHANGED_MESSAGE = "로그인한 계정이 바뀌어 요청을 보내지 않았습니다. 다시 시도해 주세요.";
+
 /** 지금 로그인 세션의 액세스 토큰(없으면 null). 화면이 토큰을 들고 다니지 않게 API 함수가 직접 읽는다 */
 export const currentAccessToken = (): string | null => readAuth().session?.accessToken ?? null;
 
