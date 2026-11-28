@@ -73,7 +73,7 @@ class SecurityHardeningTests(TestCase):
         img_key = f'uploads/2026/11/21/{self.alice.id}/photo.png'
         token = make_media_stream_token(img_key)
         fake_stream = (BytesIO(b'\x89PNG\r\n\x1a\n'), 'text/html; charset=utf-8', 8)
-        with patch('boards.views.get_file_stream', return_value=fake_stream):
+        with patch('boards.views.files.get_file_stream', return_value=fake_stream):
             res = self.client.get(reverse('media-stream'), {'token': token})
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(res['Content-Type'], 'image/png')
@@ -298,7 +298,7 @@ class SecurityHardeningTests(TestCase):
         )
         self.client.force_authenticate(user=self.alice)
         fake_stream = (BytesIO(b'<html>test</html>'), 'text/html', 17)
-        with patch('boards.views.get_file_stream', return_value=fake_stream):
+        with patch('boards.views.files.get_file_stream', return_value=fake_stream):
             res = self.client.get(
                 reverse('post-attachment-download', kwargs={'post_id': post.id, 'index': 0})
             )
@@ -500,7 +500,7 @@ class SecurityHardeningTests(TestCase):
 
     # ── [CR-5] 비밀번호 재설정 요청 SMTP 실패 시 계정 열거 방지 ───────────
     def test_password_reset_request_returns_generic_200_on_smtp_failure(self):
-        with patch('users.views.send_mail', side_effect=RuntimeError('SMTP down')):
+        with patch('users.views.password.send_mail', side_effect=RuntimeError('SMTP down')):
             res_existing = self.client.post(
                 reverse('password-reset-request'),
                 {'email': self.alice.email},

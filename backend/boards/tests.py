@@ -398,7 +398,7 @@ class PostVisibilityHardeningTest(APITestCase):
                 }, format='json')
                 self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_removed_foreign_markdown_media_is_not_deleted(self, delete_files):
         victim_path = f"uploads/2025/01/01/{self.user.id}/victim.png"
         poisoned_post = Post.objects.create(
@@ -418,7 +418,7 @@ class PostVisibilityHardeningTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         delete_files.assert_not_called()
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_unreferenced_own_markdown_media_is_deleted(self, delete_files):
         own_path = f"uploads/2025/01/01/{self.user.id}/own.png"
         post = Post.objects.create(
@@ -438,7 +438,7 @@ class PostVisibilityHardeningTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         delete_files.assert_called_once_with({own_path})
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_referenced_own_markdown_media_is_not_deleted(self, delete_files):
         own_path = f"uploads/2025/01/01/{self.user.id}/shared.png"
         post = Post.objects.create(
@@ -464,7 +464,7 @@ class PostVisibilityHardeningTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         delete_files.assert_not_called()
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_draft_referenced_own_markdown_media_is_not_deleted(self, delete_files):
         own_path = f"uploads/2025/01/01/{self.user.id}/draft.png"
         post = Post.objects.create(
