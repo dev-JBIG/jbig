@@ -159,7 +159,8 @@ function PopupManagement() {
             const data: PopupCreate = {
                 title: title.trim(),
                 content: content.trim(),
-                image_path: finalImagePath || undefined,
+                // 수정에서 이미지를 뺐으면 빈 문자열을 보내야 서버가 지운다(필드가 빠지면 예전 이미지가 남음)
+                image_path: finalImagePath || (editingPopup ? "" : undefined),
                 start_date: startDate,
                 end_date: endDate,
                 is_active: isActive,

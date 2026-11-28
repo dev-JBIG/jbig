@@ -51,7 +51,8 @@ const PERMISSION_FIELD_LABELS: Record<PermissionField, string> = {
 function BoardManagement() {
     const [boards, setBoards] = useState<AdminBoard[]>([]);
     const [loading, setLoading] = useState(true);
-    const [savingId, setSavingId] = useState<number | null>(null);
+    // 저장 중인 게시판 id 들. 한 게시판 요청이 끝나도 다른 게시판의 진행 상태는 그대로 둔다
+    const [savingIds, setSavingIds] = useState<Set<number>>(() => new Set());
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
     useEffect(() => {
@@ -71,7 +72,7 @@ function BoardManagement() {
     const handleChange = async (board: AdminBoard, field: PermissionField, value: string) => {
         const prev = board[field];
         if (prev === value) return;
-        setSavingId(board.id);
+        setSavingIds((ids) => new Set(ids).add(board.id));
         setMessage(null);
         // 낙관적 업데이트
         setBoards((bs) => bs.map((b) => (b.id === board.id ? { ...b, [field]: value } : b)));
@@ -79,11 +80,15 @@ function BoardManagement() {
         if (res.success) {
             setMessage({ type: 'success', text: `'${board.name}' ${PERMISSION_FIELD_LABELS[field]} 권한을 변경했습니다.` });
         } else {
-            // 실패 시 롤백
-            setBoards((bs) => bs.map((b) => (b.id === board.id ? { ...b, [field]: prev } : b)));
+            // 실패 시 롤백: 화면 값이 아직 이 요청이 넣은 값일 때만(그 사이 다른 변경이 성공했으면 그대로 둔다)
+            setBoards((bs) => bs.map((b) => (b.id === board.id && b[field] === value ? { ...b, [field]: prev } : b)));
             setMessage({ type: 'error', text: res.message || '권한 변경에 실패했습니다.' });
         }
-        setSavingId(null);
+        setSavingIds((ids) => {
+            const next = new Set(ids);
+            next.delete(board.id);
+            return next;
+        });
     };
 
     // 카테고리별 그룹핑 (서버가 category__id, name 순으로 정렬해 내려준다)
@@ -125,7 +130,7 @@ function BoardManagement() {
                         <div className="admin-board-list">
                             {list.map((board) => {
                                 const policy = getBoardPolicy(board);
-                                const saving = savingId === board.id;
+                                const saving = savingIds.has(board.id);
                                 return (
                                     <div key={board.id} className="admin-board-row">
                                         <div className="admin-board-info">

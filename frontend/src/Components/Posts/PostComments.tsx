@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PostDetailData } from "../Utils/interfaces";
+import { Comment, PostDetailData, Reply } from "../Utils/interfaces";
 import { createComment, deleteComment, toggleCommentLike, updateComment } from "../../API/req";
 import "./PostDetail-comments.css";
 import { Button, Label } from '@primer/react';
@@ -117,75 +117,75 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
         return () => document.removeEventListener("pointerdown", onPointerDown);
     }, []);
 
+    // 화면의 최신 게시글 상태에 변경을 적용한다. 요청을 기다리는 동안 생긴 다른 변경
+    // (게시글 좋아요, 다른 댓글 작업)을 요청 시작 때의 스냅샷으로 덮지 않게 함수형으로 갱신한다.
+    const updatePost = (fn: (p: PostDetailData) => PostDetailData) =>
+        setPost(prev => (prev && typeof prev !== "string" ? fn(prev) : prev));
+
+    // 댓글 또는 답글 하나(id 로 찾음)만 바꾼다
+    const updateItem = (id: number, patch: Partial<Comment & Reply>) =>
+        updatePost(p => ({
+            ...p,
+            comments: (p.comments || []).map(c =>
+                c.id === id
+                    ? { ...c, ...patch }
+                    : c.replies
+                        ? { ...c, replies: c.replies.map(r => (r.id === id ? { ...r, ...patch } : r)) }
+                        : c
+            ),
+        }));
+
+    const findItem = (id: number): Comment | Reply | undefined => {
+        for (const c of post.comments || []) {
+            if (c.id === id) return c;
+            const r = c.replies?.find(x => x.id === id);
+            if (r) return r;
+        }
+        return undefined;
+    };
+
+    const requireLogin = (type: 'info' | 'warning' = 'warning') =>
+        showAlert({ message: "로그인이 필요합니다.", type, onClose: () => navigate("/signin") });
+
+    // 같은 댓글의 좋아요 요청이 끝나기 전에는 다시 보내지 않는다(응답 순서가 바뀌면 화면이 서버와 달라진다)
+    const likePendingRef = useRef<Set<number>>(new Set());
+
     // 댓글 좋아요 토글 핸들러
     const handleToggleCommentLike = async (commentId: number, isReply: boolean = false) => {
-        if (!post || typeof post === "string" || !post.comments) return;
-
+        if (!post.comments) return;
         if (!accessToken) {
-            showAlert({
-                message: "로그인이 필요합니다.",
-                type: 'info',
-                onClose: () => navigate("/signin")
-            });
+            requireLogin('info');
             return;
         }
+        const current = findItem(commentId);
+        if (!current || likePendingRef.current.has(commentId)) return;
+        likePendingRef.current.add(commentId);
 
         // 낙관적 업데이트
-        const updatedComments = post.comments.map(c => {
-            if (c.id === commentId) {
-                const currentLikes = c.likes || 0;
-                const nextLiked = !c.isLiked;
-                const nextLikes = currentLikes + (nextLiked ? 1 : -1);
-                return { ...c, isLiked: nextLiked, likes: Math.max(0, nextLikes) };
-            }
-            // 답글인 경우
-            if (c.replies) {
-                const updatedReplies = c.replies.map(r => {
-                    if (r.id === commentId) {
-                        const currentLikes = r.likes || 0;
-                        const nextLiked = !r.isLiked;
-                        const nextLikes = currentLikes + (nextLiked ? 1 : -1);
-                        return { ...r, isLiked: nextLiked, likes: Math.max(0, nextLikes) };
-                    }
-                    return r;
-                });
-                return { ...c, replies: updatedReplies };
-            }
-            return c;
-        });
-
-        setPost({ ...post, comments: updatedComments });
+        const before = { isLiked: current.isLiked, likes: current.likes };
+        const nextLiked = !before.isLiked;
+        updateItem(commentId, { isLiked: nextLiked, likes: Math.max(0, (before.likes || 0) + (nextLiked ? 1 : -1)) });
 
         try {
             const response = await toggleCommentLike(commentId);
-            
             // 서버 응답으로 실제 값 업데이트
-            const finalComments = post.comments.map(c => {
-                if (c.id === commentId) {
-                    return { ...c, isLiked: response.isLiked, likes: response.likes };
-                }
-                if (c.replies) {
-                    const finalReplies = c.replies.map(r => {
-                        if (r.id === commentId) {
-                            return { ...r, isLiked: response.isLiked, likes: response.likes };
-                        }
-                        return r;
-                    });
-                    return { ...c, replies: finalReplies };
-                }
-                return c;
-            });
-            setPost({ ...post, comments: finalComments });
+            updateItem(commentId, { isLiked: response.isLiked, likes: response.likes });
         } catch (e) {
-            // 실패 시 롤백
-            setPost(post);
+            // 실패 시 이 댓글만 되돌린다
+            updateItem(commentId, before);
             showAlert({ message: "좋아요 처리 중 오류가 발생했습니다.", type: 'error' });
+        } finally {
+            likePendingRef.current.delete(commentId);
         }
+    };
+
+    const resetTurnstile = () => {
+        setTurnstileToken(null);
+        turnstileRef.current?.reset();
     };
 
     // 댓글 등록
     const handleAddComment = async () => {
-        if (!post || typeof post === "string") return;
         const content = commentInput.trim();
         if (!content) return;
 
@@ -204,107 +204,56 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
                 // 비회원은 항상 익명
             }
             const created = await createComment(post.id, payload);
-            setPost({
-                ...post,
-                comments: [ ...(post.comments || []), created ],
-            });
+            updatePost(p => ({ ...p, comments: [...(p.comments || []), created] }));
             setCommentInput("");
             setShowCommentRealName(false);
-            // Turnstile 리셋
-            setTurnstileToken(null);
-            turnstileRef.current?.reset();
+            resetTurnstile();
         } catch {
             showAlert({ message: "댓글 등록에 실패했습니다.", type: 'error' });
             // 실패 시에도 Turnstile 리셋
-            setTurnstileToken(null);
-            turnstileRef.current?.reset();
+            resetTurnstile();
         }
     };
 
-    // 댓글 삭제
-    const handleDeleteComment = async (commentId: number) => {
-        if (!post || typeof post === "string") return;
-        if (!accessToken) { 
-            showAlert({
-                message: "로그인이 필요합니다.",
-                type: 'warning',
-                onClose: () => navigate("/signin")
-            });
-            return; 
+    // 댓글, 답글 삭제(같은 엔드포인트). 실패하면 그 항목만 원래대로 되돌린다
+    const deleteItem = async (id: number, failMessage: string) => {
+        if (!accessToken) {
+            requireLogin();
+            return;
         }
-
-        const prev = post;
-        const optimistic = {
-            ...post,
-            comments: (post.comments || []).map(c =>
-                c.id === commentId ? { ...c, content: "삭제 된 댓글입니다", is_deleted: true } : c
-            ),
-        };
-        setPost(optimistic);
+        const target = findItem(id);
+        if (!target) return;
+        const before = { content: target.content, is_deleted: target.is_deleted };
+        updateItem(id, { content: "삭제 된 댓글입니다", is_deleted: true });
 
         try {
-            const res: any = await deleteComment(commentId);
-            if (res && res.status === 401) { 
-                setPost(prev); 
-                showAlert({
-                    message: "로그인이 필요합니다.",
-                    type: 'warning',
-                    onClose: () => navigate("/signin")
-                });
-                return; 
+            const res: any = await deleteComment(id);
+            if (res && res.status === 401) {
+                updateItem(id, before);
+                requireLogin();
+                return;
             }
             if (res && res.deleted === false) { throw new Error(res.message || "삭제 실패"); }
             // 성공 시 그대로 유지
         } catch {
-            setPost(prev);
-            showAlert({ message: "댓글 삭제에 실패했습니다.", type: 'error' });
+            updateItem(id, before);
+            showAlert({ message: failMessage, type: 'error' });
         }
     };
 
+    // 댓글 삭제
+    const handleDeleteComment = (commentId: number) => deleteItem(commentId, "댓글 삭제에 실패했습니다.");
+
     // 답글 삭제
-    const handleDeleteReply = async (commentId: number, replyId: number) => {
-        if (!post || typeof post === "string") return;
-        if (!accessToken) { 
-            showAlert({
-                message: "로그인이 필요합니다.",
-                type: 'warning',
-                onClose: () => navigate("/signin")
-            });
-            return; 
-        }
+    const handleDeleteReply = (_commentId: number, replyId: number) => deleteItem(replyId, "답글 삭제에 실패했습니다.");
 
-        const prev = post;
-        const optimistic = {
-            ...post,
-            comments: (post.comments || []).map(c =>
-                c.id === commentId
-                    ? {
-                        ...c,
-                        replies: (c.replies || []).map(r =>
-                            r.id === replyId ? { ...r, content: "삭제 된 댓글입니다", is_deleted: true } : r
-                        ),
-                    }
-                    : c
-            ),
-        };
-        setPost(optimistic);
-
-        try {
-            const res: any = await deleteComment(replyId); // 답글도 같은 엔드포인트
-            if (res && res.status === 401) { 
-                setPost(prev); 
-                showAlert({
-                    message: "로그인이 필요합니다.",
-                    type: 'warning',
-                    onClose: () => navigate("/signin")
-                });
-                return; 
-            }
-            if (res && res.deleted === false) { throw new Error(res.message || "삭제 실패"); }
-        } catch {
-            setPost(prev);
-            showAlert({ message: "답글 삭제에 실패했습니다.", type: 'error' });
-        }
+    // 답글 입력창을 열 때마다 늘어나는 번호. 등록 응답이 왔을 때 같은 입력창이 아직 열려 있을 때만 입력을 지운다
+    const replySessionRef = useRef(0);
+    const openReply = (id: number | null) => {
+        replySessionRef.current += 1;
+        setReplyTargetId(id);
+        setReplyInput("");
+        setShowReplyRealName(false);  // 새 답글은 실명 공개 기본값(끔)부터
     };
 
     // 답글쓰기 버튼 클릭
@@ -317,21 +266,16 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
                 type: 'warning',
                 confirmText: '취소',
                 cancelText: '계속 작성',
-                onConfirm: () => {
-                    setReplyTargetId(id);
-                    setReplyInput("");
-                }
+                onConfirm: () => openReply(id),
             });
             // 취소시 아무 것도 하지 않음 (기존 답글창/입력값 유지)
         } else {
-            setReplyTargetId(replyTargetId === id ? null : id);
-            setReplyInput("");
+            openReply(replyTargetId === id ? null : id);
         }
     };
 
     // 답글 등록
     const handleAddReply = async (commentId: number) => {
-        if (!post || typeof post === "string") return;
         const content = replyInput.trim();
         if (!content) return;
 
@@ -341,6 +285,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
             return;
         }
 
+        const session = replySessionRef.current;
         try {
             const payload: any = { content, parent: commentId };
             if (accessToken) {
@@ -350,25 +295,19 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
                 // 비회원은 항상 익명
             }
             const created = await createComment(post.id, payload);
-            setPost({
-                ...post,
-                comments: (post.comments || []).map(c =>
-                    c.id === commentId
-                        ? { ...c, replies: [ ...(c.replies || []), created ] }
-                        : c
+            updatePost(p => ({
+                ...p,
+                comments: (p.comments || []).map(c =>
+                    c.id === commentId ? { ...c, replies: [...(c.replies || []), created] } : c
                 ),
-            });
-            setReplyInput("");
-            setShowReplyRealName(false);
-            setReplyTargetId(null);
-            // Turnstile 리셋
-            setTurnstileToken(null);
-            turnstileRef.current?.reset();
+            }));
+            // 기다리는 동안 다른 답글창을 열어 쓰기 시작했다면 그 초안은 남겨 둔다
+            if (replySessionRef.current === session) openReply(null);
+            resetTurnstile();
         } catch {
             showAlert({ message: "답글 등록에 실패했습니다.", type: 'error' });
             // 실패 시에도 Turnstile 리셋
-            setTurnstileToken(null);
-            turnstileRef.current?.reset();
+            resetTurnstile();
         }
     };
 
@@ -379,14 +318,10 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
         setEditShowRealName(false);
     };
 
-    const saveEditComment = async (commentId: number) => {
-        if (!post || typeof post === "string") return;
+    // 댓글, 답글 수정 저장
+    const saveEdit = async (id: number, parent: number | null, failMessage: string) => {
         if (!accessToken) {
-            showAlert({
-                message: "로그인이 필요합니다.",
-                type: 'warning',
-                onClose: () => navigate("/signin")
-            });
+            requireLogin();
             return;
         }
         const content = editText.trim();
@@ -395,47 +330,17 @@ const PostComments: React.FC<PostCommentsProps> = ({ post, setPost, commentCount
         const is_anonymous = !editShowRealName;
 
         try {
-            await updateComment(commentId, { content, parent: null, is_anonymous });
-            setPost({
-                ...post,
-                comments: (post.comments || []).map(c => c.id === commentId ? { ...c, content, is_anonymous } : c),
-            });
+            await updateComment(id, { content, parent, is_anonymous });
+            updateItem(id, { content, is_anonymous });
             cancelEdit();
         } catch {
-            showAlert({ message: "댓글 수정에 실패했습니다.", type: 'error' });
+            showAlert({ message: failMessage, type: 'error' });
         }
     };
 
-    const saveEditReply = async (cId: number, rId: number) => {
-        if (!post || typeof post === "string") return;
-        if (!accessToken) {
-            showAlert({
-                message: "로그인이 필요합니다.",
-                type: 'warning',
-                onClose: () => navigate("/signin")
-            });
-            return;
-        }
-        const content = editText.trim();
-        if (!content) return;
+    const saveEditComment = (commentId: number) => saveEdit(commentId, null, "댓글 수정에 실패했습니다.");
 
-        const is_anonymous = !editShowRealName;
-
-        try {
-            await updateComment(rId, { content, parent: cId, is_anonymous });
-            setPost({
-                ...post,
-                comments: (post.comments || []).map(c =>
-                    c.id === cId
-                        ? { ...c, replies: (c.replies || []).map(r => r.id === rId ? { ...r, content, is_anonymous } : r) }
-                        : c
-                ),
-            });
-            cancelEdit();
-        } catch {
-            showAlert({ message: "답글 수정에 실패했습니다.", type: 'error' });
-        }
-    };
+    const saveEditReply = (cId: number, rId: number) => saveEdit(rId, cId, "답글 수정에 실패했습니다.");
 
     // 댓글 수정 시작
     const handleEditComment = (commentId: number) => {

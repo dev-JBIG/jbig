@@ -1050,8 +1050,9 @@ class DraftSerializer(serializers.ModelSerializer):
         return draft
 
     def update(self, instance, validated_data):
-        board_id = validated_data.pop('board_id', None)
-        if board_id is not None:
+        # 키가 없으면 게시판 그대로, null 이면 해제(자동 저장이 게시판 선택 해제를 null 로 보낸다)
+        if 'board_id' in validated_data:
+            board_id = validated_data.pop('board_id')
             instance.board = Board.objects.filter(id=board_id).first() if board_id else None
         
         instance.title = validated_data.get('title', instance.title)

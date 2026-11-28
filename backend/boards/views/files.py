@@ -1,6 +1,7 @@
 """파일: 업로드 주소 발급, 업로드 확인, 삭제, 권한 첨부 다운로드, 미디어 스트림 토큰"""
 import os
 import re
+import time
 import uuid
 from datetime import datetime
 from django.core import signing
@@ -174,6 +175,19 @@ def make_media_stream_token(file_key: str) -> str:
     return signing.dumps({'key': file_key}, salt=_MEDIA_STREAM_SALT)
 
 
+MEDIA_STREAM_CACHE_MAX_SECONDS = 3600
+
+
+def _media_cache_seconds(token: str) -> int:
+    """토큰 남은 유효 시간과 1시간 중 짧은 쪽(초). 발급 시각을 못 읽으면 0(캐시 안 함)."""
+    try:
+        issued = signing.b62_decode(token.split(':')[-2])
+    except (IndexError, ValueError):
+        return 0
+    remaining = MEDIA_STREAM_TOKEN_MAX_AGE - (int(time.time()) - issued)
+    return max(0, min(MEDIA_STREAM_CACHE_MAX_SECONDS, remaining))
+
+
 def verify_media_stream_token(token: str) -> str | None:
     """토큰을 검증해 file_key를 반환한다. 서명 위조/만료/형식오류면 None."""
     if not token:
@@ -326,7 +340,8 @@ class MediaStreamView(APIView):
         response['X-Content-Type-Options'] = 'nosniff'
         response['Content-Security-Policy'] = "default-src 'none'; sandbox"
         # 서명 토큰이 붙은 사설 리소스라 공용 캐시는 피하고 짧게 사설 캐시만 허용.
-        response['Cache-Control'] = 'private, max-age=3600'
+        # 캐시 수명은 토큰이 만료되기 전까지로 줄인다(만료 뒤 브라우저 캐시로 다시 보이지 않게).
+        response['Cache-Control'] = f'private, max-age={_media_cache_seconds(token)}'
         return response
 
 

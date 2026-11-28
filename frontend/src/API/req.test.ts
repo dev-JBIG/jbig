@@ -1,7 +1,7 @@
 import { AxiosError, AxiosAdapter } from "axios";
 import client from "./client";
 import { authTransport, getAuthState, readAuth, setAuth, signOutLocal, subscribeAuth } from "./auth";
-import { createPost, fetchApplications, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
+import { createComment, createPost, fetchApplications, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
 
 const user = { username: "회원", semester: "3", email: "member@jbnu.ac.kr", is_staff: false };
 const token = (seconds: number) => `header.${btoa(JSON.stringify({ exp: Date.now() / 1000 + seconds }))}.signature`;
@@ -190,4 +190,12 @@ test('authHeaders: 로그인 세션이 있을 때만 인증 헤더를 붙인다'
     expect(authHeaders()).toEqual({ Authorization: 'Bearer access-1' });
     signOutLocal();
     expect(authHeaders()).toEqual({});
+});
+
+test('createComment keeps the server anonymity flag (defaults to anonymous)', async () => {
+    const base = { id: 9, user_id: 'u', author_semester: 1, author: 'u', content: 'c', created_at: '2026-11-28T10:00:00', is_owner: true, is_deleted: false };
+    adapter.mockImplementationOnce(async config => ok(config, { ...base, parent: null, is_anonymous: false }));
+    expect((await createComment(1, { content: 'c', parent: null, is_anonymous: false })).is_anonymous).toBe(false);
+    adapter.mockImplementationOnce(async config => ok(config, { ...base, parent: 3 }));
+    expect((await createComment(1, { content: 'c', parent: 3 })).is_anonymous).toBe(true);
 });

@@ -135,13 +135,14 @@ class PostLikeAPIView(generics.GenericAPIView):
         except post.likes.through.DoesNotExist:
             post.likes.add(user)
             is_liked = True
-            # 좋아요 추가 시에만 알림 생성
-            create_notification(
-                recipient=post.author,
-                actor=user,
-                notification_type=Notification.NotificationType.LIKE,
-                post=post
-            )
+            # 좋아요 추가 시에만 알림 생성(글쓴이가 탈퇴한 글은 받는 사람이 없어 건너뜀)
+            if post.author is not None:
+                create_notification(
+                    recipient=post.author,
+                    actor=user,
+                    notification_type=Notification.NotificationType.LIKE,
+                    post=post
+                )
 
         likes_count = post.likes.count()
         return Response({'likes_count': likes_count, 'is_liked': is_liked}, status=status.HTTP_200_OK)

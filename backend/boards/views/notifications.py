@@ -5,7 +5,7 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from ..models import Notification
+from ..models import Notification, Post
 from ..serializers import NotificationSerializer
 
 
@@ -22,6 +22,13 @@ def create_notification(recipient, actor, notification_type, post, comment=None)
     )
 
 
+def visible_notifications(user):
+    """받는 사람의 알림 중 연결된 글을 지금도 읽을 수 있는 것만.
+    글의 공개 범위가 바뀐 뒤 예전 알림으로 제목이 보이는 것을 막는다."""
+    readable = Post.objects.readable_for_user(user).values('id')
+    return Notification.objects.filter(recipient=user, post__in=readable)
+
+
 @extend_schema(tags=['알림'])
 @extend_schema_view(
     get=extend_schema(
@@ -35,8 +42,7 @@ class NotificationListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return (
-            Notification.objects
-            .filter(recipient=self.request.user)
+            visible_notifications(self.request.user)
             .select_related('actor', 'post', 'post__board', 'comment')
             .order_by('-created_at')[:50]
         )
@@ -52,7 +58,7 @@ class NotificationUnreadCountAPIView(APIView):
         description="로그인한 사용자의 읽지 않은 알림 개수를 반환합니다.",
     )
     def get(self, request):
-        count = Notification.objects.filter(recipient=request.user, is_read=False).count()
+        count = visible_notifications(request.user).filter(is_read=False).count()
         return Response({'unread_count': count})
 
 

@@ -41,8 +41,12 @@ export const createComment = async (
         is_deleted: boolean;
         likes?: number;
         isLiked?: boolean;
+        is_anonymous?: boolean;
+        can_delete?: boolean;
     };
 
+    // 서버가 돌려준 공개 설정을 그대로 둔다(없으면 상세 조회처럼 익명). 바로 수정할 때 실명 체크가 잘못 켜지지 않게
+    const is_anonymous = d.is_anonymous ?? true;
     const date = d.created_at ? d.created_at.slice(0, 16).replace("T", " ") : "";
     const isReply = (payload.parent !== null && payload.parent !== 0) ||
         (d.parent !== null && d.parent !== 0);
@@ -59,6 +63,8 @@ export const createComment = async (
             is_deleted: false,
             likes: d.likes || 0,
             isLiked: d.isLiked || false,
+            is_anonymous,
+            can_delete: d.can_delete,
         };
         return reply;
     } else {
@@ -74,6 +80,8 @@ export const createComment = async (
             replies: [] as Reply[],
             likes: d.likes || 0,
             isLiked: d.isLiked || false,
+            is_anonymous,
+            can_delete: d.can_delete,
         };
         return comment;
     }
