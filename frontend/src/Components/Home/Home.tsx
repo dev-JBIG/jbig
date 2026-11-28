@@ -11,10 +11,6 @@ import {
     getBoards,
     signout,
     updateCalendarEvent,
-    fetchNotifications,
-    fetchUnreadNotificationCount,
-    markNotificationRead,
-    NotificationItem
 } from "../../API/req";
 import {
     Bell,
@@ -39,6 +35,8 @@ import LoginModal from "../Utils/LoginModal";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
 import JbigInfo from "./JbigInfo";
+import { useNotifications } from "./useNotifications";
+import { getBoardsCacheKey, normalizeBoardsPayload, readBoardsCache, writeBoardsCache } from "./boardsCache";
 import PhotoAlbumSlider from "./PhotoAlbumSlider";
 import scheduleIdleTask from "../Utils/scheduleIdleTask";
 import BrandMark from "../Utils/BrandMark";
@@ -67,46 +65,7 @@ const routeFallback = (
 // 미설정 시 CDN 커스텀 도메인으로 폴백.
 const MEDIA_BASE_URL = (process.env.REACT_APP_MEDIA_BASE_URL || "https://cdn.jbig.co.kr").replace(/\/$/, "");
 const BANNER_IMAGE_URL = `${MEDIA_BASE_URL}/static/banner.jpg`;
-const BOARDS_CACHE_PREFIX = "jbig_boards_cache";
 const DEFERRED_BOARDS_DELAY_MS = 1500;
-
-type BoardsPayload = {
-    categories: Section[];
-    total_post_count: number;
-};
-
-const normalizeBoardsPayload = (res: any): BoardsPayload => ({
-    categories: Array.isArray(res?.categories) ? res.categories : [],
-    total_post_count: typeof res?.total_post_count === "number" ? res.total_post_count : 0,
-});
-
-const getBoardsCacheKey = (
-    accessToken: string | null,
-    userIdentity: string,
-    isStaff?: boolean
-): string | null => {
-    if (!accessToken) return `${BOARDS_CACHE_PREFIX}_anonymous`;
-    if (!userIdentity) return null;
-    return `${BOARDS_CACHE_PREFIX}_${isStaff ? "staff" : "member"}_${encodeURIComponent(userIdentity)}`;
-};
-
-const readBoardsCache = (cacheKey: string | null): BoardsPayload | null => {
-    if (!cacheKey) return null;
-    try {
-        const raw = sessionStorage.getItem(cacheKey);
-        if (!raw) return null;
-        return normalizeBoardsPayload(JSON.parse(raw));
-    } catch {
-        return null;
-    }
-};
-
-const writeBoardsCache = (cacheKey: string | null, payload: BoardsPayload) => {
-    if (!cacheKey) return;
-    try {
-        sessionStorage.setItem(cacheKey, JSON.stringify(payload));
-    } catch {}
-};
 
 const removeWidgetBot = () => {
     const crateElement = document.querySelector('widgetbot-crate');
@@ -127,10 +86,12 @@ const Home: React.FC = () => {
     const [modalMode, setModalMode] = useState<'create'|'edit'>('create');
     const [initialEvent, setInitialEvent] = useState<any>(null);
     const [isLoginModalOpen, setLoginModalOpen] = useState(false);
-    const [notificationOpen, setNotificationOpen] = useState(false);
     const [themeMenuOpen, setThemeMenuOpen] = useState(false);
-    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
+    const {
+        notificationOpen, setNotificationOpen, notifications, unreadCount,
+        handleOpenNotifications, handleNotificationClick, handleMarkAllRead,
+    } = useNotifications(isLogin);
+
     const [headerSearch, setHeaderSearch] = useState("");
     const { user, signOutLocal, authReady, accessToken, refreshToken } = useUser();
     const { staffAuth } = useStaffAuth();
@@ -210,7 +171,7 @@ const Home: React.FC = () => {
 
             cancelQuizTask = scheduleIdleTask(async () => {
                 try {
-                    const url = await fetchQuizUrl(accessToken);
+                    const url = await fetchQuizUrl();
                     if (cancelled) return;
                     setQuizURL(url || "");
                 } catch {
@@ -244,7 +205,7 @@ const Home: React.FC = () => {
 
         const loadBoards = async () => {
             try {
-                const nextBoards = normalizeBoardsPayload(await getBoards(accessToken));
+                const nextBoards = normalizeBoardsPayload(await getBoards());
                 if (cancelled) return;
                 setBoards(nextBoards.categories);
                 setTotalCount(nextBoards.total_post_count);
@@ -349,122 +310,7 @@ const Home: React.FC = () => {
             document.removeEventListener("mousedown", handleClickOutside);
             document.removeEventListener("keydown", handleKeyDown);
         };
-    }, [isModalOpen, isLoginModalOpen, menuOpen, notificationOpen, themeMenuOpen]);
-
-    // 알림 개수 주기적으로 조회 (30초마다)
-    useEffect(() => {
-        if (!accessToken || !isLogin) {
-            setUnreadCount(0);
-            return;
-        }
-
-        let cancelled = false;
-
-        const loadUnreadCount = async () => {
-            try {
-                const count = await fetchUnreadNotificationCount(accessToken);
-                if (cancelled) return;
-                setUnreadCount(count);
-            } catch (err) {
-                console.error('[Notification] Failed to fetch unread count:', err);
-            }
-        };
-
-        const cancelFirstLoad = scheduleIdleTask(loadUnreadCount, { timeout: 2500, fallbackDelayMs: 1500 });
-
-        // 30초마다 알림 개수 갱신
-        const interval = setInterval(loadUnreadCount, 30000);
-
-        return () => {
-            cancelled = true;
-            cancelFirstLoad();
-            clearInterval(interval);
-        };
-    }, [accessToken, isLogin]);
-
-    // 알림 드롭다운 열 때 알림 목록 조회
-    const handleOpenNotifications = async () => {
-        if (!accessToken) {
-            showAlert({ message: "로그인이 필요합니다.", type: 'warning' });
-            navigate("/signin");
-            return;
-        }
-        
-        const wasOpen = notificationOpen;
-        setNotificationOpen(prev => !prev);
-        
-        if (!wasOpen) {
-            try {
-                const data = await fetchNotifications(accessToken);
-                setNotifications(data);
-                
-                // 빈 배열이지만 unreadCount가 있다면 재조회 시도
-                if (data.length === 0 && unreadCount > 0) {
-                    console.warn('[Notification] Empty notifications but unreadCount > 0, rechecking...');
-                    // 알림 개수 다시 확인
-                    const newCount = await fetchUnreadNotificationCount(accessToken);
-                    setUnreadCount(newCount);
-                }
-            } catch (err) {
-                console.error('[Notification] Failed to fetch notifications:', err);
-                // 토큰 갱신 실패로 로그아웃된 경우는 이미 interceptor에서 처리됨
-                setNotificationOpen(false);
-            }
-        }
-    };
-
-    // 알림 클릭 시 해당 게시글로 이동
-    const handleNotificationClick = async (notification: NotificationItem) => {
-        if (!accessToken) return;
-        
-        setNotificationOpen(false);
-        
-        // 게시글이나 게시판이 삭제된 경우 처리
-        if (!notification.board_id || !notification.post_id) {
-            showAlert({ 
-                message: "삭제된 게시글입니다.", 
-                type: 'warning' 
-            });
-            
-            // 읽음 처리만 진행
-            try {
-                await markNotificationRead(accessToken, notification.id);
-                setUnreadCount(prev => Math.max(0, prev - 1));
-                setNotifications(prev =>
-                    prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
-                );
-            } catch (err) {
-                console.error('[Notification] Failed to mark as read:', err);
-            }
-            return;
-        }
-        
-        // 페이지 이동
-        navigate(`/board/${notification.board_id}/${notification.post_id}`);
-        
-        // 읽음 처리는 백그라운드에서
-        try {
-            await markNotificationRead(accessToken, notification.id);
-            setUnreadCount(prev => Math.max(0, prev - 1));
-            setNotifications(prev =>
-                prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
-            );
-        } catch (err) {
-            console.error('[Notification] Failed to mark as read:', err);
-        }
-    };
-
-    // 전체 읽음 처리
-    const handleMarkAllRead = async () => {
-        if (!accessToken) return;
-        try {
-            await markNotificationRead(accessToken);
-            setUnreadCount(0);
-            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-        } catch (err) {
-            console.error('[Notification] Failed to mark all as read:', err);
-        }
-    };
+    }, [isModalOpen, isLoginModalOpen, menuOpen, notificationOpen, themeMenuOpen, setNotificationOpen]);
 
     const handleLogout = async () => {
         navigate("/");
@@ -497,12 +343,12 @@ const Home: React.FC = () => {
             }
 
             if (modalMode === "edit" && id) {
-                const updated = await updateCalendarEvent(id, newEvent, accessToken);
+                const updated = await updateCalendarEvent(id, newEvent);
                 window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
                     detail: { mode: "edit", event: updated },
                 }));
             } else {
-                const created = await createCalendarEvent(newEvent, accessToken);
+                const created = await createCalendarEvent(newEvent);
                 window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
                     detail: { mode: "create", event: created },
                 }));

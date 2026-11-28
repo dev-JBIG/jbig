@@ -30,7 +30,7 @@ const ImageBlockEditor: React.FC<Props> = ({ block, onChange }) => {
     }
     setUploading(true);
     try {
-      const result = await uploadAttachment(file, accessToken);
+      const result = await uploadAttachment(file);
       onChange({
         ...block,
         data: { ...block.data, path: result.path, url: result.url || '', alt: file.name },

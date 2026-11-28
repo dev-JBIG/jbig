@@ -49,7 +49,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
         if (!accessToken) return;
         setApplying(true);
         try {
-            await applyToRecruitment(postId, applyMessage, accessToken);
+            await applyToRecruitment(postId, applyMessage);
             setShowApplyModal(false);
             setApplyMessage('');
             showAlert({ message: '지원이 완료되었습니다!', type: 'success' });
@@ -73,7 +73,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
         });
         if (!confirmed) return;
         try {
-            await withdrawApplication(postId, accessToken);
+            await withdrawApplication(postId);
             showAlert({ message: '지원이 철회되었습니다.', type: 'info' });
             onUpdate();
         } catch {
@@ -96,7 +96,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
         });
         if (!confirmed) return;
         try {
-            await changeRecruitmentStatus(postId, action, accessToken);
+            await changeRecruitmentStatus(postId, action);
             onUpdate();
         } catch (err: any) {
             showAlert({ message: err?.response?.data?.error || '상태 변경에 실패했습니다.', type: 'error' });
@@ -108,7 +108,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
         setLoadingApps(true);
         setLoadAppsFailed(false);
         try {
-            const apps = await fetchApplications(postId, accessToken);
+            const apps = await fetchApplications(postId);
             setApplications(apps);
         } catch {
             setApplications([]);
@@ -126,7 +126,7 @@ const RecruitmentDetailSection: React.FC<RecruitmentDetailProps> = ({ recruitmen
     const handleAppAction = useCallback(async (appId: number, action: string) => {
         if (!accessToken) return;
         try {
-            await updateApplicationStatus(postId, appId, action, '', accessToken);
+            await updateApplicationStatus(postId, appId, action, '');
             loadApplications();
             onUpdate();
         } catch (err: any) {

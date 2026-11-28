@@ -11,6 +11,7 @@ import { safeSanitizePlugin } from "../Utils/safeMarkdown";
 import { Button } from '@primer/react';
 import {createPost, fetchPostDetail, modifyPost, updateRecruitment, uploadAttachment, deleteUploadedFile, fetchDraft, saveDraft, deleteDraft} from "../../API/req"
 import {Board, Section, UploadFile, RecruitmentFormData, FormType} from "../Utils/interfaces";
+import { currentSessionId, SESSION_CHANGED_MESSAGE } from "../../API/req";
 import {useUser} from "../Utils/UserContext";
 import {useStaffAuth} from "../Utils/StaffAuthContext";
 import {useAlert} from "../Utils/AlertContext";
@@ -21,92 +22,25 @@ import StudyForm from "./StudyForm";
 import RecruitmentForm from "./RecruitmentForm";
 import { MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, UPLOAD_MESSAGES } from "../../Utils/uploadRules";
 
-const BLOCKED_EXTENSIONS = ["jsp", "php", "asp", "cgi"];
-const MAX_FILES = 3;
-const MAX_PHOTO_FILES = 12;
-const BLOCKED_BOARD_KEYWORDS = ["공지사항", "admin", "어드민", "운영진", "관리자"];
-const BRAG_BOARD_NAME = "자랑게시판";
-const STUDY_BOARD_NAME_KEYWORDS = ["스터디", "소모임"];
+import {
+    BLOCKED_EXTENSIONS,
+    MAX_FILES,
+    MAX_PHOTO_FILES,
+    BLOCKED_BOARD_KEYWORDS,
+    BRAG_BOARD_NAME,
+    STUDY_BOARD_NAME_KEYWORDS,
+    extractKeyFromUrl,
+    isImageByName,
+    formKindOf,
+    getBoardVisibilityNotice,
+} from "./postWriteRules";
+
+// 테스트, 다른 화면이 예전 경로로 가져다 쓴다
+export { extractKeyFromUrl } from "./postWriteRules";
 
 interface PostWriteProps {
     boards?: Section[];
 }
-
-// CDN/Presigned/권한 게이트 URL에서 스토리지 파일 키를 손상 없이 추출
-export const extractKeyFromUrl = (url: string, fallback: string, explicitPath?: string): string => {
-    if (typeof explicitPath === "string" && explicitPath.trim()) {
-        return explicitPath.trim();
-    }
-    if (!url || typeof url !== "string") {
-        return fallback;
-    }
-    const trimmed = url.trim();
-    if (!trimmed) {
-        return fallback;
-    }
-    if (trimmed.startsWith("media-key://")) {
-        return trimmed.slice("media-key://".length) || fallback;
-    }
-    try {
-        const base = typeof window !== "undefined" && window.location?.origin
-            ? window.location.origin
-            : "http://localhost";
-        const urlObj = new URL(trimmed, base);
-        const queryKey = urlObj.searchParams.get("path") || urlObj.searchParams.get("key");
-        if (queryKey && queryKey.trim()) {
-            return queryKey.trim();
-        }
-        const pathname = urlObj.pathname;
-        // CDN(https://cdn.jbig.co.kr/uploads/...)과 오브젝트 스토리지(/bucket/uploads/...) 모두 uploads/ 접두사 보존
-        const uploadsMatch = pathname.match(/(uploads\/.+)$/);
-        if (uploadsMatch) {
-            return uploadsMatch[1];
-        }
-        // 권한 게이트 백엔드 다운로드 URL(/api/...)은 첫 세그먼트를 자르지 않고 원형 유지
-        if (pathname.startsWith("/api/")) {
-            return trimmed;
-        }
-        const normalized = pathname.replace(/^\/+/, "");
-        return normalized || fallback;
-    } catch {
-        return fallback;
-    }
-};
-
-const isImageByName = (name: string) => /\.(png|jpe?g|gif|webp|bmp)$/i.test(name);
-
-// 게시판이 사용하는 본문 입력 폼 종류. (모집 태그 차원은 무시 — 태그는 게시판 변경 시 별도로 초기화됨)
-type FormKind = 'photo' | 'absence' | 'feedback' | 'study' | 'generic';
-const formKindOf = (board?: Board | null): FormKind => {
-    if (!board) return 'generic';
-    if (board.board_type === 4 || board.name === "사진첩") return 'photo';
-    if (board.form_type === FormType.ABSENCE) return 'absence';
-    if (board.form_type === FormType.FEEDBACK) return 'feedback';
-    if (!!board.name && STUDY_BOARD_NAME_KEYWORDS.every((kw) => board.name.includes(kw))) return 'study';
-    return 'generic';
-};
-
-// 선택한 게시판의 공개범위 안내 문구
-// board_type===3(사유서·에러/피드백 제보)은 서버가 read_permission='author'로 관리하지만,
-// 구버전 캐시 데이터에 read_permission이 없을 수 있어 board_type도 함께 분기한다.
-const getBoardVisibilityNotice = (
-    perm?: 'all' | 'member' | 'author' | 'staff',
-    boardType?: number
-): string | null => {
-    if (perm === 'author' || boardType === 3) {
-        return "🔒 제출한 글은 본인과 스태프만 볼 수 있어요";
-    }
-    switch (perm) {
-        case 'all':
-            return "🌐 전체공개 게시판 — 로그인하지 않은 방문자도 글과 첨부파일을 볼 수 있어요";
-        case 'member':
-            return "🔒 회원전용 게시판 — 로그인한 회원만 글과 첨부파일을 볼 수 있어요";
-        case 'staff':
-            return "🔒 스태프전용 게시판 — 스태프만 글을 볼 수 있어요";
-        default:
-            return null;
-    }
-};
 
 const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
     const [title, setTitle] = useState("");
@@ -223,9 +157,15 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         }
 
         try {
-            const res = await uploadAttachment(file, accessToken);
+            const sessionId = currentSessionId();
+            const res = await uploadAttachment(file);
             if (res.message || !res.path) {
                 showAlert({ message: `이미지 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
+                return false;
+            }
+            // 올리는 동안 계정이 바뀌었으면 이전 계정 파일을 이 글에 넣지 않는다
+            if (currentSessionId() !== sessionId) {
+                showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
                 return false;
             }
 
@@ -334,7 +274,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         (async () => {
             try {
-                const draft = await fetchDraft(accessToken);
+                const draftSessionId = currentSessionId();
+                const draft = await fetchDraft();
                 if (!draft || (!draft.title && !draft.content_md)) {
                     return;
                 }
@@ -346,6 +287,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     confirmText: '불러오기',
                     cancelText: '취소',
                     onConfirm: async () => {
+                        // 확인창이 열린 동안 계정이 바뀌었으면 이전 계정의 초안을 넣지 않는다
+                        if (currentSessionId() !== draftSessionId) return;
                         if (draft.title) setTitle(draft.title);
                         if (draft.content_md) setContent(draft.content_md);
                         draft.uploaded_paths?.forEach(p => uploadedPathsRef.current.add(p));
@@ -356,10 +299,12 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         }
                     },
                     onCancel: async () => {
+                        // 확인창이 열린 동안 계정이 바뀌었으면 지금 계정의 초안을 지우지 않는다
+                        if (currentSessionId() !== draftSessionId) return;
                         // 임시저장 거부 시 DB에서 삭제 및 업로드된 파일도 삭제
-                        await deleteDraft(accessToken);
+                        await deleteDraft();
                         if (draft.uploaded_paths) {
-                            draft.uploaded_paths.forEach(path => deleteUploadedFile(path, accessToken).catch(() => {}));
+                            draft.uploaded_paths.forEach(path => deleteUploadedFile(path).catch(() => {}));
                         }
                     }
                 });
@@ -381,7 +326,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 try {
                     if (!title && !content && uploadedPathsRef.current.size === 0) {
                         // 비어있으면 DB에서 삭제
-                        await deleteDraft(accessToken).catch(() => {});
+                        await deleteDraft().catch(() => {});
                     } else {
                         // DB에 저장 (upsert) - 현재 선택된 게시판도 함께 저장
                         await saveDraft({
@@ -389,7 +334,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             title,
                             content_md: content,
                             uploaded_paths: Array.from(uploadedPathsRef.current)
-                        }, accessToken);
+                        });
                     }
                 } catch (err) {
                     console.error('[Draft] Draft save failed:', err);
@@ -408,7 +353,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         (async () => {
             try {
-                const raw = await fetchPostDetail(Number(postId), accessToken);
+                const raw = await fetchPostDetail(Number(postId));
                 if (cancelled) return;
                 if (raw.loginRequired || raw.unauthorized || raw.notFound) throw new Error("게시글을 열 수 없습니다.");
                 const src = raw.post_data ?? raw;
@@ -500,6 +445,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             return;
         }
 
+        // 파일을 고른 시점의 계정. 여러 파일을 올리는 동안 계정이 바뀌면 멈춘다
+        const pickSessionId = currentSessionId();
         const candidates = Array.from(selected);
         const willProcess = candidates.slice(0, remaining);
         let overSize = false, blockedFile = false;
@@ -522,7 +469,12 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             }
 
             try {
-                const res = await uploadAttachment(file, accessToken);
+                const res = await uploadAttachment(file);
+                // 올리는 동안 계정이 바뀌었으면(성공, 실패 모두) 이 글에 넣지 않고 남은 파일도 멈춘다
+                if (currentSessionId() !== pickSessionId) {
+                    showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
+                    break;
+                }
                 if (res.message || !res.path) {
                     showAlert({ message: `"${file.name}" 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
                     continue;
@@ -564,7 +516,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         if (fileToRemove.path) {
             setAttachments(prev => prev.filter(att => att.path !== fileToRemove.path));
             if (accessToken && uploadedPathsRef.current.has(fileToRemove.path)) {
-                deleteUploadedFile(fileToRemove.path, accessToken).catch(() => {});
+                deleteUploadedFile(fileToRemove.path).catch(() => {});
                 uploadedPathsRef.current.delete(fileToRemove.path);
             }
         }
@@ -622,7 +574,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         uploadedPathsRef.current.forEach(path => {
             if (!usedKeys.has(path)) {
-                deleteUploadedFile(path, accessToken).catch(() => {});
+                deleteUploadedFile(path).catch(() => {});
                 uploadedPathsRef.current.delete(path);
             }
         });
@@ -656,7 +608,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     ...(activeBoard ? { board_id: activeBoard.id } : {}),
                     ...(hasTags ? { tag: selectedTag } : {}),
                     is_anonymous: !showRealName,
-                }, accessToken);
+                });
 
                 // 게시글 수정이 성공했으므로 커밋된 첨부·본문 파일의 임시 업로드 소유권을 해제한다.
                 // 이후 updateRecruitment가 실패해 에디터에 남더라도 저장된 게시글의 파일을 삭제하지 않는다.
@@ -675,7 +627,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         required_skills: recruitmentData.required_skills,
                         contact_info: recruitmentData.contact_info,
                         show_applicants: recruitmentData.show_applicants,
-                    }, accessToken);
+                    });
                 }
                 savedRef.current = true;
                 navigate(`/board/${activeBoard?.id ?? Number(category)}/${postIdNumber}`);
@@ -694,10 +646,11 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     show_applicants: recruitmentData.show_applicants,
                 };
             }
-            await createPost(activeBoard!.id, postPayload, accessToken);
-            // 게시글 등록 성공 시 DB 임시저장 삭제
-            if (canUseDraft) {
-                await deleteDraft(accessToken).catch(() => {});
+            const submitSessionId = currentSessionId();
+            await createPost(activeBoard!.id, postPayload);
+            // 게시글 등록 성공 시 DB 임시저장 삭제(등록하는 동안 계정이 바뀌었으면 지금 계정의 초안은 두고)
+            if (canUseDraft && currentSessionId() === submitSessionId) {
+                await deleteDraft().catch(() => {});
             }
             savedRef.current = true;
             navigate(`/board/${activeBoard!.id}`);

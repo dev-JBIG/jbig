@@ -11,9 +11,12 @@ jest.mock("react-router-dom", () => ({
     useNavigate: () => mockNavigate,
 }), { virtual: true });
 
+let mockSessionId = "session-1";
 jest.mock("../../../API/req", () => ({
     fetchCalendarEvents: jest.fn(),
     deleteCalendarEvent: jest.fn(),
+    currentSessionId: () => mockSessionId,
+    SESSION_CHANGED_MESSAGE: "계정이 바뀜",
 }));
 
 jest.mock("../UserContext", () => ({
@@ -76,8 +79,23 @@ describe("Primer React Calendar", () => {
 
         await waitFor(() => {
             expect(showConfirm).toHaveBeenCalledTimes(1);
-            expect(mockedDeleteEvent).toHaveBeenCalledWith("101", "staff-token");
+            expect(mockedDeleteEvent).toHaveBeenCalledWith("101");
         });
+    });
+
+    test("삭제 확인창이 열린 동안 계정이 바뀌면 삭제 요청을 보내지 않는다", async () => {
+        showConfirm.mockImplementationOnce(async () => {
+            mockSessionId = "session-2";
+            return true;
+        });
+        render(<Calendar staffAuth={true} />);
+
+        fireEvent.click(await screen.findByRole("button", { name: /정기 세미나/ }));
+        fireEvent.click(await screen.findByRole("button", { name: "삭제" }));
+
+        await waitFor(() => expect(showConfirm).toHaveBeenCalledTimes(1));
+        expect(mockedDeleteEvent).not.toHaveBeenCalled();
+        mockSessionId = "session-1";
     });
 
     test("이전 달 / 다음 달 / 오늘 네비게이션이 동작한다", async () => {

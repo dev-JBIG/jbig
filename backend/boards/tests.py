@@ -398,7 +398,7 @@ class PostVisibilityHardeningTest(APITestCase):
                 }, format='json')
                 self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_removed_foreign_markdown_media_is_not_deleted(self, delete_files):
         victim_path = f"uploads/2025/01/01/{self.user.id}/victim.png"
         poisoned_post = Post.objects.create(
@@ -418,7 +418,7 @@ class PostVisibilityHardeningTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         delete_files.assert_not_called()
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_unreferenced_own_markdown_media_is_deleted(self, delete_files):
         own_path = f"uploads/2025/01/01/{self.user.id}/own.png"
         post = Post.objects.create(
@@ -438,7 +438,7 @@ class PostVisibilityHardeningTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         delete_files.assert_called_once_with({own_path})
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_referenced_own_markdown_media_is_not_deleted(self, delete_files):
         own_path = f"uploads/2025/01/01/{self.user.id}/shared.png"
         post = Post.objects.create(
@@ -464,7 +464,7 @@ class PostVisibilityHardeningTest(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         delete_files.assert_not_called()
 
-    @patch('boards.views.delete_files')
+    @patch('boards.views.posts.delete_files')
     def test_draft_referenced_own_markdown_media_is_not_deleted(self, delete_files):
         own_path = f"uploads/2025/01/01/{self.user.id}/draft.png"
         post = Post.objects.create(
@@ -949,6 +949,8 @@ class MemberBoardAndAttachmentGateTest(APITestCase):
             res = self.client.get(reverse('post-attachment-download',
                                           kwargs={'post_id': justification.id, 'index': 0}))
             self.assertEqual(res.status_code, status.HTTP_200_OK)
+            # 응답을 끝까지 읽어 파일 스트림을 닫는다(시작 안 한 스트림은 close 로 안 닫혀 윈도우에서 파일 삭제가 실패)
+            self.assertEqual(b''.join(res.streaming_content), b'letter')
             # 타인은 차단
             other = User.objects.create_user(
                 username='other2', email='other2@example.com', password='pw',
@@ -1369,3 +1371,92 @@ class QueryCountScalingTest(APITestCase):
         self.assertEqual(len(ctx.captured_queries), 1)
         self.assertEqual(res.data['jbig_email'], 'a@jbnu.ac.kr')
         self.assertEqual(res.data['quiz_url'], '')  # 퀴즈 주소는 로그인한 회원에게만
+
+
+
+class ExistingDefectFixTest(APITestCase):
+    """알림, 팝업의 글 읽기 권한, 탈퇴 글쓴이 글 좋아요, 임시저장 게시판 해제, 미디어 캐시 수명."""
+
+    def setUp(self):
+        self.member = User.objects.create_user(
+            username='fixm', email='fixm@jbnu.ac.kr', password='pw', is_verified=True, is_active=True,
+        )
+        self.writer = User.objects.create_user(
+            username='fixw', email='fixw@jbnu.ac.kr', password='pw', is_verified=True, is_active=True,
+        )
+        self.category = Category.objects.create(name='FixCat')
+        self.board = Board.objects.create(name='자랑게시판', category=self.category)
+        self.post = Post.objects.create(author=self.writer, board=self.board, title='공개 글', content_md='x')
+
+    def _auth(self, user):
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {RefreshToken.for_user(user).access_token}')
+
+    def test_notifications_hide_posts_no_longer_readable(self):
+        Notification.objects.create(recipient=self.member, actor=self.writer, notification_type=1, post=self.post)
+        other_board = Board.objects.create(name='free', category=self.category)
+        other_post = Post.objects.create(author=self.writer, board=other_board, title='other', content_md='x')
+        Notification.objects.create(recipient=self.member, actor=self.writer, notification_type=1, post=other_post)
+        self._auth(self.member)
+        res = self.client.get(reverse('notification-list'))
+        self.assertEqual(len(res.data['results'] if isinstance(res.data, dict) else res.data), 2)
+        self.assertEqual(self.client.get(reverse('notification-unread-count')).data['unread_count'], 2)
+        # 게시판을 운영진 전용으로 바꾸면 그 글의 알림은 회원에게서 빠지고, 글 없는 알림은 남는다
+        Board.objects.filter(pk=self.board.pk).update(read_permission='staff')
+        res = self.client.get(reverse('notification-list'))
+        items = res.data['results'] if isinstance(res.data, dict) else res.data
+        self.assertEqual([n['post_title'] for n in items], ['other'])
+        self.assertEqual(len(items), 1)
+        self.assertEqual(self.client.get(reverse('notification-unread-count')).data['unread_count'], 1)
+
+    def test_popup_from_post_follows_post_read_permission(self):
+        from jbig_backend.models import Popup
+        now = timezone.now()
+        Popup.objects.create(source_post=self.post, title='자랑', content='요약',
+                             start_date=now - timezone.timedelta(days=1), end_date=now + timezone.timedelta(days=1))
+        Popup.objects.create(title='수동 공지', content='x',
+                             start_date=now - timezone.timedelta(days=1), end_date=now + timezone.timedelta(days=1))
+        titles = lambda: sorted(p['title'] for p in self.client.get('/api/popups/').data)
+        self.assertEqual(titles(), ['수동 공지', '자랑'])
+        Board.objects.filter(pk=self.board.pk).update(read_permission='member')
+        self.assertEqual(titles(), ['수동 공지'])  # 비회원은 회원 전용 글의 팝업을 못 본다
+        self._auth(self.member)
+        self.assertEqual(titles(), ['수동 공지', '자랑'])
+
+    def test_like_post_of_withdrawn_author(self):
+        Post.objects.filter(pk=self.post.pk).update(author=None)
+        self._auth(self.member)
+        res = self.client.post(reverse('post-like', kwargs={'post_id': self.post.id}))
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertTrue(res.data['is_liked'])
+        self.assertFalse(Notification.objects.exists())
+
+    def test_draft_board_can_be_cleared_with_null(self):
+        self._auth(self.member)
+        url = reverse('draft-retrieve-create')
+        self.client.post(url, {'board_id': self.board.id, 'title': 't', 'content_md': 'c'}, format='json')
+        self.assertEqual(Draft.objects.get(author=self.member).board_id, self.board.id)
+        self.client.post(url, {'title': 't2'}, format='json')  # 키가 없으면 그대로
+        self.assertEqual(Draft.objects.get(author=self.member).board_id, self.board.id)
+        self.client.post(url, {'board_id': None, 'title': 't3'}, format='json')  # null 이면 해제
+        self.assertIsNone(Draft.objects.get(author=self.member).board_id)
+
+    def test_media_cache_never_outlives_token(self):
+        from io import BytesIO
+        from boards.views import make_media_stream_token
+        from boards.views.files import MEDIA_STREAM_TOKEN_MAX_AGE
+        key = f'uploads/2026/11/21/{self.member.id}/photo.png'
+        fake = lambda: (BytesIO(b'\x89PNG\r\n\x1a\n'), 'image/png', 8)
+        token = make_media_stream_token(key)
+        with patch('boards.views.files.get_file_stream', return_value=fake()):
+            res = self.client.get(reverse('media-stream'), {'token': token})
+        self.assertEqual(res['Cache-Control'], 'private, max-age=3600')
+        b''.join(res.streaming_content)
+        # 만료 10분 전에 받은 응답은 10분만 캐시
+        issued = int(timezone.now().timestamp()) - (MEDIA_STREAM_TOKEN_MAX_AGE - 600)
+        with patch('django.core.signing.time.time', return_value=issued):
+            old_token = make_media_stream_token(key)
+        with patch('boards.views.files.get_file_stream', return_value=fake()):
+            res = self.client.get(reverse('media-stream'), {'token': old_token})
+        max_age = int(res['Cache-Control'].split('max-age=')[1])
+        self.assertTrue(590 <= max_age <= 600, max_age)
+        b''.join(res.streaming_content)

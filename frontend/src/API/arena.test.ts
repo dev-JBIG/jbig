@@ -19,7 +19,7 @@ test('JWT refresh retries an upload with the same body and idempotency key', asy
         return { config, data: { remaining_today: 4 }, status: 202, statusText: 'Accepted', headers: {} };
     });
     authTransport.defaults.adapter = jest.fn(async config => ({ config, data: { ...user, isSuccess: true, access: token(3600), refresh: 'new-refresh' }, status: 200, statusText: 'OK', headers: {} }));
-    await submitArena(new File(['reservation_id,adr\na,1'], 'submission.csv'), 'old-token', 'fixed-key', () => {});
+    await submitArena(new File(['reservation_id,adr\na,1'], 'submission.csv'), 'fixed-key', () => {});
     expect(calls).toHaveLength(2);
     expect(calls[0].headers['Idempotency-Key']).toBe('fixed-key');
     expect(calls[1].headers['Idempotency-Key']).toBe('fixed-key');

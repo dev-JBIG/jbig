@@ -63,20 +63,20 @@ export default function Arena({ onLogin }: ArenaProps) {
             if (loading || document.visibilityState === "hidden") return;
             loading = true;
             try {
-                const current = await fetchArenaInfo(accessToken || undefined, controller.signal);
+                const current = await fetchArenaInfo(controller.signal);
                 if (disposed) return;
                 setInfo(current); setLoadError(null);
                 if (current.eligible && accessToken) {
                     const [records, board] = await Promise.all([
-                        page === 'submit' || page === 'submissions' ? fetchArenaHistory(accessToken, page === 'submissions' ? historyPage : 1, controller.signal) : Promise.resolve(null),
-                        page === 'leaderboard' ? fetchArenaLeaderboard(accessToken, controller.signal) : Promise.resolve(null),
+                        page === 'submit' || page === 'submissions' ? fetchArenaHistory(page === 'submissions' ? historyPage : 1, controller.signal) : Promise.resolve(null),
+                        page === 'leaderboard' ? fetchArenaLeaderboard(controller.signal) : Promise.resolve(null),
                     ]);
                     if (disposed) return;
                     if (records) setHistory(records);
                     if (board) setLeaderboard(board);
                     const pending = sessionStorage.getItem(pendingStorage);
                     if (pending) {
-                        const recovered = await fetchArenaHistory(accessToken, 1, controller.signal, pending);
+                        const recovered = await fetchArenaHistory(1, controller.signal, pending);
                         if (!disposed && recovered.count) {
                             setNotice("지난 요청의 접수를 확인했습니다. 내 제출 기록에서 처리 상태를 확인해 주세요.");
                             sessionStorage.removeItem(pendingStorage);
@@ -106,7 +106,7 @@ export default function Arena({ onLogin }: ArenaProps) {
         if (!accessToken) return;
         setFailure(null); setDownloading(kind);
         try {
-            const blob = await downloadArenaData(kind, accessToken);
+            const blob = await downloadArenaData(kind);
             const url = URL.createObjectURL(blob);
             const anchor = document.createElement("a");
             anchor.href = url; anchor.download = kind === "sample" ? "sample_submission.csv" : `${kind}.csv`;
@@ -132,7 +132,7 @@ export default function Arena({ onLogin }: ArenaProps) {
         setFailure(null); setNotice(""); setProgress(0); setUploadStage("uploading");
         sessionStorage.setItem(pendingStorage, requestKey.current);
         try {
-            const result = await submitArena(file, accessToken, requestKey.current, value => {
+            const result = await submitArena(file, requestKey.current, value => {
                 setProgress(value); if (value >= 100) setUploadStage("validating");
             });
             sessionStorage.removeItem(pendingStorage);
@@ -148,7 +148,7 @@ export default function Arena({ onLogin }: ArenaProps) {
         if (!accessToken || selecting) return;
         setFailure(null); setSelecting(id);
         try {
-            await selectArenaSubmission(id, accessToken);
+            await selectArenaSubmission(id);
             setHistory(current => ({ ...current, results: current.results.map(row => ({ ...row, is_selected: row.id === id })) }));
             setNotice("최종 평가용 제출을 선택했습니다. 마감 전까지 다른 제출로 변경할 수 있습니다.");
             setRefresh(value => value + 1);

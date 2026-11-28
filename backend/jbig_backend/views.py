@@ -260,6 +260,12 @@ class PopupViewSet(viewsets.ModelViewSet):
                 end_date__gte=now
             )
 
+            # 글에서 만든 팝업은 그 글을 지금 읽을 수 있을 때만(글 공개 범위를 팝업으로 우회 금지)
+            from django.db.models import Q
+            from boards.models import Post
+            readable = Post.objects.readable_for_user(self.request.user).values('id')
+            queryset = queryset.filter(Q(source_post__isnull=True) | Q(source_post__in=readable))
+
         # dismiss 필터링은 staff 포함 모든 로그인 사용자에게 적용
         if self.request.user.is_authenticated:
             dismissed_ids = PopupDismiss.objects.filter(

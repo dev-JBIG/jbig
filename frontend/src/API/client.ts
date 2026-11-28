@@ -27,12 +27,32 @@ function stripAuthorizationHeader(headers: InternalAxiosRequestConfig["headers"]
 }
 
 /**
- * 이 요청에 로그인 세션을 쓴다는 표시. 아래 요청 가로채기가 /api/ 요청에서만
- * 이 헤더를 지금 세션의 최신 토큰으로 바꿔 넣고, 바깥 주소로 가는 요청에서는 지운다.
- * 토큰이 없으면 아무것도 붙이지 않는다(비회원 요청).
+ * 지금 로그인 세션의 id(없으면 null). 토큰을 갱신해도 같고, 로그아웃하거나 다른 계정으로 로그인하면 바뀐다.
+ * 확인창, 업로드처럼 기다리는 동작은 시작할 때 이 값을 적어 두고, 요청 직전에 같을 때만 보낸다.
  */
-export const authHeaders = (token?: string | null): Record<string, string> =>
-    token ? { Authorization: `Bearer ${token}` } : {};
+export const currentSessionId = (): string | null => readAuth().session?.id ?? null;
+
+/**
+ * 요청을 시작한 세션에 묶는 axios 설정 조각. 아래 요청 가로채기가 보낼 때 세션이 다르면 SessionChangedError 로 멈춘다.
+ * 여러 요청으로 이뤄진 동작(업로드 주소 받기 → 올리기 → 확인)을 한 계정으로만 끝내게 할 때 쓴다.
+ */
+export const pinSession = (sessionId: string | null): { sessionId?: string } => (sessionId ? { sessionId } : {});
+
+/** 기다리는 동안 계정이 바뀌어 요청을 멈췄을 때 보여줄 문구 */
+export const SESSION_CHANGED_MESSAGE = "로그인한 계정이 바뀌어 요청을 보내지 않았습니다. 다시 시도해 주세요.";
+
+/** 지금 로그인 세션의 액세스 토큰(없으면 null). 화면이 토큰을 들고 다니지 않게 API 함수가 직접 읽는다 */
+export const currentAccessToken = (): string | null => readAuth().session?.accessToken ?? null;
+
+/**
+ * 이 요청에 로그인 세션을 쓴다는 표시. 로그인해 있으면 인증 헤더를, 아니면 빈 객체를 준다.
+ * 아래 요청 가로채기가 /api/ 요청에서만 이 헤더를 최신 토큰으로 바꿔 넣고, 바깥 주소로 가는 요청에서는 지운다.
+ * 로그인, 회원가입처럼 세션을 쓰면 안 되는 요청은 이 함수를 부르지 않는다(만료 토큰이 붙으면 서버가 401).
+ */
+export const authHeaders = (): Record<string, string> => {
+    const token = currentAccessToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 client.interceptors.request.use(config => {
     if (!isApiRequest(config)) {

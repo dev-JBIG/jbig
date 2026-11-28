@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Clock, FileText } from "lucide-react";
 import "./Calendar.css";
 import { CalendarEvent } from "../interfaces";
 import { deleteCalendarEvent, fetchCalendarEvents } from "../../../API/req";
+import { currentSessionId, SESSION_CHANGED_MESSAGE } from "../../../API/req";
 import { useUser } from "../UserContext";
 import { useAlert } from "../AlertContext";
 import Dialog, { DialogHeader } from "../Dialog";
@@ -246,6 +247,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
             return;
         }
 
+        const sessionId = currentSessionId();
         const confirmed = await showConfirm({
             title: "일정 삭제",
             message: `'${ev.title}' 일정을 삭제하시겠습니까?`,
@@ -254,10 +256,15 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
             cancelText: "취소",
         });
         if (!confirmed) return;
+        // 확인창이 열린 동안 다른 탭에서 계정이 바뀌었으면 보내지 않는다
+        if (currentSessionId() !== sessionId) {
+            showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
+            return;
+        }
 
         setDeleting(true);
         try {
-            await deleteCalendarEvent(ev.id, accessToken);
+            await deleteCalendarEvent(ev.id);
             deletedIdsRef.current.add(ev.id);
             savedOverridesRef.current.delete(ev.id);
             setEvents(prev => prev.filter(item => item.id !== ev.id));

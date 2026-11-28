@@ -71,7 +71,7 @@ class EmailRecoveryTest(TestCase):
         for failure in (SMTPException('unavailable'), ConnectionError('offline'),
                         OSError('network unreachable'), 0):
             with self.subTest(failure=failure):
-                with patch('users.views.send_mail') as send:
+                with patch('users.views.auth.send_mail') as send:
                     if isinstance(failure, Exception):
                         send.side_effect = failure
                     else:
@@ -84,7 +84,7 @@ class EmailRecoveryTest(TestCase):
 
     def test_resend_failure_without_code_leaves_no_code(self):
         self.pending_user()
-        with patch('users.views.send_mail', return_value=0):
+        with patch('users.views.auth.send_mail', return_value=0):
             self.assertEqual(self.resend().status_code, 503)
         self.assertFalse(EmailVerificationCode.objects.exists())
 
@@ -131,7 +131,7 @@ class EmailRecoveryTest(TestCase):
                 self.assertEqual(response.status_code, 401)
                 self.assertEqual(response.data['errorCode'], 'ACCOUNT_NOT_VERIFIED')
                 self.assert_no_tokens(response)
-                with patch('users.views.send_mail', return_value=1) as send:
+                with patch('users.views.auth.send_mail', return_value=1) as send:
                     self.assertEqual(self.resend().status_code, 200)
                 new_code = send.call_args.args[1].split()[-1]
                 self.assertEqual(EmailVerificationCode.objects.get(user=user).attempt_count, 0)
@@ -162,14 +162,14 @@ class EmailRecoveryTest(TestCase):
         obj = EmailVerificationCode.objects.create(user=user, code=make_password('123456'))
         EmailVerificationCode.objects.filter(pk=obj.pk).update(
             created_at=timezone.now() - timedelta(minutes=6))
-        with patch('users.views.send_mail', return_value=1) as send:
+        with patch('users.views.auth.send_mail', return_value=1) as send:
             response = self.post('signin', self.data)
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.data['errorCode'], 'ACCOUNT_NOT_VERIFIED')
             send.assert_not_called()
             self.assertTrue(EmailVerificationCode.objects.filter(pk=obj.pk).exists())
             self.assertFalse(OutstandingToken.objects.exists())
-            with patch('users.views.secrets.randbelow', return_value=654321):
+            with patch('users.views.auth.secrets.randbelow', return_value=654321):
                 self.assertEqual(self.resend().status_code, 200)
         self.assertEqual(self.verify('123456').status_code, 400)
         self.assertEqual(self.verify('654321').status_code, 200)
@@ -187,11 +187,11 @@ class EmailRecoveryTest(TestCase):
     def test_resend_public_response_does_not_distinguish_accounts(self):
         unknown = self.resend()
         user = self.pending_user()
-        with patch('users.views.send_mail', return_value=1):
+        with patch('users.views.auth.send_mail', return_value=1):
             pending = self.resend()
         user.is_verified = True
         user.save()
-        with patch('users.views.send_mail') as send:
+        with patch('users.views.auth.send_mail') as send:
             verified = self.resend()
         send.assert_not_called()
         self.assertEqual((unknown.status_code, unknown.data), (pending.status_code, pending.data))
@@ -506,7 +506,7 @@ class PasswordResetFlowTest(TestCase):
 
     # ─── 사용자 열거 & 에러 메시지 통일 ───
 
-    @patch('users.views.send_mail')
+    @patch('users.views.password.send_mail')
     def test_request_response_identical_for_unknown_email(self, mock_send_mail):
         """미가입 이메일로 요청해도 동일한 200 응답을 받아야 한다 (enumeration 방지)."""
         real = self.client.post(self.request_url, {'email': self.email}, format='json')
