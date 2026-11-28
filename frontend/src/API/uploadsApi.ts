@@ -1,7 +1,7 @@
 /** 첨부 업로드(Presigned URL), 업로드 파일 삭제. 화면은 API/req 에서 가져다 쓴다(모두 다시 내보냄) */
 import { isAxiosError } from "axios";
-import axios, { authHeaders } from "./client";
-import { BASE_URL } from "./auth";
+import axios, { authHeaders, currentSessionId, pinSession, SESSION_CHANGED_MESSAGE } from "./client";
+import { BASE_URL, SessionChangedError } from "./auth";
 import { optimizeImageForUpload } from "../Utils/imageOptimize";
 import { getErrorMessage } from "./apiShared";
 
@@ -9,6 +9,8 @@ import { getErrorMessage } from "./apiShared";
 
 // 첨부파일 업로드 (Presigned URL 방식)
 export const uploadAttachment = async (file: File): Promise<{ path: string; name: string; url?: string; message?: string }> => {
+    // 이미지 준비, 주소 받기, 확인 요청을 모두 시작한 계정으로만 보낸다(도중에 계정이 바뀌면 멈춤)
+    const session = pinSession(currentSessionId());
     const preparedFile = await optimizeImageForUpload(file);
 
     let generateUrlResponse;
@@ -16,9 +18,10 @@ export const uploadAttachment = async (file: File): Promise<{ path: string; name
         generateUrlResponse = await axios.post(
             `${BASE_URL}/api/boards/files/generate-upload-url/`,
             { filename: preparedFile.name },
-            { headers: { "Content-Type": "application/json", ...authHeaders() } }
+            { headers: { "Content-Type": "application/json", ...authHeaders() }, ...session }
         );
     } catch (error: unknown) {
+        if (error instanceof SessionChangedError) return { path: "", name: preparedFile.name, message: SESSION_CHANGED_MESSAGE };
         return { path: "", name: preparedFile.name, message: getErrorMessage(error, "업로드 URL 요청에 실패했습니다.") };
     }
 
@@ -40,9 +43,11 @@ export const uploadAttachment = async (file: File): Promise<{ path: string; name
         await axios.post(
             `${BASE_URL}/api/boards/files/confirm-upload/`,
             { file_key },
-            { headers: { "Content-Type": "application/json", ...authHeaders() } }
+            { headers: { "Content-Type": "application/json", ...authHeaders() }, ...session }
         );
-    } catch {
+    } catch (error: unknown) {
+        // 계정이 바뀌었으면 이 파일을 지금 계정 글에 넣지 않게 실패로 알린다
+        if (error instanceof SessionChangedError) return { path: "", name: preparedFile.name, message: SESSION_CHANGED_MESSAGE };
         // ACL 적용 실패해도 파일 자체는 업로드됨
     }
 

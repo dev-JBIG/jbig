@@ -445,6 +445,8 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             return;
         }
 
+        // 파일을 고른 시점의 계정. 여러 파일을 올리는 동안 계정이 바뀌면 멈춘다
+        const pickSessionId = currentSessionId();
         const candidates = Array.from(selected);
         const willProcess = candidates.slice(0, remaining);
         let overSize = false, blockedFile = false;
@@ -467,16 +469,15 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             }
 
             try {
-                const sessionId = currentSessionId();
                 const res = await uploadAttachment(file);
+                // 올리는 동안 계정이 바뀌었으면(성공, 실패 모두) 이 글에 넣지 않고 남은 파일도 멈춘다
+                if (currentSessionId() !== pickSessionId) {
+                    showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
+                    break;
+                }
                 if (res.message || !res.path) {
                     showAlert({ message: `"${file.name}" 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
                     continue;
-                }
-                // 올리는 동안 계정이 바뀌었으면 이전 계정 파일을 이 글에 넣지 않고 멈춘다
-                if (currentSessionId() !== sessionId) {
-                    showAlert({ message: SESSION_CHANGED_MESSAGE, type: 'warning' });
-                    break;
                 }
 
                 const previewUrl = file.type.startsWith("image/") ? URL.createObjectURL(file) : "";

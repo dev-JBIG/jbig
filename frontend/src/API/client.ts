@@ -32,6 +32,12 @@ function stripAuthorizationHeader(headers: InternalAxiosRequestConfig["headers"]
  */
 export const currentSessionId = (): string | null => readAuth().session?.id ?? null;
 
+/**
+ * 요청을 시작한 세션에 묶는 axios 설정 조각. 아래 요청 가로채기가 보낼 때 세션이 다르면 SessionChangedError 로 멈춘다.
+ * 여러 요청으로 이뤄진 동작(업로드 주소 받기 → 올리기 → 확인)을 한 계정으로만 끝내게 할 때 쓴다.
+ */
+export const pinSession = (sessionId: string | null): { sessionId?: string } => (sessionId ? { sessionId } : {});
+
 /** 기다리는 동안 계정이 바뀌어 요청을 멈췄을 때 보여줄 문구 */
 export const SESSION_CHANGED_MESSAGE = "로그인한 계정이 바뀌어 요청을 보내지 않았습니다. 다시 시도해 주세요.";
 

@@ -1,7 +1,9 @@
 import { AxiosError, AxiosAdapter } from "axios";
 import client from "./client";
 import { authTransport, getAuthState, readAuth, setAuth, signOutLocal, subscribeAuth } from "./auth";
-import { createComment, createPost, fetchApplications, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
+import { createComment, createPost, uploadAttachment, fetchApplications, fetchBoardPosts, fetchPostDetail, fetchQuizUrl, signin } from "./req";
+
+jest.mock("../Utils/imageOptimize", () => ({ optimizeImageForUpload: async (f: File) => f }));
 
 const user = { username: "회원", semester: "3", email: "member@jbnu.ac.kr", is_staff: false };
 const token = (seconds: number) => `header.${btoa(JSON.stringify({ exp: Date.now() / 1000 + seconds }))}.signature`;
@@ -198,4 +200,24 @@ test('createComment keeps the server anonymity flag (defaults to anonymous)', as
     expect((await createComment(1, { content: 'c', parent: null, is_anonymous: false })).is_anonymous).toBe(false);
     adapter.mockImplementationOnce(async config => ok(config, { ...base, parent: 3 }));
     expect((await createComment(1, { content: 'c', parent: 3 })).is_anonymous).toBe(true);
+});
+
+test('uploadAttachment stops when the account changes during the upload', async () => {
+    let crypto = 0;
+    Object.defineProperty(globalThis, 'crypto', { configurable: true, value: { randomUUID: () => `session-${++crypto}` } });
+    setAuth(user, token(3600), 'refresh-a');
+    adapter.mockImplementation(async config => {
+        const url = String(config.url);
+        if (url.includes('generate-upload-url')) return ok(config, { upload_url: 'https://storage.example/put', file_key: 'uploads/k.png', url: 'https://cdn/k.png' });
+        if (url.startsWith('https://storage.example')) {
+            // 스토리지에 올리는 동안 다른 탭에서 다른 계정으로 로그인
+            setAuth({ ...user, username: '다른 회원' }, token(3600), 'refresh-b');
+            return ok(config, {});
+        }
+        return ok(config, {});
+    });
+    const res = await uploadAttachment(new File(['x'], 'a.png', { type: 'image/png' }));
+    expect(res.path).toBe('');
+    expect(res.message).toMatch('계정이 바뀌어');
+    expect(adapter.mock.calls.some(([c]) => String(c.url).includes('confirm-upload'))).toBe(false);
 });
