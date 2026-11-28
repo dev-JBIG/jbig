@@ -76,7 +76,7 @@ describe("Primer React Calendar", () => {
 
         await waitFor(() => {
             expect(showConfirm).toHaveBeenCalledTimes(1);
-            expect(mockedDeleteEvent).toHaveBeenCalledWith("101", "staff-token");
+            expect(mockedDeleteEvent).toHaveBeenCalledWith("101");
         });
     });
 

@@ -31,7 +31,7 @@ const JbigInfo: React.FC<JbigInfoProps> = ({ calendarSlot, calendarAction }) => 
     useEffect(() => {
         const loadSettings = async () => {
             try {
-                const data = await fetchSiteSettings();
+                const data = await fetchSiteSettings(false);
                 setSettings(data);
             } catch (error) {
                 console.error('Failed to load site settings:', error);

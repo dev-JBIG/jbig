@@ -134,7 +134,7 @@ const PostDetail: React.FC = () => {
             showAlert({ message: "로그인이 필요합니다.", type: 'warning' });
             return;
         }
-        const res = await downloadGatedAttachment(fileUrl, fileName, accessToken);
+        const res = await downloadGatedAttachment(fileUrl, fileName);
         if (!res.success) {
             showAlert({ message: res.message || "파일 다운로드에 실패했습니다.", type: 'error' });
         }
@@ -264,7 +264,7 @@ const PostDetail: React.FC = () => {
         const loadPost = async () => {
             try {
 
-                const raw = await fetchPostDetail(Number(postId), accessToken || null);
+                const raw = await fetchPostDetail(Number(postId));
                 if (cancelled) return;
 
                 if (raw.loginRequired) {
@@ -426,7 +426,7 @@ const PostDetail: React.FC = () => {
         if (!confirmed) return;
 
         try {
-            const res = await deletePost(post.id, accessToken);
+            const res = await deletePost(post.id);
             if (res?.status === 401) { 
                 showAlert({
                     message: "로그인이 필요합니다.",
@@ -497,7 +497,7 @@ const PostDetail: React.FC = () => {
         }
 
         try {
-            const response = await togglePostLike(toggledPostId, accessToken);
+            const response = await togglePostLike(toggledPostId);
             setPost(prev => {
                 if (!prev || typeof prev === "string" || prev.id !== toggledPostId) return prev;
                 return {
@@ -557,7 +557,7 @@ const PostDetail: React.FC = () => {
         setPost({ ...post, comments: updatedComments });
 
         try {
-            const response = await toggleCommentLike(commentId, accessToken);
+            const response = await toggleCommentLike(commentId);
             
             // 서버 응답으로 실제 값 업데이트
             const finalComments = post.comments.map(c => {
@@ -603,7 +603,7 @@ const PostDetail: React.FC = () => {
                 payload.turnstile_token = turnstileToken;
                 // 비회원은 항상 익명
             }
-            const created = await createComment(post.id, payload, accessToken || null);
+            const created = await createComment(post.id, payload);
             setPost({
                 ...post,
                 comments: [ ...(post.comments || []), created ],
@@ -643,7 +643,7 @@ const PostDetail: React.FC = () => {
         setPost(optimistic);
 
         try {
-            const res: any = await deleteComment(commentId, accessToken);
+            const res: any = await deleteComment(commentId);
             if (res && res.status === 401) { 
                 setPost(prev); 
                 showAlert({
@@ -690,7 +690,7 @@ const PostDetail: React.FC = () => {
         setPost(optimistic);
 
         try {
-            const res: any = await deleteComment(replyId, accessToken); // 답글도 같은 엔드포인트
+            const res: any = await deleteComment(replyId); // 답글도 같은 엔드포인트
             if (res && res.status === 401) { 
                 setPost(prev); 
                 showAlert({
@@ -749,7 +749,7 @@ const PostDetail: React.FC = () => {
                 payload.turnstile_token = turnstileToken;
                 // 비회원은 항상 익명
             }
-            const created = await createComment(post.id, payload, accessToken || null);
+            const created = await createComment(post.id, payload);
             setPost({
                 ...post,
                 comments: (post.comments || []).map(c =>
@@ -795,7 +795,7 @@ const PostDetail: React.FC = () => {
         const is_anonymous = !editShowRealName;
 
         try {
-            await updateComment(commentId, { content, parent: null, is_anonymous }, accessToken);
+            await updateComment(commentId, { content, parent: null, is_anonymous });
             setPost({
                 ...post,
                 comments: (post.comments || []).map(c => c.id === commentId ? { ...c, content, is_anonymous } : c),
@@ -822,7 +822,7 @@ const PostDetail: React.FC = () => {
         const is_anonymous = !editShowRealName;
 
         try {
-            await updateComment(rId, { content, parent: cId, is_anonymous }, accessToken);
+            await updateComment(rId, { content, parent: cId, is_anonymous });
             setPost({
                 ...post,
                 comments: (post.comments || []).map(c =>
@@ -992,7 +992,7 @@ const PostDetail: React.FC = () => {
                     postId={post.id}
                     onUpdate={() => {
                         // 게시글 다시 로드
-                        fetchPostDetail(post.id, accessToken ?? undefined).then(raw => {
+                        fetchPostDetail(post.id).then(raw => {
                             const src = raw.post_data ?? raw;
                             setPost(prev => {
                                 if (!prev || typeof prev === "string") return prev;

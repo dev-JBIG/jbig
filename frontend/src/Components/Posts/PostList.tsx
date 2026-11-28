@@ -188,8 +188,7 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                     String(announcementBoard.id),
                     3,
                     1,
-                    false,
-                    accessToken ?? undefined
+                    false
                 );
 
                 if (cancelled) return;
@@ -270,14 +269,13 @@ function PostList({ boards, isHome, userId }: { boards?: Section[], isHome?: boo
                         })
                         return;
                     }
-                    response = await fetchUserPosts(userId, 10, page, accessToken);
+                    response = await fetchUserPosts(userId, 10, page);
                 } else { 
                     response = await fetchBoardPosts(
                         isHome ? undefined : (activeBoardID !== 0 ? String(activeBoardID) : undefined),
                         isHome ? 10 : effectivePerPage,
                         isHome ? 1 : page,
-                        isHome,
-                        accessToken ?? undefined
+                        isHome
                     );
                 }
 

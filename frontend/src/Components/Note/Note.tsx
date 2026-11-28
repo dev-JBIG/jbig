@@ -30,8 +30,8 @@ function sanitizeRecordMap(recordMap: ExtendedRecordMap): ExtendedRecordMap {
     return { ...recordMap, block: cleanBlock };
 }
 
-async function fetchNotionPage(pageId: string, accessToken: string): Promise<ExtendedRecordMap> {
-    const data = await fetchNotionPageAPI(pageId, accessToken);
+async function fetchNotionPage(pageId: string): Promise<ExtendedRecordMap> {
+    const data = await fetchNotionPageAPI(pageId);
     return sanitizeRecordMap(data as ExtendedRecordMap);
 }
 
@@ -73,7 +73,7 @@ const Note: React.FC = () => {
         setError(null);
 
         try {
-            const data = await fetchNotionPage(normalizedId, accessToken);
+            const data = await fetchNotionPage(normalizedId);
             setRecordMap(data);
             setCurrentPageId(normalizedId);
             const defaultId = normalizeNotionPageId(defaultPageIdRef.current);
@@ -110,7 +110,7 @@ const Note: React.FC = () => {
 
         const init = async () => {
             try {
-                const settings = await fetchSiteSettings();
+                const settings = await fetchSiteSettings(false);
                 const defaultPageId = settings.notion_page_id || "";
                 defaultPageIdRef.current = defaultPageId;
                 const params = new URLSearchParams(window.location.search);

@@ -1,5 +1,5 @@
 import { AxiosError, isAxiosError } from "axios";
-import axios, { authHeaders } from "./client";
+import axios, { authHeaders, currentAccessToken } from "./client";
 import { BASE_URL, readAuth, SessionChangedError } from "./auth";
 import { optimizeImageForUpload } from "../Utils/imageOptimize";
 import {
@@ -171,8 +171,8 @@ export const signupUser = async (
 };
 
 // sidebar 게시판 목록 조회 함수
-export const getBoards = async (token?: string | null) => {
-    const config = { headers: authHeaders(token) };
+export const getBoards = async () => {
+    const config = { headers: authHeaders() };
     const response = await axios.get(`${BASE_URL}/api/categories/`, config);
     return response.data;
 };
@@ -249,9 +249,9 @@ export const fetchBoardPosts = async (
     boardId: string | undefined,
     pageSize: number,
     page: number,
-    isHome: boolean = false,
-    token?: string
+    isHome: boolean = false
 ): Promise<{ posts: PostItem[]; totalPages: number; postPermission: boolean; postTypes?: Map<number, number> }> => {
+    const token = currentAccessToken();
     const url = isHome
         ? `${BASE_URL}/api/posts/all/`
         : boardId
@@ -265,7 +265,7 @@ export const fetchBoardPosts = async (
     const makeRequest = async (useToken: boolean) => {
         const reqConfig = { ...config };
         if (useToken && token) {
-            reqConfig.headers = { ...reqConfig.headers, ...authHeaders(token) };
+            reqConfig.headers = { ...reqConfig.headers, ...authHeaders() };
         }
         return axios.get(url, reqConfig);
     };
@@ -328,9 +328,9 @@ export const fetchPhotoAlbumPosts = async (
 };
 
 // 퀴즈 url 반환
-export const fetchQuizUrl = async (token: string): Promise<string | null> => {
+export const fetchQuizUrl = async (): Promise<string | null> => {
     const res = await axios.get(`${BASE_URL}/api/quiz-url/`, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
     const quizUrl = typeof res.data?.quiz_url === "string" ? res.data.quiz_url.trim() : "";
     return quizUrl || null;
@@ -351,12 +351,13 @@ export interface SiteSettings {
 }
 
 // 사이트 설정 가져오기
-export const fetchSiteSettings = async (token?: string | null): Promise<SiteSettings> => {
+/** withAuth=false 면 로그인해 있어도 비회원으로 읽는다(대문, 노트처럼 공개 값만 쓰는 곳. 퀴즈 주소는 회원에게만 온다) */
+export const fetchSiteSettings = async (withAuth: boolean = true): Promise<SiteSettings> => {
     const url = `${BASE_URL}/api/settings/`;
     
     try {
         const res = await axios.get(url, {
-            headers: authHeaders(token),
+            headers: withAuth ? authHeaders() : {},
         });
         return res.data;
     } catch (err) {
@@ -366,14 +367,13 @@ export const fetchSiteSettings = async (token?: string | null): Promise<SiteSett
 
 // 사이트 설정 업데이트
 export const updateSiteSettings = async (
-    token: string,
     settings: Partial<SiteSettings>
 ): Promise<any> => {
     const url = `${BASE_URL}/api/settings/`;
     
     try {
         const res = await axios.put(url, settings, {
-            headers: authHeaders(token),
+            headers: authHeaders(),
         });
         return res.data;
     } catch (err) {
@@ -425,10 +425,10 @@ export const fetchBoardSearchPosts = async (
 };
 
 // 게시글 세부 정보 조회
-export const fetchPostDetail = async (postId: number, token?: string | null) => {
+export const fetchPostDetail = async (postId: number) => {
     try {
         const response = await axios.get(`${BASE_URL}/api/posts/${postId}/`, {
-            headers: authHeaders(token),
+            headers: authHeaders(),
         });
         return response.data;
     } catch (error) {
@@ -442,26 +442,26 @@ export const fetchPostDetail = async (postId: number, token?: string | null) => 
 };
 
 // 게시글 좋아요 토글
-export const togglePostLike = async (postId: number, token: string) => {
+export const togglePostLike = async (postId: number) => {
     const url = `${BASE_URL}/api/posts/${postId}/like/`;
     const res = await axios.post(
         url,
         {},
         {
-            headers: authHeaders(token),
+            headers: authHeaders(),
         }
     );
     return res.data;
 };
 
 // 댓글 좋아요 토글
-export const toggleCommentLike = async (commentId: number, token: string) => {
+export const toggleCommentLike = async (commentId: number) => {
     const url = `${BASE_URL}/api/comments/${commentId}/like/`;
     const res = await axios.post(
         url,
         {},
         {
-            headers: authHeaders(token),
+            headers: authHeaders(),
         }
     );
     return res.data;
@@ -471,14 +471,13 @@ export const toggleCommentLike = async (commentId: number, token: string) => {
 export const fetchUserPosts = async (
     userId: string,
     pageSize: number,
-    page: number,
-    token?: string | null
+    page: number
 ): Promise<{ posts: PostItem[]; totalPages: number; postTypes?: Map<number, number> }> => {
     const headers: any = {
         Accept: "application/json",
     };
     
-    Object.assign(headers, authHeaders(token));
+    Object.assign(headers, authHeaders());
 
     const res = await axios.get(`${BASE_URL}/api/users/${encodeURIComponent(userId)}/posts/`, {
         params: { page, page_size: pageSize },
@@ -501,7 +500,7 @@ export const fetchUserPosts = async (
 // 첨부파일 업로드
 
 // 첨부파일 업로드 (Presigned URL 방식)
-export const uploadAttachment = async (file: File, token: string): Promise<{ path: string; name: string; url?: string; message?: string }> => {
+export const uploadAttachment = async (file: File): Promise<{ path: string; name: string; url?: string; message?: string }> => {
     const preparedFile = await optimizeImageForUpload(file);
 
     let generateUrlResponse;
@@ -509,7 +508,7 @@ export const uploadAttachment = async (file: File, token: string): Promise<{ pat
         generateUrlResponse = await axios.post(
             `${BASE_URL}/api/boards/files/generate-upload-url/`,
             { filename: preparedFile.name },
-            { headers: { "Content-Type": "application/json", ...authHeaders(token) } }
+            { headers: { "Content-Type": "application/json", ...authHeaders() } }
         );
     } catch (error: unknown) {
         return { path: "", name: preparedFile.name, message: getErrorMessage(error, "업로드 URL 요청에 실패했습니다.") };
@@ -533,7 +532,7 @@ export const uploadAttachment = async (file: File, token: string): Promise<{ pat
         await axios.post(
             `${BASE_URL}/api/boards/files/confirm-upload/`,
             { file_key },
-            { headers: { "Content-Type": "application/json", ...authHeaders(token) } }
+            { headers: { "Content-Type": "application/json", ...authHeaders() } }
         );
     } catch {
         // ACL 적용 실패해도 파일 자체는 업로드됨
@@ -547,13 +546,13 @@ export const uploadAttachment = async (file: File, token: string): Promise<{ pat
 };
 
 // 업로드된 파일 삭제 (스토리지)
-export const deleteUploadedFile = async (path: string, token: string): Promise<{ success: boolean; message?: string }> => {
+export const deleteUploadedFile = async (path: string): Promise<{ success: boolean; message?: string }> => {
     try {
         await axios.delete(`${BASE_URL}/api/boards/files/delete/`, {
             data: { path },
             headers: {
                 "Content-Type": "application/json",
-                ...authHeaders(token),
+                ...authHeaders(),
             },
         });
         return { success: true };
@@ -582,16 +581,15 @@ export interface AdminBoard {
     comment_permission: BoardTwoLevelPermission;
 }
 
-export const getAdminBoards = async (token: string): Promise<AdminBoard[]> => {
+export const getAdminBoards = async (): Promise<AdminBoard[]> => {
     const response = await axios.get(`${BASE_URL}/api/admin/boards/`, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
     return response.data as AdminBoard[];
 };
 
 // 관리자: 게시판 권한(조회/작성/댓글) 변경 — 바꿀 필드만 부분 PATCH
 export const updateBoardPermissions = async (
-    token: string,
     boardId: number,
     patch: Partial<Pick<AdminBoard, "read_permission" | "post_permission" | "comment_permission">>
 ): Promise<{ success: boolean; message?: string }> => {
@@ -599,7 +597,7 @@ export const updateBoardPermissions = async (
         await axios.patch(
             `${BASE_URL}/api/admin/boards/${boardId}/`,
             patch,
-            { headers: { "Content-Type": "application/json", ...authHeaders(token) } }
+            { headers: { "Content-Type": "application/json", ...authHeaders() } }
         );
         return { success: true };
     } catch (error: unknown) {
@@ -612,8 +610,7 @@ export const updateBoardPermissions = async (
 // 내려오므로, Authorization 헤더를 실은 요청으로 blob을 받아 브라우저 저장을 트리거한다.
 export const downloadGatedAttachment = async (
     url: string,
-    fileName: string,
-    token: string
+    fileName: string
 ): Promise<{ success: boolean; message?: string }> => {
     try {
         const apiRoot = `${BASE_URL.replace(/\/$/, "")}/api/`;
@@ -622,7 +619,7 @@ export const downloadGatedAttachment = async (
             return { success: false, message: "허용되지 않는 다운로드 경로입니다." };
         }
         const response = await axios.get(resolved, {
-            headers: authHeaders(token),
+            headers: authHeaders(),
             responseType: "blob",
         });
         const blobUrl = window.URL.createObjectURL(response.data);
@@ -647,11 +644,10 @@ export const createPost = async (
         content_md: string;
         attachment_paths: { path: string; name: string; }[];
         is_anonymous?: boolean;
-    },
-    token: string
+    }
 ) => {
     const response = await axios.post(`${BASE_URL}/api/boards/${boardId}/posts/`, postData, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
     return response.data;
 };
@@ -663,12 +659,11 @@ interface DeletePostResponse {
 }
 
 export const deletePost = async (
-    postId: number,
-    token: string
+    postId: number
 ): Promise<{ deleted?: boolean; status?: number; notFound?: boolean; message?: string }> => {
     try {
         const res = await axios.delete<DeletePostResponse>(`${BASE_URL}/api/posts/${postId}/`, {
-            headers: { Accept: "application/json", ...authHeaders(token) },
+            headers: { Accept: "application/json", ...authHeaders() },
             withCredentials: true,
         });
 
@@ -697,15 +692,14 @@ export const modifyPost = async (
         board_id?: number;
         is_anonymous?: boolean;
         tag?: string;
-    },
-    token: string
+    }
 ) => {
     const url = `${BASE_URL}/api/posts/${postId}/`;
     const res = await axios.patch(url, payload, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
         withCredentials: true,
         responseType: "json",
@@ -716,10 +710,10 @@ export const modifyPost = async (
 
 
 // 댓글 삭제
-export const deleteComment = async (commentId: number, token: string): Promise<void> => {
+export const deleteComment = async (commentId: number): Promise<void> => {
     const url = `${BASE_URL}/api/comments/${commentId}/`;
     await axios.delete(url, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
         withCredentials: true,
     });
 };
@@ -727,15 +721,14 @@ export const deleteComment = async (commentId: number, token: string): Promise<v
 // 댓글 등록
 export const createComment = async (
     postId: number,
-    payload: { content: string; parent: number | null; is_anonymous?: boolean; turnstile_token?: string },
-    token: string | null
+    payload: { content: string; parent: number | null; is_anonymous?: boolean; turnstile_token?: string }
 ): Promise<Comment | Reply> => {
     const url = `${BASE_URL}/api/posts/${postId}/comments/`;
     const headers: any = {
         Accept: "application/json",
         "Content-Type": "application/json",
     };
-    Object.assign(headers, authHeaders(token));
+    Object.assign(headers, authHeaders());
     const res = await axios.post(url, payload, {
         headers,
         withCredentials: true,
@@ -795,15 +788,14 @@ export const createComment = async (
 // 댓글 수정
 export const updateComment = async (
     commentId: number,
-    payload: { content: string; parent: number | null; is_anonymous?: boolean },
-    token: string
+    payload: { content: string; parent: number | null; is_anonymous?: boolean }
 ): Promise<Comment | Reply> => {
     const url = `${BASE_URL}/api/comments/${commentId}/`;
     const res = await axios.patch(url, payload, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
         withCredentials: true,
         responseType: "json",
@@ -862,14 +854,13 @@ export const updateComment = async (
 
 // 사용자 정보 조회
 export const fetchUserInfo = async (
-    userId: string,
-    token: string
+    userId: string
 ): Promise<UserProfile> => {
     const url = `${BASE_URL}/api/users/${encodeURIComponent(userId)}/`;
     const res = await axios.get(url, {
         headers: {
             Accept: "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
         withCredentials: true,
         responseType: "json",
@@ -902,8 +893,7 @@ export const fetchUserInfo = async (
 export const fetchUserComments = async (
     userId: string,
     pageSize: number,
-    page: number,
-    token?: string | null
+    page: number
 ): Promise<{ comments: UserComment[]; totalPages: number }> => {
     const url = `${BASE_URL}/api/users/${encodeURIComponent(userId)}/comments/`;
 
@@ -911,7 +901,7 @@ export const fetchUserComments = async (
         Accept: "application/json",
     };
     
-    Object.assign(headers, authHeaders(token));
+    Object.assign(headers, authHeaders());
 
     const res = await axios.get(url, {
         params: { page, page_size: pageSize },
@@ -965,14 +955,13 @@ export const fetchUserComments = async (
 export async function changePassword(
     oldPassword: string,
     newPassword1: string,
-    newPassword2: string,
-    token: string
+    newPassword2: string
 ): Promise<{ success: boolean; message?: string }> {
     try {
         const res = await axios.post<{ detail?: string }>(
             `${BASE_URL}/api/users/password/change/`,
             { old_password: oldPassword, new_password1: newPassword1, new_password2: newPassword2 },
-            { headers: { ...authHeaders(token), "Content-Type": "application/json" } }
+            { headers: { ...authHeaders(), "Content-Type": "application/json" } }
         );
         return { success: true, message: res.data?.detail || "비밀번호 변경 성공" };
     } catch (error: unknown) {
@@ -1010,8 +999,7 @@ export const fetchCalendarEvents = async (): Promise<CalendarEvent[]> => {
 
 // 캘린더 일정 추가하기
 export const createCalendarEvent = async (
-    newEvent: CalendarEventCreate,
-    token: string
+    newEvent: CalendarEventCreate
 ): Promise<CalendarEvent> => {
     const url = `${BASE_URL}/api/calendar/`;
 
@@ -1025,7 +1013,7 @@ export const createCalendarEvent = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
         withCredentials: true,
         responseType: "json",
@@ -1044,8 +1032,7 @@ export const createCalendarEvent = async (
 // 캘린더 일정 수정하기 (PUT)
 export const updateCalendarEvent = async (
     id: string,
-    event: CalendarEventCreate,
-    token: string
+    event: CalendarEventCreate
 ): Promise<CalendarEvent> => {
     const url = `${BASE_URL}/api/calendar/${id}/`;
 
@@ -1059,7 +1046,7 @@ export const updateCalendarEvent = async (
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
         withCredentials: true,
         responseType: "json",
@@ -1075,14 +1062,13 @@ export const updateCalendarEvent = async (
 
 // 캘린더 일정 삭제하기 (DELETE)
 export const deleteCalendarEvent = async (
-    id: string,
-    token: string
+    id: string
 ): Promise<void> => {
     const url = `${BASE_URL}/api/calendar/${id}/`;
     await axios.delete(url, {
         headers: {
             Accept: "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
         withCredentials: true,
         responseType: "json",
@@ -1129,62 +1115,59 @@ export interface PublicProfile {
 
 export const fetchPublicProfile = async (
     username: string,
-    token?: string,
     includeActivity: boolean = false
 ): Promise<PublicProfile> => {
     const url = `${BASE_URL}/api/users/profile/${encodeURIComponent(username)}/`;
     const res = await axios.get(url, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
         params: includeActivity ? { include_activity: "1" } : undefined,
     });
     return res.data;
 };
 
 export const fetchPublicProfileActivity = async (
-    username: string,
-    token?: string
+    username: string
 ): Promise<Pick<PublicProfile, "posts" | "comments">> => {
-    const data = await fetchPublicProfile(username, token, true);
+    const data = await fetchPublicProfile(username, true);
     return {
         posts: Array.isArray(data.posts) ? data.posts : [],
         comments: Array.isArray(data.comments) ? data.comments : [],
     };
 };
 
-export const updateResume = async (resume: string, token: string): Promise<{ resume: string }> => {
+export const updateResume = async (resume: string): Promise<{ resume: string }> => {
     const url = `${BASE_URL}/api/users/profile/`;
     const res = await axios.patch(url, { resume }, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
     });
     return res.data;
 };
 
-export const updateProfileBlocks = async (blocks: ProfileBlockData[], token: string): Promise<{ profile_blocks: ProfileBlockData[] }> => {
+export const updateProfileBlocks = async (blocks: ProfileBlockData[]): Promise<{ profile_blocks: ProfileBlockData[] }> => {
     const url = `${BASE_URL}/api/users/profile/blocks/`;
     const res = await axios.patch(url, { profile_blocks: blocks }, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
     });
     return res.data;
 };
 
 export const updateProfileHtml = async (
-    payload: { profile_type: 'blocks' | 'html'; profile_html?: string },
-    token: string
+    payload: { profile_type: 'blocks' | 'html'; profile_html?: string }
 ): Promise<{ profile_type: 'blocks' | 'html'; profile_html: string }> => {
     const url = `${BASE_URL}/api/users/profile/html/`;
     const res = await axios.patch(url, payload, {
         headers: {
             Accept: "application/json",
             "Content-Type": "application/json",
-            ...authHeaders(token),
+            ...authHeaders(),
         },
     });
     return res.data;
@@ -1205,10 +1188,10 @@ export interface NotificationItem {
     created_at: string;
 }
 
-export const fetchNotifications = async (token: string): Promise<NotificationItem[]> => {
+export const fetchNotifications = async (): Promise<NotificationItem[]> => {
     const url = `${BASE_URL}/api/notifications/`;
     const res = await axios.get(url, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
     // 페이지네이션 응답일 경우 results 배열 반환, 아니면 그대로 반환
     if (Array.isArray(res.data)) {
@@ -1217,20 +1200,20 @@ export const fetchNotifications = async (token: string): Promise<NotificationIte
     return res.data.results || [];
 };
 
-export const fetchUnreadNotificationCount = async (token: string): Promise<number> => {
+export const fetchUnreadNotificationCount = async (): Promise<number> => {
     const url = `${BASE_URL}/api/notifications/unread-count/`;
     const res = await axios.get(url, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
     return res.data.unread_count;
 };
 
-export const markNotificationRead = async (token: string, notificationId?: number): Promise<void> => {
+export const markNotificationRead = async (notificationId?: number): Promise<void> => {
     const url = notificationId
         ? `${BASE_URL}/api/notifications/${notificationId}/mark-read/`
         : `${BASE_URL}/api/notifications/mark-read/`;
     await axios.post(url, {}, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
 };
 
@@ -1246,11 +1229,11 @@ export interface DraftData {
 }
 
 // 임시저장 버퍼 조회
-export const fetchDraft = async (token: string): Promise<DraftData | null> => {
+export const fetchDraft = async (): Promise<DraftData | null> => {
     const url = `${BASE_URL}/api/draft/`;
     try {
         const res = await axios.get(url, {
-            headers: authHeaders(token),
+            headers: authHeaders(),
         });
         return res.data;
     } catch (err) {
@@ -1263,13 +1246,12 @@ export const fetchDraft = async (token: string): Promise<DraftData | null> => {
 
 // 임시저장 버퍼 생성/업데이트
 export const saveDraft = async (
-    data: { board_id?: number | null; title: string; content_md: string; uploaded_paths: string[] },
-    token: string
+    data: { board_id?: number | null; title: string; content_md: string; uploaded_paths: string[] }
 ): Promise<DraftData> => {
     const url = `${BASE_URL}/api/draft/`;
     const res = await axios.post(url, data, {
         headers: {
-            ...authHeaders(token),
+            ...authHeaders(),
             "Content-Type": "application/json",
         },
     });
@@ -1277,22 +1259,22 @@ export const saveDraft = async (
 };
 
 // 임시저장 버퍼 삭제
-export const deleteDraft = async (token: string): Promise<void> => {
+export const deleteDraft = async (): Promise<void> => {
     const url = `${BASE_URL}/api/draft/delete/`;
     await axios.delete(url, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
 };
 
 // 회원 탈퇴
-export const deleteAccount = async (password: string, token: string): Promise<{ success: boolean; message?: string }> => {
+export const deleteAccount = async (password: string): Promise<{ success: boolean; message?: string }> => {
     try {
         const res = await axios.post(
             `${BASE_URL}/api/users/delete-account/`,
             { password },
             {
                 headers: {
-                    ...authHeaders(token),
+                    ...authHeaders(),
                     "Content-Type": "application/json"
                 }
             }
@@ -1333,36 +1315,36 @@ export interface PopupCreate {
 }
 
 // 활성 팝업 조회 (사용자용 — 토큰 전달 시 dismiss 필터링 적용)
-export const fetchActivePopups = async (token?: string | null): Promise<PopupItem[]> => {
+export const fetchActivePopups = async (): Promise<PopupItem[]> => {
     const url = `${BASE_URL}/api/popups/`;
     const headers: any = {};
-    Object.assign(headers, authHeaders(token));
+    Object.assign(headers, authHeaders());
     const res = await axios.get(url, { headers });
     return res.data;
 };
 
 // 팝업 dismiss (다시 보지 않기)
-export const dismissPopup = async (popupId: number, token: string): Promise<void> => {
+export const dismissPopup = async (popupId: number): Promise<void> => {
     await axios.post(`${BASE_URL}/api/popups/${popupId}/dismiss/`, {}, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
 };
 
 // 모든 팝업 조회 (관리자용)
-export const fetchAllPopups = async (token: string): Promise<PopupItem[]> => {
+export const fetchAllPopups = async (): Promise<PopupItem[]> => {
     const url = `${BASE_URL}/api/popups/`;
     const res = await axios.get(url, {
-        headers: authHeaders(token),
+        headers: authHeaders(),
     });
     return res.data;
 };
 
 // 팝업 생성
-export const createPopup = async (data: PopupCreate, token: string): Promise<PopupItem> => {
+export const createPopup = async (data: PopupCreate): Promise<PopupItem> => {
     const url = `${BASE_URL}/api/popups/`;
     const res = await axios.post(url, data, {
         headers: {
-            ...authHeaders(token),
+            ...authHeaders(),
             "Content-Type": "application/json"
         }
     });
@@ -1370,11 +1352,11 @@ export const createPopup = async (data: PopupCreate, token: string): Promise<Pop
 };
 
 // 팝업 수정
-export const updatePopup = async (id: number, data: Partial<PopupCreate>, token: string): Promise<PopupItem> => {
+export const updatePopup = async (id: number, data: Partial<PopupCreate>): Promise<PopupItem> => {
     const url = `${BASE_URL}/api/popups/${id}/`;
     const res = await axios.patch(url, data, {
         headers: {
-            ...authHeaders(token),
+            ...authHeaders(),
             "Content-Type": "application/json"
         }
     });
@@ -1382,56 +1364,56 @@ export const updatePopup = async (id: number, data: Partial<PopupCreate>, token:
 };
 
 // 팝업 삭제
-export const deletePopup = async (id: number, token: string): Promise<void> => {
+export const deletePopup = async (id: number): Promise<void> => {
     const url = `${BASE_URL}/api/popups/${id}/`;
     await axios.delete(url, {
-        headers: authHeaders(token)
+        headers: authHeaders()
     });
 };
 
 // ========== 모집 시스템 API ==========
 
 // 모집 상세 조회
-export const fetchRecruitmentDetail = async (postId: number, token?: string): Promise<any> => {
+export const fetchRecruitmentDetail = async (postId: number): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/`;
     const headers: Record<string, string> = {};
-    Object.assign(headers, authHeaders(token));
+    Object.assign(headers, authHeaders());
     const res = await axios.get(url, { headers });
     return res.data;
 };
 
 // 모집 정보 수정
-export const updateRecruitment = async (postId: number, data: any, token: string): Promise<any> => {
+export const updateRecruitment = async (postId: number, data: any): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/`;
     const res = await axios.patch(url, data, {
-        headers: { ...authHeaders(token), "Content-Type": "application/json" }
+        headers: { ...authHeaders(), "Content-Type": "application/json" }
     });
     return res.data;
 };
 
 // 모집 상태 변경 (close, reopen, complete, cancel)
-export const changeRecruitmentStatus = async (postId: number, action: string, token: string): Promise<any> => {
+export const changeRecruitmentStatus = async (postId: number, action: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/${action}/`;
     const res = await axios.post(url, {}, {
-        headers: authHeaders(token)
+        headers: authHeaders()
     });
     return res.data;
 };
 
 // 모집에 지원
-export const applyToRecruitment = async (postId: number, message: string, token: string): Promise<any> => {
+export const applyToRecruitment = async (postId: number, message: string): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/apply/`;
     const res = await axios.post(url, { message }, {
-        headers: { ...authHeaders(token), "Content-Type": "application/json" }
+        headers: { ...authHeaders(), "Content-Type": "application/json" }
     });
     return res.data;
 };
 
 // 내 지원 상태 조회
-export const fetchMyApplication = async (postId: number, token: string): Promise<any> => {
+export const fetchMyApplication = async (postId: number): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/my-application/`;
     try {
-        const res = await axios.get(url, { headers: authHeaders(token) });
+        const res = await axios.get(url, { headers: authHeaders() });
         return res.data;
     } catch {
         return null;
@@ -1439,13 +1421,13 @@ export const fetchMyApplication = async (postId: number, token: string): Promise
 };
 
 // 지원 철회
-export const withdrawApplication = async (postId: number, token: string): Promise<void> => {
+export const withdrawApplication = async (postId: number): Promise<void> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/my-application/`;
-    await axios.delete(url, { headers: authHeaders(token) });
+    await axios.delete(url, { headers: authHeaders() });
 };
 
 // 지원자 목록 조회
-export const fetchApplications = async (postId: number, token: string): Promise<ApplicationItem[]> => {
+export const fetchApplications = async (postId: number): Promise<ApplicationItem[]> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/applications/`;
     const sessionId = readAuth().session?.id;
     const applications: ApplicationItem[] = [];
@@ -1454,7 +1436,7 @@ export const fetchApplications = async (postId: number, token: string): Promise<
 
     do {
         const { data } = await axios.get<PaginatedResponse<ApplicationItem> | ApplicationItem[]>(url, {
-            headers: authHeaders(token),
+            headers: authHeaders(),
             params: { page },
         });
         if (readAuth().session?.id !== sessionId) throw new SessionChangedError();
@@ -1472,33 +1454,33 @@ export const fetchApplications = async (postId: number, token: string): Promise<
 
 // 지원 수락/거절
 export const updateApplicationStatus = async (
-    postId: number, appId: number, action: string, recruiterNote: string, token: string
+    postId: number, appId: number, action: string, recruiterNote: string
 ): Promise<any> => {
     const url = `${BASE_URL}/api/recruitments/${postId}/applications/${appId}/${action}/`;
     const res = await axios.post(url, { recruiter_note: recruiterNote }, {
-        headers: { ...authHeaders(token), "Content-Type": "application/json" }
+        headers: { ...authHeaders(), "Content-Type": "application/json" }
     });
     return res.data;
 };
 
 // 내가 만든 모집 목록
-export const fetchMyRecruitments = async (token: string): Promise<any[]> => {
+export const fetchMyRecruitments = async (): Promise<any[]> => {
     const url = `${BASE_URL}/api/recruitments/my-recruitments/`;
-    const res = await axios.get(url, { headers: authHeaders(token) });
+    const res = await axios.get(url, { headers: authHeaders() });
     return res.data;
 };
 
 // 내가 지원한 목록
-export const fetchMyApplications = async (token: string): Promise<any[]> => {
+export const fetchMyApplications = async (): Promise<any[]> => {
     const url = `${BASE_URL}/api/recruitments/my-applications/`;
-    const res = await axios.get(url, { headers: authHeaders(token) });
+    const res = await axios.get(url, { headers: authHeaders() });
     return res.data;
 };
 
 // ========== Notion 프록시 API ==========
 
-export const fetchNotionPage = async (pageId: string, token: string): Promise<any> => {
+export const fetchNotionPage = async (pageId: string): Promise<any> => {
     const url = `${BASE_URL}/api/notion/${encodeURIComponent(pageId)}/`;
-    const res = await axios.get(url, { headers: authHeaders(token) });
+    const res = await axios.get(url, { headers: authHeaders() });
     return res.data;
 };

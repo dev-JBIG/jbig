@@ -31,7 +31,7 @@ test('recruitment with no applicants returns an empty array', async () => {
         count: 0, next: null, previous: null, results: [],
     }));
 
-    await expect(fetchApplications(1, freshAccess)).resolves.toEqual([]);
+    await expect(fetchApplications(1)).resolves.toEqual([]);
 });
 
 test('fetches every applicant page from the recruitment endpoint', async () => {
@@ -44,7 +44,7 @@ test('fetches every applicant page from the recruitment endpoint', async () => {
         count: 2, next: null, previous: 'https://pagination.example/', results: [accepted],
     }));
 
-    await expect(fetchApplications(1, freshAccess)).resolves.toEqual([pending, accepted]);
+    await expect(fetchApplications(1)).resolves.toEqual([pending, accepted]);
     expect(adapter).toHaveBeenCalledTimes(2);
     const [first, second] = adapter.mock.calls.map(([config]) => config);
     expect(second.url).toBe(first.url);
@@ -55,14 +55,14 @@ test('fetches an unpaginated applicant response', async () => {
     const rejected = { id: 3, status: 3 };
     adapter.mockImplementation(async config => ok(config, [rejected]));
 
-    await expect(fetchApplications(1, freshAccess)).resolves.toEqual([rejected]);
+    await expect(fetchApplications(1)).resolves.toEqual([rejected]);
     expect(adapter).toHaveBeenCalledTimes(1);
 });
 
 test('rejects a response without an applicant list', async () => {
     adapter.mockImplementation(async config => ok(config, '<html></html>'));
 
-    await expect(fetchApplications(1, freshAccess)).rejects.toThrow('지원자 목록 응답 형식이 올바르지 않습니다.');
+    await expect(fetchApplications(1)).rejects.toThrow('지원자 목록 응답 형식이 올바르지 않습니다.');
 });
 
 test.each(['ACCOUNT_NOT_VERIFIED', 'INVALID_CREDENTIALS', 'ACCOUNT_INACTIVE'])(
@@ -79,7 +79,7 @@ test('post detail refreshes, retries and publishes fresh state to UI subscribers
     const unsubscribe = subscribeAuth(() => { states.push(getAuthState().session?.accessToken || ''); });
     adapter.mockImplementationOnce(config => reject(config));
     adapter.mockImplementationOnce(async config => ok(config, { id: 1, title: '본문' }));
-    expect(await fetchPostDetail(1, 'stale-context-token')).toMatchObject({ id: 1 });
+    expect(await fetchPostDetail(1)).toMatchObject({ id: 1 });
     expect(refreshAdapter).toHaveBeenCalledTimes(1);
     expect(adapter.mock.calls[1][0].headers.Authorization).toBe(`Bearer ${freshAccess}`);
     expect(readAuth().session?.refreshToken).toBe('new-refresh');
@@ -90,14 +90,14 @@ test('post detail refreshes, retries and publishes fresh state to UI subscribers
 test('post creation also uses the shared refresh path', async () => {
     adapter.mockImplementationOnce(config => reject(config));
     adapter.mockImplementationOnce(async config => ok(config, { id: 2 }));
-    expect(await createPost(1, { title: '제목', content_md: '본문', attachment_paths: [] }, 'old-access')).toEqual({ id: 2 });
+    expect(await createPost(1, { title: '제목', content_md: '본문', attachment_paths: [] })).toEqual({ id: 2 });
     expect(refreshAdapter).toHaveBeenCalledTimes(1);
     expect(adapter.mock.calls[1][0].data).toBe(adapter.mock.calls[0][0].data);
 });
 
 test('403 stays a permission failure and does not expire the session', async () => {
     adapter.mockImplementation(config => reject(config, 403));
-    expect(await fetchPostDetail(1, 'old-access')).toEqual({ unauthorized: true });
+    expect(await fetchPostDetail(1)).toEqual({ unauthorized: true });
     expect(refreshAdapter).not.toHaveBeenCalled();
     expect(readAuth().session).not.toBeNull();
 });
@@ -105,38 +105,38 @@ test('403 stays a permission failure and does not expire the session', async () 
 test('expired refresh clears the session and produces a login result, not forbidden', async () => {
     adapter.mockImplementation(config => reject(config));
     refreshAdapter.mockImplementation(config => reject(config));
-    expect(await fetchPostDetail(1, 'old-access')).toEqual({ loginRequired: true });
+    expect(await fetchPostDetail(1)).toEqual({ loginRequired: true });
     expect(readAuth()).toEqual({ session: null, expired: true });
 });
 
 test('server failure preserves the session and can be retried', async () => {
     adapter.mockImplementation(config => reject(config));
     refreshAdapter.mockImplementationOnce(config => reject(config, 503));
-    await expect(fetchPostDetail(1, 'old-access')).rejects.toMatchObject({ response: { status: 503 } });
+    await expect(fetchPostDetail(1)).rejects.toMatchObject({ response: { status: 503 } });
     expect(readAuth().session?.refreshToken).toBe('old-refresh');
     expect(getAuthState().status).toBe('error');
     adapter.mockImplementationOnce(config => reject(config));
     adapter.mockImplementationOnce(async config => ok(config, { id: 1 }));
-    expect(await fetchPostDetail(1, 'old-access')).toMatchObject({ id: 1 });
+    expect(await fetchPostDetail(1)).toMatchObject({ id: 1 });
 });
 
 test('quiz authentication failure preserves the central session-expired notice', async () => {
     adapter.mockImplementation(config => reject(config));
     refreshAdapter.mockImplementation(config => reject(config));
-    await expect(fetchQuizUrl('old-access')).rejects.toMatchObject({ response: { status: 401 } });
+    await expect(fetchQuizUrl()).rejects.toMatchObject({ response: { status: 401 } });
     expect(readAuth()).toEqual({ session: null, expired: true });
 });
 
 test('multiple 401s share one refresh', async () => {
     adapter.mockImplementation(config => config.headers.Authorization === `Bearer ${freshAccess}`
         ? Promise.resolve(ok(config, { id: 1 })) : reject(config));
-    await Promise.all([fetchPostDetail(1, 'old'), fetchPostDetail(2, 'old'), fetchPostDetail(3, 'old')]);
+    await Promise.all([fetchPostDetail(1), fetchPostDetail(2), fetchPostDetail(3)]);
     expect(refreshAdapter).toHaveBeenCalledTimes(1);
 });
 
 test('a second 401 terminates the session without a retry loop', async () => {
     adapter.mockImplementation(config => reject(config));
-    expect(await fetchPostDetail(1, 'old')).toEqual({ loginRequired: true });
+    expect(await fetchPostDetail(1)).toEqual({ loginRequired: true });
     expect(refreshAdapter).toHaveBeenCalledTimes(1);
     expect(adapter).toHaveBeenCalledTimes(2);
     expect(readAuth().session).toBeNull();
@@ -156,7 +156,7 @@ test('logout while a request is in flight cannot log out a subsequent login', as
         rejectRequest = () => rejectPromise(new AxiosError('expired', '', config, undefined,
             { config, data: {}, status: 401, statusText: '', headers: {} }));
     }));
-    const request = fetchPostDetail(1, 'old');
+    const request = fetchPostDetail(1);
     for (let i = 0; i < 8; i++) await Promise.resolve();
     signOutLocal();
     Object.defineProperty(globalThis.crypto, 'randomUUID', { configurable: true, value: () => 'new-session-id' });
@@ -181,10 +181,13 @@ test('fetchBoardPosts calls /api/posts/all/ with trailing slash when boardId is 
 });
 
 
-test('authHeaders: 토큰이 있을 때만 인증 헤더를 붙인다', () => {
-    const { authHeaders } = jest.requireActual('./client');
-    expect(authHeaders('abc')).toEqual({ Authorization: 'Bearer abc' });
-    expect(authHeaders(null)).toEqual({});
-    expect(authHeaders(undefined)).toEqual({});
-    expect(authHeaders('')).toEqual({});
+test('authHeaders: 로그인 세션이 있을 때만 인증 헤더를 붙인다', () => {
+    const { authHeaders, currentAccessToken } = jest.requireActual('./client');
+    signOutLocal();
+    expect(currentAccessToken()).toBeNull();
+    expect(authHeaders()).toEqual({});
+    setAuth({ username: 'u', semester: '1', email: 'u@jbnu.ac.kr', is_staff: false }, 'access-1', 'refresh-1');
+    expect(authHeaders()).toEqual({ Authorization: 'Bearer access-1' });
+    signOutLocal();
+    expect(authHeaders()).toEqual({});
 });

@@ -43,7 +43,9 @@ import BrandMark from "../Utils/BrandMark";
 import EmptyState from "../Utils/EmptyState";
 import { getImageUploadError } from "../../Utils/uploadRules";
 
-function SettingsManagement({ accessToken }: { accessToken: string }) {
+// 아래 관리 화면 3개는 관리자 화면(Admin)이 로그인한 운영진에게만 그리므로 토큰을 받지 않는다.
+// 토큰은 API 함수가 지금 세션에서 직접 읽는다
+function SettingsManagement() {
     const [notionPageId, setNotionPageId] = useState("");
     const [quizUrl, setQuizUrl] = useState("");
     const [jbigDescription, setJbigDescription] = useState("");
@@ -65,7 +67,7 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
         let cancelled = false;
         const load = async () => {
             try {
-                const settings = await fetchSiteSettings(accessToken);
+                const settings = await fetchSiteSettings();
                 if (cancelled) return;
                 loadedSettingsRef.current = true;
                 setNotionPageId(settings.notion_page_id || "");
@@ -92,7 +94,7 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
         return () => {
             cancelled = true;
         };
-    }, [accessToken]);
+    }, []);
 
     const handleSave = async () => {
         const trimmedQuiz = quizUrl.trim();
@@ -103,7 +105,7 @@ function SettingsManagement({ accessToken }: { accessToken: string }) {
         setSaving(true);
         setMessage(null);
         try {
-            await updateSiteSettings(accessToken, {
+            await updateSiteSettings({
                 notion_page_id: notionPageId,
                 quiz_url: trimmedQuiz ? sanitizeHttpUrl(trimmedQuiz) || "" : "",
                 jbig_description: jbigDescription,
@@ -381,7 +383,7 @@ const PERMISSION_FIELD_LABELS: Record<PermissionField, string> = {
     comment_permission: "댓글",
 };
 
-function BoardManagement({ accessToken }: { accessToken: string }) {
+function BoardManagement() {
     const [boards, setBoards] = useState<AdminBoard[]>([]);
     const [loading, setLoading] = useState(true);
     const [savingId, setSavingId] = useState<number | null>(null);
@@ -390,7 +392,7 @@ function BoardManagement({ accessToken }: { accessToken: string }) {
     useEffect(() => {
         const load = async () => {
             try {
-                const data = await getAdminBoards(accessToken);
+                const data = await getAdminBoards();
                 setBoards(data);
             } catch {
                 setMessage({ type: 'error', text: '게시판 목록을 불러오는데 실패했습니다.' });
@@ -399,7 +401,7 @@ function BoardManagement({ accessToken }: { accessToken: string }) {
             }
         };
         load();
-    }, [accessToken]);
+    }, []);
 
     const handleChange = async (board: AdminBoard, field: PermissionField, value: string) => {
         const prev = board[field];
@@ -408,7 +410,7 @@ function BoardManagement({ accessToken }: { accessToken: string }) {
         setMessage(null);
         // 낙관적 업데이트
         setBoards((bs) => bs.map((b) => (b.id === board.id ? { ...b, [field]: value } : b)));
-        const res = await updateBoardPermissions(accessToken, board.id, { [field]: value });
+        const res = await updateBoardPermissions(board.id, { [field]: value });
         if (res.success) {
             setMessage({ type: 'success', text: `'${board.name}' ${PERMISSION_FIELD_LABELS[field]} 권한을 변경했습니다.` });
         } else {
@@ -522,7 +524,7 @@ function BoardManagement({ accessToken }: { accessToken: string }) {
     );
 }
 
-function PopupManagement({ accessToken }: { accessToken: string }) {
+function PopupManagement() {
     const [popups, setPopups] = useState<PopupItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -546,7 +548,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
     const loadPopups = React.useCallback(async () => {
         setLoading(true);
         try {
-            const data = await fetchAllPopups(accessToken);
+            const data = await fetchAllPopups();
             setPopups(data);
         } catch (err) {
             console.error('[Popup] Failed to fetch popups:', err);
@@ -554,7 +556,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
         } finally {
             setLoading(false);
         }
-    }, [accessToken, showAlert]);
+    }, [showAlert]);
 
     useEffect(() => {
         loadPopups();
@@ -645,7 +647,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
         try {
             // 새로운 이미지 파일이 있으면 오브젝트 스토리지에 업로드
             if (imageFile) {
-                const uploadResult = await uploadAttachment(imageFile, accessToken);
+                const uploadResult = await uploadAttachment(imageFile);
                 if (uploadResult.message || !uploadResult.path) {
                     showAlert({ message: `이미지 업로드 실패: ${uploadResult.message || '알 수 없는 오류'}`, type: 'error' });
                     setUploading(false);
@@ -666,10 +668,10 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
             };
 
             if (editingPopup) {
-                await updatePopup(editingPopup.id, data, accessToken);
+                await updatePopup(editingPopup.id, data);
                 showAlert({ message: "팝업이 수정되었습니다.", type: 'success' });
             } else {
-                await createPopup(data, accessToken);
+                await createPopup(data);
                 showAlert({ message: "팝업이 생성되었습니다.", type: 'success' });
             }
             resetForm();
@@ -690,7 +692,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
             message: "정말 이 팝업을 삭제하시겠습니까?",
             onConfirm: async () => {
                 try {
-                    await deletePopup(id, accessToken);
+                    await deletePopup(id);
                     showAlert({ message: "팝업이 삭제되었습니다.", type: 'success' });
                     loadPopups();
                 } catch (err) {
@@ -703,7 +705,7 @@ function PopupManagement({ accessToken }: { accessToken: string }) {
 
     const toggleActive = async (popup: PopupItem) => {
         try {
-            await updatePopup(popup.id, { is_active: !popup.is_active }, accessToken);
+            await updatePopup(popup.id, { is_active: !popup.is_active });
             showAlert({
                 message: `팝업이 ${!popup.is_active ? '활성화' : '비활성화'}되었습니다.`,
                 type: 'success'
@@ -1007,11 +1009,11 @@ function Admin() {
         if (!accessToken) return null;
         switch (currentPage) {
             case "boards":
-                return <BoardManagement accessToken={accessToken} />;
+                return <BoardManagement />;
             case "settings":
-                return <SettingsManagement accessToken={accessToken} />;
+                return <SettingsManagement />;
             case "popups":
-                return <PopupManagement accessToken={accessToken} />;
+                return <PopupManagement />;
             default:
                 return <Dashboard onSelectPage={handleMenuSelect} />;
         }

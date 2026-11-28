@@ -87,7 +87,7 @@ const Profile: React.FC = () => {
         setLoading(true);
         setError(null);
         try {
-            const data = await fetchPublicProfile(username, accessToken || undefined);
+            const data = await fetchPublicProfile(username);
             setProfile(data);
             setActivityLoaded(false);
         } catch (err: unknown) {
@@ -100,6 +100,8 @@ const Profile: React.FC = () => {
         } finally {
             setLoading(false);
         }
+    // 로그인 상태가 바뀌면(로그인, 로그아웃, 다른 계정) 다시 불러온다. 토큰은 API 함수가 직접 읽는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [username, accessToken]);
 
     useEffect(() => {
@@ -117,7 +119,7 @@ const Profile: React.FC = () => {
         let cancelled = false;
         setActivityLoading(true);
 
-        fetchPublicProfileActivity(username, accessToken || undefined)
+        fetchPublicProfileActivity(username)
             .then((activity) => {
                 if (cancelled) return;
                 setProfile(prev => prev ? {
@@ -145,10 +147,10 @@ const Profile: React.FC = () => {
         if (!accessToken) return;
         setSaving(true);
         try {
-            await updateProfileBlocks(blocks, accessToken);
+            await updateProfileBlocks(blocks);
             // 블록 모드로 저장하면 공개 프로필도 블록 방식으로 전환
             if (profile?.profile_type !== 'blocks') {
-                await updateProfileHtml({ profile_type: 'blocks' }, accessToken);
+                await updateProfileHtml({ profile_type: 'blocks' });
             }
             setProfile(prev => prev ? { ...prev, profile_blocks: blocks, profile_type: 'blocks' } : null);
             setEditMode(false);
@@ -164,7 +166,7 @@ const Profile: React.FC = () => {
         if (!accessToken) return;
         setSaving(true);
         try {
-            await updateProfileHtml({ profile_type: 'html', profile_html: html }, accessToken);
+            await updateProfileHtml({ profile_type: 'html', profile_html: html });
             setProfile(prev => prev ? { ...prev, profile_html: html, profile_type: 'html' } : null);
             setEditMode(false);
             showAlert({ message: "프로필이 저장되었습니다.", type: 'success' });
@@ -197,7 +199,7 @@ const Profile: React.FC = () => {
 
         setDeleting(true);
         try {
-            const result = await deleteAccount(deletePassword, accessToken);
+            const result = await deleteAccount(deletePassword);
             if (result.success) {
                 showAlert({ message: result.message || "회원 탈퇴가 완료되었습니다.", type: 'success' });
                 signOutLocal();

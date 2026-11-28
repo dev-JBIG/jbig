@@ -257,7 +257,7 @@ const Calendar: React.FC<CalendarProps> = ({ staffAuth, compact = false, embedde
 
         setDeleting(true);
         try {
-            await deleteCalendarEvent(ev.id, accessToken);
+            await deleteCalendarEvent(ev.id);
             deletedIdsRef.current.add(ev.id);
             savedOverridesRef.current.delete(ev.id);
             setEvents(prev => prev.filter(item => item.id !== ev.id));

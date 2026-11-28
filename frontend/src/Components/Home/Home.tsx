@@ -210,7 +210,7 @@ const Home: React.FC = () => {
 
             cancelQuizTask = scheduleIdleTask(async () => {
                 try {
-                    const url = await fetchQuizUrl(accessToken);
+                    const url = await fetchQuizUrl();
                     if (cancelled) return;
                     setQuizURL(url || "");
                 } catch {
@@ -244,7 +244,7 @@ const Home: React.FC = () => {
 
         const loadBoards = async () => {
             try {
-                const nextBoards = normalizeBoardsPayload(await getBoards(accessToken));
+                const nextBoards = normalizeBoardsPayload(await getBoards());
                 if (cancelled) return;
                 setBoards(nextBoards.categories);
                 setTotalCount(nextBoards.total_post_count);
@@ -362,7 +362,7 @@ const Home: React.FC = () => {
 
         const loadUnreadCount = async () => {
             try {
-                const count = await fetchUnreadNotificationCount(accessToken);
+                const count = await fetchUnreadNotificationCount();
                 if (cancelled) return;
                 setUnreadCount(count);
             } catch (err) {
@@ -395,14 +395,14 @@ const Home: React.FC = () => {
         
         if (!wasOpen) {
             try {
-                const data = await fetchNotifications(accessToken);
+                const data = await fetchNotifications();
                 setNotifications(data);
                 
                 // 빈 배열이지만 unreadCount가 있다면 재조회 시도
                 if (data.length === 0 && unreadCount > 0) {
                     console.warn('[Notification] Empty notifications but unreadCount > 0, rechecking...');
                     // 알림 개수 다시 확인
-                    const newCount = await fetchUnreadNotificationCount(accessToken);
+                    const newCount = await fetchUnreadNotificationCount();
                     setUnreadCount(newCount);
                 }
             } catch (err) {
@@ -428,7 +428,7 @@ const Home: React.FC = () => {
             
             // 읽음 처리만 진행
             try {
-                await markNotificationRead(accessToken, notification.id);
+                await markNotificationRead(notification.id);
                 setUnreadCount(prev => Math.max(0, prev - 1));
                 setNotifications(prev =>
                     prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
@@ -444,7 +444,7 @@ const Home: React.FC = () => {
         
         // 읽음 처리는 백그라운드에서
         try {
-            await markNotificationRead(accessToken, notification.id);
+            await markNotificationRead(notification.id);
             setUnreadCount(prev => Math.max(0, prev - 1));
             setNotifications(prev =>
                 prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
@@ -458,7 +458,7 @@ const Home: React.FC = () => {
     const handleMarkAllRead = async () => {
         if (!accessToken) return;
         try {
-            await markNotificationRead(accessToken);
+            await markNotificationRead();
             setUnreadCount(0);
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
         } catch (err) {
@@ -497,12 +497,12 @@ const Home: React.FC = () => {
             }
 
             if (modalMode === "edit" && id) {
-                const updated = await updateCalendarEvent(id, newEvent, accessToken);
+                const updated = await updateCalendarEvent(id, newEvent);
                 window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
                     detail: { mode: "edit", event: updated },
                 }));
             } else {
-                const created = await createCalendarEvent(newEvent, accessToken);
+                const created = await createCalendarEvent(newEvent);
                 window.dispatchEvent(new CustomEvent("CALENDAR_EVENT_SAVED", {
                     detail: { mode: "create", event: created },
                 }));

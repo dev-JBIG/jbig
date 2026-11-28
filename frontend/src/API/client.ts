@@ -26,13 +26,18 @@ function stripAuthorizationHeader(headers: InternalAxiosRequestConfig["headers"]
     }
 }
 
+/** 지금 로그인 세션의 액세스 토큰(없으면 null). 화면이 토큰을 들고 다니지 않게 API 함수가 직접 읽는다 */
+export const currentAccessToken = (): string | null => readAuth().session?.accessToken ?? null;
+
 /**
- * 이 요청에 로그인 세션을 쓴다는 표시. 아래 요청 가로채기가 /api/ 요청에서만
- * 이 헤더를 지금 세션의 최신 토큰으로 바꿔 넣고, 바깥 주소로 가는 요청에서는 지운다.
- * 토큰이 없으면 아무것도 붙이지 않는다(비회원 요청).
+ * 이 요청에 로그인 세션을 쓴다는 표시. 로그인해 있으면 인증 헤더를, 아니면 빈 객체를 준다.
+ * 아래 요청 가로채기가 /api/ 요청에서만 이 헤더를 최신 토큰으로 바꿔 넣고, 바깥 주소로 가는 요청에서는 지운다.
+ * 로그인, 회원가입처럼 세션을 쓰면 안 되는 요청은 이 함수를 부르지 않는다(만료 토큰이 붙으면 서버가 401).
  */
-export const authHeaders = (token?: string | null): Record<string, string> =>
-    token ? { Authorization: `Bearer ${token}` } : {};
+export const authHeaders = (): Record<string, string> => {
+    const token = currentAccessToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
 client.interceptors.request.use(config => {
     if (!isApiRequest(config)) {

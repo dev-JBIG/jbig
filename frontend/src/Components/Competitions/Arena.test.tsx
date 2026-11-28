@@ -66,7 +66,7 @@ test('invalid CSV keeps the file and request key for retry without showing a res
     expect(await screen.findByRole('alert')).toHaveTextContent('CSV 레코드 18');
     fireEvent.click(screen.getByRole('button', { name: /제출하기/ }));
     await waitFor(() => expect(mocked.submitArena).toHaveBeenCalledTimes(2));
-    expect(mocked.submitArena.mock.calls[0][2]).toBe(mocked.submitArena.mock.calls[1][2]);
+    expect(mocked.submitArena.mock.calls[0][1]).toBe(mocked.submitArena.mock.calls[1][1]);
     expect(screen.getByText('오늘 5 / 5회 남음')).toBeInTheDocument();
 });
 
@@ -98,7 +98,7 @@ test('my history shows pending state and lets a received submission be selected'
     open('/arena/submissions');
     expect(await screen.findByText('채점 대기')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '최종 평가용 선택' }));
-    await waitFor(() => expect(mocked.selectArenaSubmission).toHaveBeenCalledWith('one', 'token'));
+    await waitFor(() => expect(mocked.selectArenaSubmission).toHaveBeenCalledWith('one'));
     expect(await screen.findByText(/최종 평가용 제출을 선택했습니다/)).toBeInTheDocument();
 });
 
@@ -113,7 +113,7 @@ test('final leaderboard clearly uses Private score and marks my row', async () =
 });
 
 test('submission page shows the newest receipts after browsing an older history page', async () => {
-    mocked.fetchArenaHistory.mockImplementation(async (_token, page = 1) => ({
+    mocked.fetchArenaHistory.mockImplementation(async (page = 1) => ({
         count: 21, page, pages: 2, results: [{ ...submission, filename: page === 1 ? 'newest.csv' : 'older.csv' }],
     }));
     open('/arena/submissions');

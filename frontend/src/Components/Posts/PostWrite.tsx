@@ -223,7 +223,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         }
 
         try {
-            const res = await uploadAttachment(file, accessToken);
+            const res = await uploadAttachment(file);
             if (res.message || !res.path) {
                 showAlert({ message: `이미지 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
                 return false;
@@ -334,7 +334,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         (async () => {
             try {
-                const draft = await fetchDraft(accessToken);
+                const draft = await fetchDraft();
                 if (!draft || (!draft.title && !draft.content_md)) {
                     return;
                 }
@@ -357,9 +357,9 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     },
                     onCancel: async () => {
                         // 임시저장 거부 시 DB에서 삭제 및 업로드된 파일도 삭제
-                        await deleteDraft(accessToken);
+                        await deleteDraft();
                         if (draft.uploaded_paths) {
-                            draft.uploaded_paths.forEach(path => deleteUploadedFile(path, accessToken).catch(() => {}));
+                            draft.uploaded_paths.forEach(path => deleteUploadedFile(path).catch(() => {}));
                         }
                     }
                 });
@@ -381,7 +381,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                 try {
                     if (!title && !content && uploadedPathsRef.current.size === 0) {
                         // 비어있으면 DB에서 삭제
-                        await deleteDraft(accessToken).catch(() => {});
+                        await deleteDraft().catch(() => {});
                     } else {
                         // DB에 저장 (upsert) - 현재 선택된 게시판도 함께 저장
                         await saveDraft({
@@ -389,7 +389,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                             title,
                             content_md: content,
                             uploaded_paths: Array.from(uploadedPathsRef.current)
-                        }, accessToken);
+                        });
                     }
                 } catch (err) {
                     console.error('[Draft] Draft save failed:', err);
@@ -408,7 +408,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         (async () => {
             try {
-                const raw = await fetchPostDetail(Number(postId), accessToken);
+                const raw = await fetchPostDetail(Number(postId));
                 if (cancelled) return;
                 if (raw.loginRequired || raw.unauthorized || raw.notFound) throw new Error("게시글을 열 수 없습니다.");
                 const src = raw.post_data ?? raw;
@@ -522,7 +522,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
             }
 
             try {
-                const res = await uploadAttachment(file, accessToken);
+                const res = await uploadAttachment(file);
                 if (res.message || !res.path) {
                     showAlert({ message: `"${file.name}" 업로드 실패: ${res.message || '알 수 없는 오류'}`, type: 'error' });
                     continue;
@@ -564,7 +564,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
         if (fileToRemove.path) {
             setAttachments(prev => prev.filter(att => att.path !== fileToRemove.path));
             if (accessToken && uploadedPathsRef.current.has(fileToRemove.path)) {
-                deleteUploadedFile(fileToRemove.path, accessToken).catch(() => {});
+                deleteUploadedFile(fileToRemove.path).catch(() => {});
                 uploadedPathsRef.current.delete(fileToRemove.path);
             }
         }
@@ -622,7 +622,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
 
         uploadedPathsRef.current.forEach(path => {
             if (!usedKeys.has(path)) {
-                deleteUploadedFile(path, accessToken).catch(() => {});
+                deleteUploadedFile(path).catch(() => {});
                 uploadedPathsRef.current.delete(path);
             }
         });
@@ -656,7 +656,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     ...(activeBoard ? { board_id: activeBoard.id } : {}),
                     ...(hasTags ? { tag: selectedTag } : {}),
                     is_anonymous: !showRealName,
-                }, accessToken);
+                });
 
                 // 게시글 수정이 성공했으므로 커밋된 첨부·본문 파일의 임시 업로드 소유권을 해제한다.
                 // 이후 updateRecruitment가 실패해 에디터에 남더라도 저장된 게시글의 파일을 삭제하지 않는다.
@@ -675,7 +675,7 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                         required_skills: recruitmentData.required_skills,
                         contact_info: recruitmentData.contact_info,
                         show_applicants: recruitmentData.show_applicants,
-                    }, accessToken);
+                    });
                 }
                 savedRef.current = true;
                 navigate(`/board/${activeBoard?.id ?? Number(category)}/${postIdNumber}`);
@@ -694,10 +694,10 @@ const PostWrite: React.FC<PostWriteProps> = ({ boards = [] }) => {
                     show_applicants: recruitmentData.show_applicants,
                 };
             }
-            await createPost(activeBoard!.id, postPayload, accessToken);
+            await createPost(activeBoard!.id, postPayload);
             // 게시글 등록 성공 시 DB 임시저장 삭제
             if (canUseDraft) {
-                await deleteDraft(accessToken).catch(() => {});
+                await deleteDraft().catch(() => {});
             }
             savedRef.current = true;
             navigate(`/board/${activeBoard!.id}`);

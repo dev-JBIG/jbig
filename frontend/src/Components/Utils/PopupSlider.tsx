@@ -54,7 +54,7 @@ const PopupSlider: React.FC = () => {
         setContentLoading(true);
         setPostImageUrl(null);
         try {
-            const data = await fetchPostDetail(postId, accessToken);
+            const data = await fetchPostDetail(postId);
             if (!mountedRef.current || seq !== postContentSeqRef.current) return;
             if (data && !data.unauthorized && !data.loginRequired && !data.notFound) {
                 setPostContent(data.content_md || "");
@@ -74,6 +74,8 @@ const PopupSlider: React.FC = () => {
                 setContentLoading(false);
             }
         }
+    // 로그인 상태가 바뀌면(로그인, 로그아웃, 다른 계정) 다시 불러온다. 토큰은 API 함수가 직접 읽는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [accessToken]);
 
     useEffect(() => {
@@ -82,7 +84,7 @@ const PopupSlider: React.FC = () => {
 
         const loadPopups = async () => {
             try {
-                const data = await fetchActivePopups(accessToken);
+                const data = await fetchActivePopups();
                 if (cancelled || !mountedRef.current) return;
 
                 // 비로그인: 축하 팝업 제외
@@ -129,7 +131,7 @@ const PopupSlider: React.FC = () => {
         const popup = popups[currentIndex];
         if (!popup) return;
         if (accessToken && popup.id) {
-            dismissPopup(popup.id, accessToken).catch(() => {});
+            dismissPopup(popup.id).catch(() => {});
         }
         removeCurrentPopup();
     };
@@ -147,15 +149,14 @@ const PopupSlider: React.FC = () => {
         setIsClosing(true);
 
         if (accessToken && popup.id) {
-            dismissPopup(popup.id, accessToken).catch(() => {});
+            dismissPopup(popup.id).catch(() => {});
         }
 
         if (popup.source_post_id && accessToken) {
             try {
                 await createComment(
                     popup.source_post_id,
-                    { content: message, parent: null, is_anonymous: true },
-                    accessToken
+                    { content: message, parent: null, is_anonymous: true }
                 );
             } catch (err) {
                 console.error('[PopupSlider] Failed to create congratulation comment:', err);
