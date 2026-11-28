@@ -949,6 +949,8 @@ class MemberBoardAndAttachmentGateTest(APITestCase):
             res = self.client.get(reverse('post-attachment-download',
                                           kwargs={'post_id': justification.id, 'index': 0}))
             self.assertEqual(res.status_code, status.HTTP_200_OK)
+            # 응답을 끝까지 읽어 파일 스트림을 닫는다(시작 안 한 스트림은 close 로 안 닫혀 윈도우에서 파일 삭제가 실패)
+            self.assertEqual(b''.join(res.streaming_content), b'letter')
             # 타인은 차단
             other = User.objects.create_user(
                 username='other2', email='other2@example.com', password='pw',

@@ -3,7 +3,9 @@ import hashlib
 import io
 import json
 import math
+import os
 import tempfile
+import unittest
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone as dt_timezone
@@ -254,12 +256,14 @@ class ArenaAPITests(FixtureMixin, TestCase):
         self.assertFalse(Submission.objects.exists())
         self.assertFalse(DailyQuota.objects.exists())
 
+    @unittest.skipIf(os.name == 'nt', '윈도우는 POSIX 권한 비트(0o640 등)를 지원하지 않는다. 리눅스(CI, 운영)에서 검사')
     def test_received_files_are_readable_only_by_owner_and_grader_group(self):
         submission = self.submit()
         path = submission_path(submission)
         self.assertEqual(path.stat().st_mode & 0o777, 0o640)
         self.assertEqual(path.parent.stat().st_mode & 0o777, 0o750)
 
+    @unittest.skipIf(os.name == 'nt', '윈도우는 POSIX 권한 비트(0o640 등)를 지원하지 않는다. 리눅스(CI, 운영)에서 검사')
     def test_verification_files_stay_in_grading_storage_with_owner_only_access(self):
         Participant.objects.filter(pk=self.participant.pk).update(is_test=True)
         submission = self.submit()
